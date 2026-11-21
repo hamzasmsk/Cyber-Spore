@@ -144,21 +144,21 @@ const EDEF = {
 //  curve (curved homing throw), bounce (ricochets), pierce (passes through N), stick (misses stick in the ground),
 //  push (knock-back), boomer (boomerang), freeze (slows), burn (damage over time), boom (area blast), chain (lightning)
 const GUNS = [
-  { name: 'Shuriken',     mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 820,  curve: 0.55, bounce: 1, stick: 1,
+  { name: 'Shuriken', glow: 'gold',  evo: { name: 'Kasırga Yıldızı', sp: 'orbit',   desc: 'Hedefe giden shuriken kasırgası' },      mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 820,  curve: 0.55, bounce: 1, stick: 1,
     trail: 'ghost', hit: 'spark', snd: 'shoot', hsnd: 'hit', tags: ['Kavisli', 'Seker'] },
-  { name: 'Kunai',        mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1150, pierce: 1, stick: 1,
+  { name: 'Kunai', glow: 'ink',   evo: { name: 'Kunai Yağmuru',   sp: 'rain',    desc: 'Gökten kunai yağar' },         mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1150, pierce: 1, stick: 1,
     trail: 'line', hit: 'cut', snd: 'throw2', hsnd: 'hit2', tags: ['Çok hızlı', 'Deler'] },
-  { name: 'Üçlü Ok',      mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, spread: 0.24, sp: 1100, stick: 1, held: 'wh_Bow',
+  { name: 'Üçlü Ok', glow: 'leaf',  evo: { name: 'Ok Yağmuru',      sp: 'volley',  desc: 'Kavisle düşen ok bulutu' },       mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, spread: 0.24, sp: 1100, stick: 1, held: 'wh_Bow',
     trail: 'line', hit: 'cut', bits: 'q_Wood', snd: 'throw2', hsnd: 'hit3', tags: ['3 ok', 'Yay'] },
-  { name: 'Büyük Kunai',  mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, pierce: 3, push: 1, stick: 1,
+  { name: 'Büyük Kunai', glow: 'magic', evo: { name: 'Gölge Hattı',     sp: 'column',  desc: 'Ekranı boydan yaran dev kunai' },   mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, pierce: 3, push: 1, stick: 1,
     trail: 'line', hit: 'claw', snd: 'shoot', hsnd: 'hit2', tags: ['4 düşman deler', 'İter'] },
-  { name: 'Büyü Yıldızı', mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 1, sp: 760,  boomer: 1, held: 'wh_Wand',
+  { name: 'Büyü Yıldızı', glow: 'magic', evo: { name: 'Galaksi',         sp: 'galaxy',  desc: 'Üç dev yıldız bumerang' },  mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 1, sp: 760,  boomer: 1, held: 'wh_Wand',
     trail: 'spark', hit: 'star', snd: 'throw_magic', hsnd: 'magic', tags: ['Bumerang', 'Gidiş-dönüş keser'] },
-  { name: 'Buz Mızrağı',  mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, pierce: 1, freeze: 1, held: 'wh_Book',
+  { name: 'Buz Mızrağı', glow: 'ice',   evo: { name: 'Buz Çiçeği',      sp: 'bloom',   desc: 'Alanı donduran buz patlaması' },   mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, pierce: 1, freeze: 1, held: 'wh_Book',
     trail: 'snow', hit: 'ice', snd: 'throw_magic', hsnd: 'hit_ice', tags: ['Deler', 'Yavaşlatır'] },
-  { name: 'Ateş Topu',    mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, wobble: 1, boom: 1, burn: 1, held: 'wh_Wand',
+  { name: 'Ateş Topu', glow: 'fire',  evo: { name: 'Meteor',          sp: 'meteor',  desc: 'Hedef işaretli gök taşları' },     mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, wobble: 1, boom: 1, burn: 1, held: 'wh_Wand',
     trail: 'fire', hit: 'fire', snd: 'throw_fire', hsnd: 'hit_fire', tags: ['Patlar', 'Yakar'] },
-  { name: 'Ruh Küresi',   mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
+  { name: 'Ruh Küresi', glow: 'ice',   evo: { name: 'Gök Gürültüsü',   sp: 'thunder', desc: 'Gökten inen zincir şimşekler' },    mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
     trail: 'aura', hit: 'thunder', snd: 'throw_magic', hsnd: 'magic', tags: ['Zincir şimşek x3', 'Patlar'] },
 ];
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
@@ -189,7 +189,14 @@ const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(SPEED_CAP
 const COST = { power: l => 8 * Math.pow(1.25, l), speed: l => 12 * Math.pow(1.28, l), money: l => 15 * Math.pow(1.2, l) };
 const MODS = { dmg: [], rate: [], money: [] };
 const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
-const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * rebirthMul() * modMul('dmg');
+// weapon stars (1-5, bought with gems): +30% damage per star, +1 projectile at 3 stars, evolution at 5 stars
+if (!Array.isArray(save.wstar)) save.wstar = [];
+if (typeof save.wbest !== 'number') save.wbest = save.gun;
+const star = i => clamp(save.wstar[i] || 1, 1, 5);
+const evolved = (i = save.gun) => star(i) >= 5;
+const starCost = (i, s) => Math.max(2, Math.round(Math.max(GUNS[i].cost, 5) * 0.35 * s));
+const shotsOf = g => g.shots + (star(GUNS.indexOf(g)) >= 3 ? 1 : 0);
+const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * (1 + 0.3 * (star(save.gun) - 1)) * (evolved() ? 1.5 : 1) * rebirthMul() * modMul('dmg');
 const fireRate = () => stat.speed(save.lv.speed) * modMul('rate') * (R.ultT > 0 ? 3 : 1);
 const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
@@ -317,7 +324,7 @@ function musicTick(dt) {
 // ================================================================ runtime state
 const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
-  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [] };
+  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0 };
 MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
 MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
 const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0);
@@ -406,7 +413,8 @@ function newBiomeAhead() {   // the next region starts just above the screen and
 // ================================================================ combat
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 function enemyGoal(e) {
-  const eb = enemyBox(), sq = R.sq, st = STAND * U;
+  // stand distance adapts to the screen: on short screens enemies hold the middle of the field, not the HUD edge
+  const eb = enemyBox(), sq = R.sq, st = clamp((sq.y - eb.y0) * 0.6, 140 * U, STAND * U);
   let g = clampBox(along(sq, st, e.lane * F.pathW * 0.8), eb);
   if (dist(g, sq) < st * 0.85) {
     const dx = e.x - sq.x, dy = e.y - sq.y, d = Math.hypot(dx, dy) || 1;
@@ -449,7 +457,7 @@ function bossWin() {
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
-  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15;
+  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15; R.cheerT = 2;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
   banner('ZAFER!', `+${gems} elmas · ${biome().name}`); sfx('win', 0);
@@ -469,7 +477,7 @@ function bossFail() {
 function damage(target, dmg, crit, isBoss) {
   if (target.dead) return;
   target.hp -= dmg; target.flash = 0.08;
-  if (!isBoss) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = 6 * U; }
+  if (!isBoss && target.y > enemyBox().y0 + 50 * U) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = Math.max(target.knock || 0, (crit ? 7 : 2) * U); }
   const top = isBoss ? bossH(target) : 18 * P * (target.sc || 1);
   addText(target.x + rand(-14, 14) * U, target.y - top - 2 * U + rand(-6, 6) * U, fmt(dmg), crit ? 'crit' : 'dmg');
   if (target.hp <= 0) { if (isBoss) bossWin(); else kill(target); }
@@ -512,6 +520,7 @@ function bits(x, y, set, n) {
 }
 function confetti(x, y, col, n) { bits(x, y, biome().bits, Math.min(8, n)); }
 function boom(x, y, s = 1) {
+  vfx('ring', 'fire', x, y, s, 0.35);
   if (s < 1) { if (R.t - (R.boomT || 0) < 0.07 || R.parts.length > 170) { fx('fx_circle', x, y, s, 0.25); return; } R.boomT = R.t; }
   fx('fx_circle', x, y, s, 0.32);
   part({ k: 'anim', a: 'fx_smoke', x, y: y + 6 * P * s, s, life: 0.5, max: 0.5, ay: 1, alpha: 0.85 });
@@ -530,7 +539,8 @@ function hitFx(q, t) {
     default: fx('fx_spark', x, y);
   }
   if (g.bits) bits(x, y, g.bits, 2);
-  if (q.crit) fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22);
+  if (q.crit) { fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22); vfx('burst', g.glow || 'gold', x, y, 0.5, 0.22); }
+  else if (evolved()) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.2);
   if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx(g.hsnd || 'hit', 0, x);
   if (save.team >= 4 && t !== R.boss && Math.random() < 0.2) {   // Bombacı perk: splash
     boom(x, y, 0.5);
@@ -565,15 +575,15 @@ function throwNow(h) {
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
-  const crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1), dmg = total / g.shots;
+  const ns = shotsOf(g), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1), dmg = total / ns;
   let tg = [t];
-  if (g.shots > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, g.shots - 1));
-  for (let k = 0; k < g.shots; k++) {
+  if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
+  for (let k = 0; k < ns; k++) {
     const tk = tg[k % tg.length];
-    let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (g.shots > 1 ? (k - (g.shots - 1) / 2) * (g.spread || 0.12) : 0);
+    let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (ns > 1 ? (k - (ns - 1) / 2) * (g.spread || 0.14) : 0);
     if (g.curve) a += (Math.random() < 0.5 ? -1 : 1) * g.curve * rand(0.6, 1);
     R.bul.push({ x: o.x, y: o.y, a, sp: g.sp * U, tgt: tk, dmg, crit, g, age: rand(0, 1), life: g.boomer ? 2.4 : 1.3, trail: [], tt: 0,
-      hits: new Set(), pierce: g.pierce || 0, bounce: g.bounce || 0, home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
+      hits: new Set(), pierce: (g.pierce || 0) + (evolved() && g.pierce ? 1 : 0), bounce: (g.bounce || 0) + (evolved() && g.bounce ? 1 : 0), sc: (g.sc || 1) * (evolved() && (g.sc || 1) >= 1 && (AF[`p_${g.spr}_0`] || [0, 0, 99])[2] <= 18 ? 1.5 : 1), home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
     if (tk !== R.boss) tk.pend = (tk.pend || 0) + dmg;
   }
   if (g.held === 'wh_Wand' || g.held === 'wh_Book') fx('fx_spark', o.x, o.y, 0.5, 0.15);
@@ -623,6 +633,170 @@ function stickDecal(q) {
   if (R.decals.length > 24) R.decals.shift();
   R.decals.push({ f: `p_${g.spr}_0`, x: q.x, y: q.y, rot, sc: g.sc || 1, life: 1.6 });
   bits(q.x, q.y, 'q_Rock', 1);
+}
+
+// ================================================================ evolved weapons: special attacks
+// Every few seconds in a fight an evolved (5-star) weapon fires its signature attack. Each spec is a small
+// object with its own update/draw so the effects stay readable and independent.
+const specDmg = k => dmgPerShot() * Math.max(1, save.team) * k;
+function densest(radius) {   // enemy with the most neighbours
+  let best = null, bn = -1;
+  for (const e of R.en) { if (e.dead || e.y < 150) continue; let n = 0; for (const o of R.en) if (!o.dead && Math.hypot(o.x - e.x, o.y - e.y) < radius) n++; if (n > bn) { bn = n; best = e; } }
+  return best || (R.boss && R.boss.arrive >= 1 ? R.boss : null);
+}
+const liveTargets = () => R.en.filter(e => !e.dead && e.y > 150).concat(R.boss && R.boss.arrive >= 1 ? [R.boss] : []);
+function areaHit(x, y, r, dmg, onEach) {
+  for (const e of R.en) if (!e.dead && Math.hypot(e.x - x, (aimY(e) - y) * 1.2) < r) { if (onEach) onEach(e); damage(e, dmg, false, false); }
+  const b = R.boss; if (b && b.arrive >= 1 && Math.hypot(b.x - x, (aimY(b) - y) * 0.8) < r + 50 * U) damage(b, dmg, false, true);
+}
+function vfx(kind, col, x, y, s = 1, life = 0.35) { fx(`vx_${kind}_${col}`, x, y, s, life); }
+function castSpecial() {
+  const g = GUNS[save.gun], L0 = R.heroes[0], T = liveTargets(); if (!L0 || !T.length) return false;
+  const sp = g.evo.sp;
+  banner2(g.evo.name);
+  if (sp === 'orbit') {
+    const tgt = densest(90 * U) || pick(T);
+    R.specs.push({ k: 'orbit', x: L0.x, y: L0.y - 10 * P, sx: L0.x, sy: L0.y - 10 * P, tx: tgt.x, ty: aimY(tgt), t: 0, T: 3.2, hit: new Map(), dmg: specDmg(0.22) });
+    sfx('throw_magic', 0); sfx('skill', 0);
+  } else if (sp === 'rain') {
+    for (let i = 0; i < 16; i++) { const e = pick(T); R.specs.push({ k: 'drop', spr: 'p_Kunai_0', ori: 0, sc: 1, x: e.x + rand(-30, 30) * U, y: (e === R.boss ? e.y : e.y) + rand(-10, 10) * U, z: 320 * U, vz: 1100 * U, delay: i * 0.07, r: 26 * U, dmg: specDmg(0.18), land: 'cut', stick: 1 }); }
+    sfx('throw2', 0);
+  } else if (sp === 'volley') {
+    for (let i = 0; i < 14; i++) { const e = pick(T), h = pick(R.heroes); R.specs.push({ k: 'arc', spr: 'p_Arrow_0', sx: h.x, sy: h.y - 10 * P, tx: e.x + rand(-26, 26) * U, ty: e.y + rand(-8, 8) * U, t: -i * 0.05, T: 0.85, hgt: 240 * U, dmg: specDmg(0.18), r: 28 * U }); }
+    sfx('throw2', 0);
+  } else if (sp === 'column') {
+    const e = densest(40 * U) || pick(T);
+    R.specs.push({ k: 'column', x: e.x, t: 0, tele: 0.35, y: H, hit: new Set(), dmg: specDmg(0.9) });
+    sfx('elite', 0);
+  } else if (sp === 'galaxy') {
+    for (let i = 0; i < 3; i++) {
+      const a = -Math.PI / 2 + (i - 1) * 0.7, tgt = pick(T);
+      R.bul.push({ x: L0.x, y: L0.y - 10 * P, a, sp: 700 * U, tgt, dmg: specDmg(0.3), crit: false, g, age: rand(0, 1), life: 2.6, trail: [], tt: 0, hits: new Set(), pierce: 0, bounce: 0, home: true, from: L0, dist: 0, back: false, wob: 0, settled: true, sc: 2, special: 1 });
+    }
+    sfx('throw_magic', 0); sfx('magic', 0);
+  } else if (sp === 'bloom') {
+    const e = densest(90 * U) || pick(T);
+    R.specs.push({ k: 'bloom', x: e.x, y: e.y, t: 0, tele: 0.35, done: false, dmg: specDmg(0.8) });
+  } else if (sp === 'meteor') {
+    for (let i = 0; i < 4; i++) { const e = T[i % T.length]; R.specs.push({ k: 'meteor', x: e.x + rand(-12, 12) * U, y: e.y + rand(-6, 6) * U, t: -i * 0.3, T: 0.75, dmg: specDmg(0.6) }); }
+    sfx('throw_fire', 0);
+  } else if (sp === 'thunder') {
+    const order = T.slice().sort(() => Math.random() - 0.5).slice(0, 6);
+    order.forEach((e, i) => R.specs.push({ k: 'strike', tgt: e, t: -i * 0.13, tele: 0.18, dmg: specDmg(0.45), done: false }));
+  }
+  return true;
+}
+function banner2(name) { const b = $('evoTag'); if (!b) return; b.textContent = name; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
+function updateSpecs(dt) {
+  for (const sp of R.specs) {
+    sp.t += dt;
+    if (sp.k === 'orbit') {
+      const k = sp.t / sp.T, go = Math.min(1, sp.t / 0.7), back = Math.max(0, (sp.t - (sp.T - 0.7)) / 0.7);
+      const cx = lerp(lerp(sp.sx, sp.tx, go), R.heroes[0] ? R.heroes[0].x : sp.sx, back), cy = lerp(lerp(sp.sy, sp.ty, go), R.heroes[0] ? R.heroes[0].y - 10 * P : sp.sy, back);
+      sp.x = cx; sp.y = cy; sp.rad = (34 + 18 * Math.sin(sp.t * 3)) * U;
+      for (const [e, cd] of sp.hit) if (cd - dt <= 0) sp.hit.delete(e); else sp.hit.set(e, cd - dt);
+      for (const e of R.en) if (!e.dead && !sp.hit.has(e) && Math.hypot(e.x - cx, aimY(e) - cy) < sp.rad + 14 * U) { sp.hit.set(e, 0.3); damage(e, sp.dmg, false, false); fx('fx_spark', e.x, aimY(e), 0.5, 0.15); sfx('hit', 0.05, e.x); }
+      const b = R.boss; if (b && b.arrive >= 1 && !sp.hit.has(b) && Math.hypot(b.x - cx, aimY(b) - cy) < sp.rad + 60 * U) { sp.hit.set(b, 0.25); damage(b, sp.dmg, false, true); }
+      if (k >= 1) sp.dead = true;
+    } else if (sp.k === 'drop') {
+      if (sp.t < sp.delay) continue;
+      sp.z -= sp.vz * dt;
+      if (sp.z <= 0) { sp.dead = true; areaHit(sp.x, sp.y - 6 * P, sp.r, sp.dmg); fx('fx_cut', sp.x, sp.y - 4 * P, 0.5, 0.18); puff(sp.x, sp.y, 1); if (sp.stick && R.decals.length < 30) R.decals.push({ f: sp.spr, x: sp.x, y: sp.y - 3 * P, rot: Math.PI / 2, sc: 1, life: 1.4 }); sfx('hit2', 0.05, sp.x); }
+    } else if (sp.k === 'arc') {
+      if (sp.t < 0) continue;
+      if (sp.t >= sp.T) { sp.dead = true; areaHit(sp.tx, sp.ty - 6 * P, sp.r, sp.dmg); vfx('burst', 'leaf', sp.tx, sp.ty - 6 * P, 0.5, 0.25); puff(sp.tx, sp.ty, 1); if (R.decals.length < 30) R.decals.push({ f: sp.spr, x: sp.tx, y: sp.ty - 3 * P, rot: Math.PI / 2 - 0.4, sc: 1, life: 1.4 }); sfx('hit3', 0.05, sp.tx); }
+    } else if (sp.k === 'column') {
+      if (sp.t < sp.tele) continue;
+      const v = 2600 * U; sp.y -= v * dt;
+      for (const e of R.en) if (!e.dead && !sp.hit.has(e) && Math.abs(e.x - sp.x) < 30 * U && e.y > sp.y) { sp.hit.add(e); e.knock = 20 * U; damage(e, sp.dmg, true, false); vfx('burst', 'magic', e.x, aimY(e), 0.5, 0.25); }
+      const b = R.boss; if (b && !sp.hit.has(b) && Math.abs(b.x - sp.x) < 70 * U && b.y > sp.y) { sp.hit.add(b); damage(b, sp.dmg, true, true); }
+      if (!sp.fx) { sp.fx = 1; R.flash = 0.25; R.shake = 7; sfx('boom', 0); }
+      if (sp.y < -80) sp.dead = true;
+      sp.life = (sp.life || 0) + dt;
+    } else if (sp.k === 'bloom') {
+      if (!sp.done && sp.t >= sp.tele) {
+        sp.done = true; R.flash = 0.15; R.shake = 5; sfx('hit_ice', 0, sp.x); sfx('magic', 0, sp.x, -5);
+        vfx('ring', 'ice', sp.x, sp.y - 6 * P, 2.5, 0.5); vfx('burst', 'ice', sp.x, sp.y - 6 * P, 1.5, 0.4);
+        for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; fx('fx_ice', sp.x + Math.cos(a) * 55 * U, sp.y + Math.sin(a) * 30 * U - 6 * P, 0.5, 0.5); }
+        areaHit(sp.x, sp.y - 6 * P, 95 * U, sp.dmg, e => { e.slow = 3.5; });
+      }
+      if (sp.t > 0.9) sp.dead = true;
+    } else if (sp.k === 'meteor') {
+      if (sp.t >= sp.T) {
+        sp.dead = true; R.shake = Math.max(R.shake, 6); sfx('boom', 0, sp.x); sfx('hit_fire', 0, sp.x);
+        vfx('burst', 'fire', sp.x, sp.y - 8 * P, 1.5, 0.4); vfx('ring', 'fire', sp.x, sp.y - 4 * P, 1.5, 0.45);
+        part({ k: 'anim', a: 'fx_smoke', x: sp.x, y: sp.y + 4 * P, s: 1.5, life: 0.6, max: 0.6, ay: 1, alpha: 0.85 }); bits(sp.x, sp.y - 6 * P, 'q_Fire', 7);
+        areaHit(sp.x, sp.y - 6 * P, 70 * U, sp.dmg, e => { e.burn = 2.5; e.burnD = sp.dmg * 0.1; e.burnT = 0.4; });
+      }
+    } else if (sp.k === 'strike') {
+      if (!sp.done && sp.t >= sp.tele) {
+        sp.done = true; const e = sp.tgt; if (!e || e.dead) { sp.dead = true; continue; }
+        sp.x = e.x; sp.y = aimY(e); R.flash = Math.max(R.flash, 0.12); sfx('magic', 0.05, e.x, 5);
+        vfx('burst', 'ice', sp.x, sp.y, 1, 0.3); fx('fx_thunder', sp.x, sp.y, 0.5, 0.3);
+        damage(e, sp.dmg, false, e === R.boss); if (e !== R.boss) chainBolt(e, sp.dmg * 0.5, 2);
+      }
+      if (sp.t > sp.tele + 0.22) sp.dead = true;
+    }
+  }
+  R.specs = R.specs.filter(sp => !sp.dead);
+}
+function drawSpecs(t) {
+  for (const sp of R.specs) {
+    if (sp.k === 'orbit') {
+      const n = 6;
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.22; spr('vx_glow40_gold', sp.x, sp.y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      for (let i = 0; i < n; i++) {
+        const a = sp.t * 7 + i / n * TAU, x = sp.x + Math.cos(a) * sp.rad, y = sp.y + Math.sin(a) * sp.rad * 0.7;
+        for (let k = 1; k <= 2; k++) { const a2 = a - k * 0.25; ctx.globalAlpha = 0.35 / k; spr('p_Shuriken_0', sp.x + Math.cos(a2) * sp.rad, sp.y + Math.sin(a2) * sp.rad * 0.7, 1, 0.5, 0.5, false, 0, '#fce2ca'); }
+        ctx.globalAlpha = 1; spr(`p_Shuriken_${Math.floor(t * 20 + i) % 2}`, x, y, 1, 0.5, 0.5);
+      }
+    } else if (sp.k === 'drop') {
+      if (sp.t < sp.delay) { ctx.globalAlpha = 0.5; ellipse(sp.x, sp.y, 7 * P, 3 * P); ctx.fillStyle = 'rgba(19,27,27,0.35)'; ctx.fill(); ctx.globalAlpha = 1; continue; }
+      ctx.fillStyle = 'rgba(19,27,27,0.35)'; ellipse(sp.x, sp.y, 6 * P * (1 - sp.z / (400 * U)), 2.5 * P, 0, 0, TAU); ctx.fill();
+      for (let k = 1; k <= 6; k++) { ctx.globalAlpha = 0.5 * (1 - k / 7); prect(sp.x - P / 2, sp.y - sp.z - k * 4 * P, P, 3 * P, '#fce2ca'); }
+      ctx.globalAlpha = 1; spr(sp.spr, sp.x, sp.y - sp.z, sp.sc, 0.5, 0.5, false, Math.PI / 2);
+    } else if (sp.k === 'arc') {
+      if (sp.t < 0) continue;
+      const u = sp.t / sp.T, x = lerp(sp.sx, sp.tx, u), gy = lerp(sp.sy, sp.ty, u), y = gy - Math.sin(Math.PI * u) * sp.hgt;
+      const u2 = Math.min(1, u + 0.02), x2 = lerp(sp.sx, sp.tx, u2), y2 = lerp(sp.sy, sp.ty, u2) - Math.sin(Math.PI * u2) * sp.hgt;
+      ctx.fillStyle = 'rgba(19,27,27,0.3)'; ellipse(x, gy, 5 * P, 2 * P); ctx.fill();
+      spr(sp.spr, x, y, 1, 0.5, 0.5, false, Math.round(Math.atan2(y2 - y, x2 - x) / (Math.PI / 8)) * (Math.PI / 8));
+    } else if (sp.k === 'column') {
+      if (sp.t < sp.tele) {   // telegraph: thin blinking guide line
+        if (Math.floor(t * 20) % 2) for (let y = 140; y < H - 170; y += 4 * P) prect(sp.x - P / 2, y, P, 2 * P, '#d3a2c0');
+        continue;
+      }
+      const a = clamp(1 - (sp.life || 0) / 0.5, 0, 1);
+      ctx.globalAlpha = a * 0.55; prect(sp.x - 9 * P, sp.y, 18 * P, H - sp.y, '#d3a2c0'); ctx.globalAlpha = a; prect(sp.x - 3 * P, sp.y, 6 * P, H - sp.y, '#ffffff'); ctx.globalAlpha = 1;
+      spr('p_BigKunai_0', sp.x, sp.y, 1, 0.5, 0.5, false, -Math.PI / 2);
+    } else if (sp.k === 'bloom') {
+      if (sp.t < sp.tele) { const k = sp.t / sp.tele; ctx.lineWidth = P; ctx.strokeStyle = Math.floor(t * 20) % 2 ? '#8feff1' : '#ffffff'; ellipse(sp.x, sp.y, 95 * U * k, 50 * U * k); ctx.stroke(); }
+    } else if (sp.k === 'meteor') {
+      const u = clamp(sp.t / sp.T, 0, 1);
+      if (sp.t > -0.3) {   // landing marker
+        const pulse = Math.floor(t * 14) % 2;
+        ctx.lineWidth = P; ctx.strokeStyle = pulse ? '#e0394c' : '#ffe18d'; ellipse(sp.x, sp.y, 30 * U, 14 * U); ctx.stroke();
+        ctx.fillStyle = `rgba(224,57,76,${0.12 + 0.2 * u})`; ellipse(sp.x, sp.y, 30 * U * u, 14 * U * u); ctx.fill();
+      }
+      if (sp.t >= 0) {
+        const mx = sp.x + (1 - u) * 160 * U, my = sp.y - 8 * P - (1 - u) * 420 * U;
+        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.5; spr('vx_glow40_fire', mx, my, 1.5, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+        spr(`p_Fireball_${Math.floor(t * 12) % 4}`, mx, my, 2, 0.5, 0.5, false, Math.round((Math.atan2(420, -160) - (-Math.PI / 4)) / (Math.PI / 8)) * (Math.PI / 8));
+        if (Math.random() < 0.7) part({ k: 'float', f: `q_Fire_${Math.floor(Math.random() * (AN.q_Fire || 1))}`, x: mx + rand(-6, 6) * U, y: my + rand(-6, 6) * U, vx: rand(10, 40) * U, vy: rand(-60, -20) * U, life: 0.4, max: 0.4 });
+      }
+    } else if (sp.k === 'strike') {
+      const e = sp.tgt; if (!e) continue;
+      const x = sp.done ? sp.x : e.x, y = sp.done ? sp.y : aimY(e);
+      if (!sp.done) { if (sp.t > -0.05 && Math.floor(t * 24) % 2) { ctx.lineWidth = P; ctx.strokeStyle = '#8feff1'; ellipse(x, y + 8 * P, 12 * P, 5 * P); ctx.stroke(); } continue; }
+      const pts = [[x + rand(-10, 10) * U, 120]]; const seg = 7;
+      for (let i = 1; i < seg; i++) pts.push([x + rand(-16, 16) * U, lerp(120, y, i / seg)]);
+      pts.push([x, y]);
+      for (const [col, sz] of [['#548789', 4], ['#8feff1', 2], ['#ffffff', 1]]) for (let i = 0; i < pts.length - 1; i++) {
+        const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, by - ay) / P);
+        for (let k = 0; k <= n; k++) prect(lerp(ax, bx, k / n) - sz * P / 2, lerp(ay, by, k / n) - sz * P / 2, sz * P, sz * P, col);
+      }
+    }
+  }
 }
 
 // ================================================================ ultimate: Shuriken Storm (charges with kills)
@@ -892,7 +1066,7 @@ function update(dt) {
     if (e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
     else e.stopped = true;
     if (L0) e.dir = e.stopped ? dirOf(L0.x - e.x, L0.y - e.y) : dirOf(dx, dy);
-    if (e.knock > 0) { e.x += e.kx * e.knock; e.y += e.ky * e.knock; e.knock *= 0.5; if (e.knock < 0.3) e.knock = 0; }
+    if (e.knock > 0) { const eb = enemyBox(); e.x = clamp(e.x + e.kx * e.knock, eb.x0 - 20 * U, eb.x1 + 20 * U); e.y = Math.max(e.y + e.ky * e.knock, Math.min(e.y, eb.y0 + 20 * U)); e.knock *= 0.5; if (e.knock < 0.3) e.knock = 0; }
     if (e.kb > 0) {
       const ax = e.x - R.sq.x, ay = e.y - R.sq.y, n = Math.hypot(ax, ay) || 1, m = Math.min(e.kb, 700 * U * dt);
       const p = clampBox({ x: e.x + ax / n * m, y: e.y + ay / n * m }, enemyBox()); e.x = p.x; e.y = p.y; e.kb -= m;
@@ -956,6 +1130,9 @@ function update(dt) {
   R.bolts = R.bolts.filter(b => b.life > 0);
   for (const d of R.decals) d.life -= dt;
   R.decals = R.decals.filter(d => d.life > 0);
+  updateSpecs(dt);
+  if (evolved() && !ko && (R.en.length || (R.boss && R.boss.arrive >= 1))) { R.specT -= dt; if (R.specT <= 0) R.specT = castSpecial() ? 5.5 : 1; }
+  if (R.cheerT > 0) R.cheerT -= dt;
   updateEnemyShots(dt);
   for (const p of R.parts) {
     p.life -= dt;
@@ -1023,11 +1200,13 @@ function render() {
       ctx.globalAlpha = 1;
     } else {
       const sq = R.sq, ko = sq.ko > 0;
-      const fr = o.atk > 0 ? 'a' : o.moving ? String(Math.floor(o.walk) % 4) : '0';
-      const name = `h_${o.id}_${o.dir}${fr}`;
+      const hop = (R.ultT > 0 || R.cheerT > 0) && sq.ko <= 0;
+      const fr = o.atk > 0 ? 'a' : hop ? 'j' : o.moving ? String(Math.floor(o.walk) % 4) : '0';
+      const name = `h_${o.id}_${R.cheerT > 0 && o.atk <= 0 ? 'd' : o.dir}${fr}`;
+      const lift = hop ? Math.round(Math.abs(Math.sin(t * 7 + o.ph)) * 6) * P : 0;
       // recoil: one art pixel back, away from the throw
       const rx = o.recoil > 0 ? -Math.round(Math.cos(o.ang)) * P : 0, ry = o.recoil > 0 ? -Math.round(Math.sin(o.ang)) * P : 0;
-      const hx = o.x + rx, hy = o.y + ry;
+      const hx = o.x + rx, hy = o.y + ry - lift;
       ctx.globalAlpha = ko ? 0.4 : (sq.inv > 0 && Math.floor(t * 14) % 2 === 0) ? 0.5 : 1;
       spr(name, hx, hy);
       if (sq.hit > 0 && !ko) spr(name, hx, hy, 1, 0.5, 1, false, 0, '#ffffff');
@@ -1036,6 +1215,7 @@ function render() {
     }
   }
   drawShots(t);
+  drawSpecs(t);
   // chain lightning: pixel bolts (square dots along a jagged path, outer glow + white core)
   for (const b of R.bolts) {
     const seg = 6, pts = [[b.x0, b.y0]];
@@ -1048,7 +1228,12 @@ function render() {
   }
   // thrown weapons: fading ghost trail, then the weapon (never freely rotated: spin = frame flip, else 16 directions)
   for (const q of R.bul) {
-    const g = q.g, n = AN['p_' + g.spr] || 1, sc = g.sc || 1;
+    const g = q.g, n = AN['p_' + g.spr] || 1, sc = q.sc || g.sc || 1;
+    if (g.glow && (q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + 0.1 * Math.sin(q.age * 20);
+      spr(`vx_glow${q.special || evolved() ? 40 : 24}_${g.glow}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    }
     const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
     const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
     if (g.trail === 'line') {
@@ -1106,7 +1291,7 @@ function drawHeld(o, x, y) {
   const ux = o.dir === 'l' ? -1 : o.dir === 'r' ? 1 : 0, uy = o.dir === 'u' ? -1 : o.dir === 'd' ? 1 : 0;
   let px = x + (o2[0] + ux * push) * P, py = y + (o2[1] + uy * push + (o.atk > 0 ? 0 : 2)) * P;
   if (g.held === 'wh_Bow' && o.dir === 'u') { px = x; py = y - (17 + push) * P; }   // bow raised above the head when shooting up
-  if (g.held) spr(g.held, px, py, 1, 0.5, 0.5, false, HELD_ROT[o.dir] || 0);
+  if (g.held) spr(g.held, px, py, 1, 0.5, 0.5, false, g.held === 'wh_Book' ? 0 : (HELD_ROT[o.dir] || 0));
   else if (o.wind > 0) spr(`p_${g.spr}_0`, px, py, 0.5, 0.5, 0.5, false, g.spin ? 0 : (FACE_ANG[o.dir] || 0) - (g.ori || 0));
 }
 function drawBar(cx, y, w, f, col = '#e0394c', lag = 0) {
@@ -1241,10 +1426,11 @@ function updateUI(dt) {
   // ultimate meter
   const ub = $('ultBtn'); ub.querySelector('i').style.height = Math.round(R.ult * 100) + '%';
   $('hint').style.visibility = R.boss ? 'hidden' : '';
+  if (R.t > 20 && !$('hint').classList.contains('gone')) { $('hint').classList.add('gone'); try { localStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }
   ub.classList.toggle('full', R.ult >= 1 && R.ultT <= 0); ub.classList.toggle('active', R.ultT > 0);
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
-  note('[data-open="guns"]', save.gun < GUNS.length - 1 && save.gems >= GUNS[save.gun + 1].cost);
+  note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
   note('[data-open="team"]', save.team < TEAM.length && save.money >= TEAM[save.team].cost);
   note('[data-open="rebirth"]', rebirthGain() > 0 && R.bossFails >= 2);
   // first steps
@@ -1288,6 +1474,12 @@ function closePanel() { if (!$('panel').classList.contains('hidden')) sfx('close
 $('pClose').onclick = () => closePanel();
 $('panel').addEventListener('pointerdown', e => { if (e.target.id === 'panel') closePanel(); });
 // new weapon: a short celebration so the upgrade is felt, not just read
+function evolveMoment(g) {
+  banner(`<img class="bimg" src="assets/ui/wi_${g.spr}.png" alt="">EVRİM!`, `${g.evo.name} · ${g.evo.desc}`);
+  sfx('skill', 0); setTimeout(() => sfx('win', 0), 300);
+  R.flash = 0.45; R.stop = 0.2; R.shake = 6; R.cheerT = 2; R.specT = 1.2;
+  for (const h of R.heroes) { vfx('ring', g.glow || 'gold', h.x, h.y - 8 * P, 1.5, 0.6); vfx('burst', g.glow || 'gold', h.x, h.y - 10 * P, 1, 0.45); fx('fx_aura', h.x, h.y, 1, 0.6, 1); }
+}
 function unlockMoment(g) {
   banner(`<img class="bimg" src="assets/ui/wi_${g.spr}.png" alt="">YENİ SİLAH`, g.name + ' · ' + g.tags.join(' · '));
   sfx('bonus', 0); setTimeout(() => sfx('skill', 0), 250);
@@ -1347,18 +1539,33 @@ function startPreview(canvas, gi) {
 }
 const PANELS = {
   guns: (sel) => openPanel('Silahlar', 'blue', body => {
-    const show = sel === undefined ? Math.min(save.gun + 1, GUNS.length - 1) : sel;
-    const pv = el(`<div class="wprev"><canvas></canvas><div class="wcap"><b>${GUNS[show].name}</b><span>${GUNS[show].tags.join(' · ')}</span></div></div>`);
+    const show = sel === undefined ? save.gun : sel;
+    const sg = GUNS[show], evoTxt = evolved(show) ? `EVRİM: ${sg.evo.name}` : sg.tags.join(' · ');
+    const pv = el(`<div class="wprev"><canvas></canvas><div class="wcap"><b>${evolved(show) ? sg.evo.name : sg.name}</b><span>${evoTxt}</span></div></div>`);
     body.appendChild(pv); startPreview(pv.querySelector('canvas'), show);
     GUNS.forEach((g, i) => {
-      const owned = i <= save.gun, next = i === save.gun + 1;
-      const row = el(`<div class="row-card ${i === save.gun ? 'cur' : ''} ${owned || next ? '' : 'lock'} ${i === show ? 'sel' : ''}"><div class="ico tile"><img src="assets/ui/wi_${g.spr}.png" alt=""></div>
-        <div class="info"><h4>${g.name}</h4><p>Hasar x${fmt(g.mult)} · ${g.tags.join(' · ')}</p></div>
-        ${i === save.gun ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn grey off">AÇILDI</button>' : next ? `<button class="btn yellow"><img src="assets/ui/gem.png" alt="">${g.cost}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
+      const owned = i <= save.wbest, next = i === save.wbest + 1, cur = i === save.gun, st = star(i), evo = evolved(i);
+      const stars = owned ? `<div class="stars">${[1, 2, 3, 4, 5].map(k => `<i class="${k <= st ? 'on' : ''}"></i>`).join('')}</div>` : '';
+      const nextTxt = !owned ? g.tags.join(' · ') : evo ? `<b class="evo">${g.evo.name}</b> · ${g.evo.desc}` : st === 2 ? `★3: +1 atış` : st === 4 ? `★5: Evrim → ${g.evo.name}` : `★${st + 1}: +%30 hasar`;
+      let btn;
+      if (cur && st < 5) btn = `<button class="btn yellow up"><img src="assets/ui/gem.png" alt="">${starCost(i, st)}</button>`;
+      else if (cur) btn = '<button class="btn purple off">EVRİM</button>';
+      else if (owned) btn = '<button class="btn green eq">TAK</button>';
+      else if (next) btn = `<button class="btn yellow buy"><img src="assets/ui/gem.png" alt="">${g.cost}</button>`;
+      else btn = '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>';
+      const row = el(`<div class="row-card ${cur ? 'cur' : ''} ${owned || next ? '' : 'lock'} ${i === show ? 'sel' : ''} ${evo ? 'evolved' : ''}"><div class="ico tile"><img src="assets/ui/wi_${g.spr}.png" alt=""></div>
+        <div class="info"><h4>${evo ? g.evo.name : g.name}</h4>${stars}<p>Hasar x${fmt(g.mult)} · ${nextTxt}</p></div>${btn}</div>`);
       row.querySelector('.ico').onclick = row.querySelector('.info').onclick = () => { sfx('tick', 0); PANELS.guns(i); };
-      if (next) row.querySelector('.btn').onclick = () => {
+      const b = row.querySelector('.btn');
+      if (b.classList.contains('up')) b.onclick = () => {
+        const c = starCost(i, st); if (save.gems < c) { sfx('no'); toast('Yeterli elmas yok'); return; }
+        save.gems -= c; save.wstar[i] = st + 1; persist(); uiKey = '';
+        if (st + 1 >= 5) { closePanel(); evolveMoment(g); } else { sfx('buy', 0, undefined, PENTA[st + 2]); vfx('burst', g.glow || 'gold', W / 2, H / 2, 1, 0.3); PANELS.guns(i); }
+      };
+      if (b.classList.contains('eq')) b.onclick = () => { save.gun = i; persist(); uiKey = ''; sfx('accept', 0); PANELS.guns(i); };
+      if (b.classList.contains('buy')) b.onclick = () => {
         if (save.gems < g.cost) { sfx('no'); toast('Yeterli elmas yok'); return; }
-        save.gems -= g.cost; save.gun = i; persist(); uiKey = ''; closePanel(); unlockMoment(g);
+        save.gems -= g.cost; save.wbest = i; save.gun = i; persist(); uiKey = ''; closePanel(); unlockMoment(g);
       };
       body.appendChild(row);
     });

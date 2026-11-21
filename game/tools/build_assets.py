@@ -107,6 +107,7 @@ for h in HEROES:
         for r in range(4):
             add(f'h_{h}_{d}{r}', sh.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16)))
         add(f'h_{h}_{d}a', sh.crop((c * 16, 64, c * 16 + 16, 80)))
+        add(f'h_{h}_{d}j', sh.crop((c * 16, 80, c * 16 + 16, 96)))
     save_ui(f'face_{h}', load(A('Actor', 'Characters', h, 'Faceset.png')), 3)
 add('shadow', load(A('Actor', 'Characters', 'Shadow.png')))
 
@@ -239,6 +240,73 @@ for code in range(33, 127):
         a[O] = (19, 27, 27, 255)
         a[M] = c + (255,)
         add(f'g{k}_{code}', Image.fromarray(a, 'RGBA'))
+
+# ------------------------------------------------------------------ generated pixel VFX (pack palette, ordered dithering)
+# The pack has few large effects, so glows, bursts and shock rings are generated here on the pixel grid with a
+# 4x4 Bayer matrix: hard edges and dithered falloff, so they sit next to the hand-drawn art.
+BAYER = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0
+VCOL = {'gold': ['#ff9554', '#ffe18d', '#ffffff'], 'ice': ['#548789', '#8feff1', '#ffffff'], 'fire': ['#d14b34', '#ff9554', '#ffe18d'],
+        'magic': ['#a5608b', '#d3a2c0', '#ffffff'], 'leaf': ['#56864c', '#adbc3a', '#ffffff'], 'ink': ['#46402e', '#8d977f', '#fce2ca']}
+
+
+def rgba(h):
+    return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
+
+
+def dith_layers(level, size):
+    """level: float array 0..3 -> image using palette layers with dithered borders."""
+    by = np.tile(BAYER, (size // 4 + 1, size // 4 + 1))[:size, :size]
+    return np.floor(level + by - 0.5).clip(0, 3).astype(int)
+
+
+for name, cols in VCOL.items():
+    pal = [None] + [rgba(c) for c in cols]
+    # glow blob (drawn additively behind projectiles)
+    for sz in (24, 40):
+        yy, xx = np.mgrid[0:sz, 0:sz] + 0.5
+        d = np.hypot(xx - sz / 2, yy - sz / 2) / (sz / 2)
+        L = dith_layers(np.clip(1 - d, 0, 1) ** 1.2 * 3.4, sz)
+        im = np.zeros((sz, sz, 4), np.uint8)
+        for k in (1, 2, 3):
+            im[L == k] = pal[k]
+        add(f'vx_glow{sz}_{name}', Image.fromarray(im, 'RGBA'))
+    # starburst impact: 8 frames, rays grow then thin out, core shrinks
+    sz, n = 48, 8
+    for f in range(n):
+        t = f / (n - 1)
+        yy, xx = np.mgrid[0:sz, 0:sz] + 0.5
+        dx, dy = xx - sz / 2, yy - sz / 2
+        r = np.hypot(dx, dy); a = np.arctan2(dy, dx)
+        reach = (0.35 + 0.65 * min(1, t * 2.2)) * sz / 2
+        width = (1 - t) * 0.22 + 0.04
+        ang = np.abs(((a + np.pi / 8) % (np.pi / 4)) - np.pi / 8)
+        long_ = (np.round((a + np.pi) / (np.pi / 4)) % 2 == 0)
+        ray = (ang < width * (1 - r / reach)) & (r < reach * np.where(long_, 1, 0.6))
+        core = r < (1 - t) ** 1.5 * sz * 0.2
+        L = np.zeros((sz, sz), int)
+        L[ray] = np.where(r[ray] < reach * 0.45, 3, 2)
+        L[core] = 3
+        edge = (r < (1 - t) ** 1.5 * sz * 0.2 + 2) & ~core & (t < 0.6)
+        L[edge & (L == 0)] = 1
+        im = np.zeros((sz, sz, 4), np.uint8)
+        for k in (1, 2, 3):
+            im[L == k] = pal[k]
+        add(f'vx_burst_{name}_{f}', Image.fromarray(im, 'RGBA'))
+    anim[f'vx_burst_{name}'] = n
+    # shock ring: 8 frames, dithered thinning ring
+    sz = 64
+    for f in range(n):
+        t = f / (n - 1)
+        yy, xx = np.mgrid[0:sz, 0:sz] + 0.5
+        r = np.hypot(xx - sz / 2, yy - sz / 2)
+        R0 = 4 + t * (sz / 2 - 5); th = 4 * (1 - t) + 1
+        v = np.clip(1 - np.abs(r - R0) / th, 0, 1) * 3.3 * (1 - t * 0.5)
+        L = dith_layers(v, sz)
+        im = np.zeros((sz, sz, 4), np.uint8)
+        for k in (1, 2, 3):
+            im[L == k] = pal[k]
+        add(f'vx_ring_{name}_{f}', Image.fromarray(im, 'RGBA'))
+    anim[f'vx_ring_{name}'] = n
 
 # ------------------------------------------------------------------ pack the atlas (shelf packer, 2px gutter)
 pieces.sort(key=lambda p: (-p[1].height, -p[1].width))

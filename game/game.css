@@ -264,3 +264,15 @@ h2,h3,h4{margin:0;font-weight:700}
 .row-card.sel{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--blue)}
 .row-card .ico,.row-card .info{cursor:pointer}
 #banner .bimg{display:block;width:72px;height:72px;margin:0 auto 8px;image-rendering:pixelated;filter:drop-shadow(0 4px 0 var(--ink))}
+
+/* weapon stars + evolution */
+.stars{display:flex;gap:2px;margin:2px 0 1px}
+.stars i{width:12px;height:12px;background:var(--sage2);clip-path:polygon(50% 0,64% 34%,100% 36%,72% 60%,82% 100%,50% 78%,18% 100%,28% 60%,0 36%,36% 34%)}
+.stars i.on{background:var(--gold)}
+.row-card.evolved .stars i.on{background:var(--purple)}
+.row-card .evo{color:var(--purple)}
+.row-card.evolved .ico.tile{background:var(--purple)}
+#evoTag{position:absolute;left:0;right:0;top:calc(196px + var(--safe-t));text-align:center;font-size:20px;color:var(--gold2);opacity:0;pointer-events:none;
+  text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink),0 4px 0 var(--ink)}
+#evoTag.show{animation:evoTag 1.4s steps(1,end) forwards,bannerIn .2s steps(3) both}
+@keyframes evoTag{0%{opacity:1}80%{opacity:1}100%{opacity:0}}
