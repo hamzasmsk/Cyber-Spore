@@ -7,14 +7,15 @@
 .ribbon.purple{--c1:#d29bff;--c2:#8d50ea;--edge:#5a2aa8}
 
 /* side columns: when many feature buttons exist, wrap into a second column instead of running under the HUD */
-.side{top:calc(132px + var(--safe-t));justify-content:flex-end;align-content:flex-start;column-gap:8px}
-.side.left{flex-wrap:wrap}
-.side.right{flex-wrap:wrap-reverse}
+.side{top:auto;bottom:calc(150px + var(--safe-b));gap:6px;flex-wrap:nowrap}
+.side .sbtn{width:54px;height:54px;border-radius:16px}
+.side .sbtn img,.side .sbtn canvas{width:30px;height:26px}
+.side .sbtn span{font-size:11.5px}
 @media (max-height:700px){
-  .side{gap:6px;column-gap:6px}
-  .side .sbtn{width:56px;height:56px;border-radius:16px}
-  .side .sbtn img,.side .sbtn canvas{width:30px;height:26px}
-  .side .sbtn span{font-size:12px}
+  .side{gap:5px;bottom:calc(140px + var(--safe-b))}
+  .side .sbtn{width:48px;height:48px;border-radius:14px}
+  .side .sbtn img,.side .sbtn canvas{width:26px;height:22px}
+  .side .sbtn span{font-size:10.5px}
 }
 
 /* small count badge on side buttons */
@@ -129,3 +130,6 @@
 .fb-tab.on{color:#fff;background:linear-gradient(#ffb8d6,#f0609c);border:3px solid var(--ink);box-shadow:inset 0 -4px 0 #b02e68;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
 .fb-skin .ico canvas{width:64px;height:50px}
 .fb-skin .btn{min-width:84px}
+
+/* settings gear in the top row (moved there by layout.js) */
+#settingsTop svg,#settingsTop img{width:26px;height:26px}

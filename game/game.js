@@ -57,7 +57,7 @@ function heroBox() {
   return { x0: 34 * U, x1: W - 34 * U, y0, y1 };
 }
 // area enemies may stand in (a bit looser at the top so they stay visible under the HUD)
-function enemyBox() { return { x0: 30 * U, x1: W - 26 * U, y0: 150 + 40 * U, y1: Math.max(260, H - 170) }; }
+function enemyBox() { return { x0: 74 * U, x1: W - 74 * U, y0: 150 + 50 * U, y1: Math.max(300, H - 190) }; }   // inside the side button columns
 // the squad keeps out from under the side button columns (rects re-read twice a second; plugins may add buttons)
 let sideRects = [], sideT = 0;
 function avoidSides(p, half) {
@@ -311,7 +311,7 @@ function spawnEnemy() {
   const p = spawnPoint(lane);
   puff(p.x, p.y - 20 * U, 0.45);
   const hp = enemyHp() * (d.hp || 1);
-  R.en.push({ id: R.nextId++, type, d, x: p.x, y: p.y, lane, hp, maxHp: hp, sp: 75 * U * (d.spd || 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 1, ky: 0, kb: 0, age: 0, sc: (d.sc || 1) * 1.4 * U, hopT: rand(0, 1),
+  R.en.push({ id: R.nextId++, type, d, x: p.x, y: p.y, lane, hp, maxHp: hp, sp: 75 * U * (d.spd || 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 1, ky: 0, kb: 0, age: 0, sc: (d.sc || 1) * 1.2 * U, hopT: rand(0, 1),
     ranged: !!RANGED[type], stopped: false, atk: rand(1.4, 2.6), wind: 0 });
 }
 function startBoss() {
@@ -512,7 +512,7 @@ function updateSquad(dt) {
 function lob(e) {
   const L = R.heroes[0]; if (!L) return;
   const tx = L.x + rand(-14, 14) * U + R.sq.vx * 0.25, ty = L.y + rand(-8, 8) * U + R.sq.vy * 0.25;
-  R.eb.push({ k: 'lob', sx: e.x, sy: e.y - 30 * U * (e.sc / (1.4 * U)), tx, ty, t: 0, T: 1.3, col: e.d.col, r: 11 * U, dmg: hpBase() * 0.09 });
+  R.eb.push({ k: 'lob', sx: e.x, sy: e.y - 30 * U * (e.sc / (1.2 * U)), tx, ty, t: 0, T: 1.3, col: e.d.col, r: 11 * U, dmg: hpBase() * 0.09 });
   sfx('lob', 0.1);
 }
 function orb(x, y, a, sp, col, dmg, r = 12) { R.eb.push({ k: 'orb', x, y, vx: Math.cos(a) * sp * U, vy: Math.sin(a) * sp * U, r: r * U, col, dmg, life: 7 }); }
@@ -620,7 +620,7 @@ function update(dt) {
   const b = R.boss;
   if (b) {
     b.anim += dt; if (b.flash > 0) b.flash -= dt;
-    if (b.arrive < 1) { b.arrive = Math.min(1, b.arrive + dt / 1.4); const p = along(F.A, lerp(40, -260, b.arrive) * U, 0); b.x = p.x; b.y = p.y; if (b.arrive >= 1) R.shake = 14; }
+    if (b.arrive < 1) { b.arrive = Math.min(1, b.arrive + dt / 1.4); const p = along(F.A, lerp(40, -330, b.arrive) * U, 0); b.x = p.x; b.y = p.y; if (b.arrive >= 1) R.shake = 14; }
     else { b.t -= dt; if (b.t <= 0) bossFail(); else if (!ko) updateBossAI(b, dt); }
   }
   if (R.leavingBoss) { const lb = R.leavingBoss; lb.leaving += dt; lb.x += F.dir.x * 300 * U * dt; lb.y += F.dir.y * 300 * U * dt; if (lb.leaving > 2) R.leavingBoss = null; }
@@ -718,7 +718,7 @@ function render() {
       if (o.wind > 0) { ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 40); sprT('en_' + fr, o.d.col, o.x, o.y + bob, o.sc * pop, 0.5, 1, flip, 0, esx, esy); ctx.globalAlpha = 1; }
       if (o.hp < o.maxHp) { const w = 44 * U, yy = o.y + bob - 70 * o.sc; ctx.fillStyle = INK; rrect(o.x - w / 2 - 2, yy - 2, w + 4, 9 * U, 4); ctx.fill(); ctx.fillStyle = '#ff4d63'; rrect(o.x - w / 2, yy, w * Math.max(0, o.hp / o.maxHp), 5 * U, 2.5); ctx.fill(); }
     } else if (it.k === 1) {
-      const sc = 0.8 * U, br = Math.sin(t * 3) * 0.03;
+      const sc = 0.68 * U, br = Math.sin(t * 3) * 0.03;
       ctx.globalAlpha = o.leaving ? Math.max(0, 1 - o.leaving / 2) : 1;
       ctx.fillStyle = 'rgba(20,20,30,0.25)'; ctx.beginPath(); ctx.ellipse(o.x, o.y, 90 * U, 20 * U, 0, 0, TAU); ctx.fill();
       spr('boss_' + o.key, o.x, o.y + 6 * U, sc, 0.5, 1, false, Math.sin(t * 2) * 0.03, 1 + br, 1 - br);
@@ -956,7 +956,7 @@ function updateUI() {
     const bt = $('bossTime'); bt.textContent = Math.max(0, Math.ceil(R.boss.t)); bt.classList.toggle('low', R.boss.t < 8);
   }
   drawGunIcon(document.querySelector('.gunico'), save.gun);
-  $('soundIco').src = 'assets/ui/' + (save.sound ? 'ic_sound_on' : 'ic_sound_off') + '.png';
+  const si = $('soundIco'); if (si) si.src = 'assets/ui/' + (save.sound ? 'ic_sound_on' : 'ic_sound_off') + '.png';
 }
 function buy(k) {
   const lv = save.lv[k], cost = COST[k](lv);
