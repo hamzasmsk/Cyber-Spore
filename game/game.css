@@ -27,7 +27,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(--text);font:700 16px/1.15 var(--font);
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none}
-canvas#c{position:fixed;inset:0;display:block;touch-action:none}
+canvas#c{position:fixed;left:0;top:0;display:block;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated}
 .hidden{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;letter-spacing:inherit}
 img{-webkit-user-drag:none;user-select:none;pointer-events:none;image-rendering:crisp-edges;image-rendering:pixelated}
@@ -156,10 +156,10 @@ h2,h3,h4{margin:0;font-weight:700}
 .side{position:absolute;bottom:calc(150px + var(--safe-b));display:flex;flex-direction:column;gap:4px}
 .side.left{left:max(6px,var(--safe-l))}
 .side.right{right:max(6px,var(--safe-r))}
-.sbtn{position:relative;width:56px;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(var(--drop))}
+.sbtn{position:relative;width:56px;display:flex;flex-direction:column;align-items:center}
 .sbtn img{width:48px;height:48px;display:block;padding:3px;box-sizing:content-box;background:var(--ink);clip-path:var(--notch)}
 .sbtn span{position:relative;z-index:1;margin-top:-7px;font-size:12px;line-height:1;color:var(--cream);text-shadow:var(--o-sm);white-space:nowrap}
-.sbtn:active{transform:translateY(3px);filter:none}
+.sbtn:active{transform:translateY(3px)}
 .sbtn.on img{background:var(--gold)}
 .sbtn.ready{animation:pulse .8s steps(2) infinite}
 .sbtn.ready img{background:var(--gold2)}
@@ -202,3 +202,25 @@ h2,h3,h4{margin:0;font-weight:700}
 .row-card .btn img{height:18px}
 .big-note{text-align:center;font-size:14px;color:var(--muted);margin:0}
 .big-num{text-align:center;font-size:40px;line-height:1;color:var(--gold2);text-shadow:var(--o);padding:4px 0}
+
+/* stage row: auto-boss toggle · region label · boss button */
+.stagerow{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.stagerow .stage{flex:1;text-align:center}
+.pill{display:flex;align-items:center;gap:4px;height:30px;padding:0 8px 0 3px;background:rgba(19,27,27,.82);clip-path:var(--notch);font-size:13px;color:var(--cream);text-shadow:var(--o-sm)}
+.pill img{width:24px;height:24px}
+.pill.on{background:var(--green)}
+.pill.boss.locked{opacity:.55}
+.pill.boss.locked img{filter:grayscale(1)}
+.pill.boss.ready{background:var(--red);animation:blink2 .9s steps(2) infinite}
+.pill:active{transform:translateY(2px)}
+/* control badge + first-time hint above the card tray */
+#ctrl{position:absolute;left:50%;bottom:calc(140px + var(--safe-b));transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;
+  background:rgba(19,27,27,.7);clip-path:var(--notch);font-size:12px;color:var(--cream);text-shadow:var(--o-sm)}
+#ctrl i{width:8px;height:8px;background:var(--green)}
+#ctrl.manual i{background:var(--gold2)}
+#ctrl.manual{color:var(--gold2)}
+#hint{position:absolute;left:70px;right:70px;bottom:calc(166px + var(--safe-b));text-align:center;font-size:13px;color:var(--cream);text-shadow:var(--o-sm);animation:blink3 1.6s steps(2) infinite}
+#hint.gone{display:none}
+@keyframes blink3{50%{opacity:.6}}
+.row-card .ico.tile{background:var(--ink);padding:0}
+.row-card .ico.tile img{width:46px;height:46px;max-width:none;max-height:none}

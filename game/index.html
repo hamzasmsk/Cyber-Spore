@@ -22,14 +22,18 @@
   <div class="top">
     <div class="pbar"><i id="subFill"></i><span id="subPct">0%</span></div>
     <div class="toprow">
-      <button class="rbtn wood" id="soundBtn" aria-label="Ayarlar"><img src="assets/ui/ic_settings.png" alt=""></button>
+      <button class="rbtn wood" id="soundBtn" aria-label="Ayarlar"><img src="assets/ui/ic_gear.png" alt=""></button>
       <div class="nodes" id="nodes"></div>
       <div class="wallet">
         <div class="chip money"><img src="assets/ui/coin.png" alt=""><b id="money">0</b></div>
         <div class="chip gems"><img src="assets/ui/gem.png" alt=""><b id="gems">0</b></div>
       </div>
     </div>
-    <div class="stage" id="stageLbl">Bambu Vadisi · 1-1</div>
+    <div class="stagerow">
+      <button class="pill" id="autoBtn"><img src="assets/ui/ic_auto.png" alt=""><span>OTO</span></button>
+      <div class="stage" id="stageLbl">Bambu Vadisi · 1-1</div>
+      <button class="pill boss" id="bossBtn"><img id="bossBtnImg" src="assets/ui/boss_GiantSlime2.png" alt=""><span>BOSS</span></button>
+    </div>
     <div id="bossHud" class="hidden">
       <img id="bossImg" src="assets/ui/boss_GiantSlime2.png" alt="">
       <div class="bossbar"><i id="bossFill"></i><span id="bossHpTxt"></span></div>
@@ -39,12 +43,10 @@
 
   <div class="side left">
     <button class="sbtn" data-open="rebirth"><img src="assets/ui/ic_rebirth.png" alt=""><span>Doğuş</span></button>
-    <button class="sbtn" data-open="guns"><img class="gunico" src="assets/ui/ic_weapon.png" alt=""><span>Silah</span></button>
+    <button class="sbtn" data-open="guns"><img class="gunico" src="assets/ui/wi_Shuriken.png" alt=""><span>Silah</span></button>
     <button class="sbtn" data-open="team"><img src="assets/ui/ic_team.png" alt=""><span>Takım</span></button>
   </div>
   <div class="side right">
-    <button class="sbtn" id="autoBtn"><img src="assets/ui/ic_auto.png" alt=""><span>Oto</span></button>
-    <button class="sbtn" id="bossBtn"><img id="bossBtnImg" src="assets/ui/boss_GiantSlime2.png" alt=""><span>Boss</span></button>
   </div>
 
   <div class="cards">
@@ -52,6 +54,8 @@
     <button class="ucard" data-up="speed"><div class="lbl"><img src="assets/ui/ic_rate.png" alt=""><span>Hız</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin.png" alt=""><b>0</b></div></button>
     <button class="ucard" data-up="money"><div class="lbl"><img src="assets/ui/ic_money.png" alt=""><span>Para</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin.png" alt=""><b>0</b></div></button>
   </div>
+  <div id="ctrl"><i></i><span>Otomatik</span></div>
+  <div id="hint">Sürükle: kontrol sende · Bırak: manga kendi savaşır</div>
   <div id="banner"></div>
   <div id="toast"></div>
 </div>

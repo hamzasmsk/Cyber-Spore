@@ -25,6 +25,7 @@ import subprocess
 import sys
 import tempfile
 
+import numpy as np
 from PIL import Image
 
 NA = sys.argv[1] if len(sys.argv) > 1 else '/home/user/na/src/Assets/Art/Ninja Adventure - Asset Pack'
@@ -210,6 +211,29 @@ for i, n in enumerate(['flower_sun', 'flower_sun2', 'clover', 'flower_red', 'lea
 for n, (sh, x0, y0, x1, y1) in DECOR.items():
     add('d_' + n, trim(sh.crop((x0, y0, x1, y1))))
 
+# ------------------------------------------------------------------ bitmap font for in-canvas numbers (pack font8x8, ASCII 32..)
+# each glyph is trimmed to its width, given a 1px ink outline and baked in 4 colours: g<colour>_<charcode>
+FONT8 = load(A('Ui', 'Font', 'font8x8.png'))
+GCOL = {'w': (252, 226, 202), 'y': (255, 225, 141), 'r': (239, 149, 151), 'o': (255, 149, 84)}
+for code in range(33, 127):
+    i = code - 32
+    cell = np.array(FONT8.crop(((i % 15) * 8, (i // 15) * 8, (i % 15) * 8 + 8, (i // 15) * 8 + 8)))[:, :, 3] > 0
+    if not cell.any():
+        continue
+    cs = np.where(cell.any(0))[0]
+    m = cell[:, cs[0]:cs[-1] + 1]
+    M = np.zeros((m.shape[0] + 2, m.shape[1] + 2), bool)
+    M[1:-1, 1:-1] = m
+    O = M.copy()
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            O |= np.roll(np.roll(M, dy, 0), dx, 1)
+    for k, c in GCOL.items():
+        a = np.zeros(M.shape + (4,), np.uint8)
+        a[O] = (19, 27, 27, 255)
+        a[M] = c + (255,)
+        add(f'g{k}_{code}', Image.fromarray(a, 'RGBA'))
+
 # ------------------------------------------------------------------ pack the atlas (shelf packer, 2px gutter)
 pieces.sort(key=lambda p: (-p[1].height, -p[1].width))
 AW, x, y, rowh, pad = 1024, 0, 0, 0, 2
@@ -281,6 +305,38 @@ save_ui('lock', glyph(['...oooooo...', '..oxxxxxxo..', '.oxo....oxo.', '.oxo....
 save_ui('play', glyph(['oo..........', 'oxoo........', 'oxxxoo......', 'oxxxxxoo....', 'oxxxxxxxoo..', 'oxxxxxxxxxo.',
                        'oxxxxxxxxxo.', 'oxxxxxxxoo..', 'oxxxxxoo....', 'oxxxoo......', 'oxoo........', 'oo..........'],
                       {'o': INK, 'x': CREAM}))
+
+# weapon icon tiles in the pack's icon style (one per weapon tier)
+for w, src in {'Shuriken': 'Items&Weapon/Shuriken', 'Kunai': 'Items&Weapon/Kunai', 'Arrow': 'Items&Weapon/Arrow',
+               'BigKunai': 'Spell/Cut', 'ShurikenMagic': 'Spell/OrbLight', 'IceSpike': 'Spell/BookIce',
+               'Fireball': 'Spell/Fireball', 'BigEnergyBall': 'Spell/OrbWater'}.items():
+    save_ui(f'wi_{w}', load(os.path.join(ICON, src + '.png')))
+# settings: a cog drawn in the pack's icon-tile style (the pack has no gear icon), computed on the pixel grid
+def gear_icon():
+    import math
+    T = np.zeros((24, 24, 4), np.uint8)
+    T[1:22, 1:23] = (84, 135, 137, 255)
+    T[21, 1:23] = (45, 105, 123, 255)
+    for (y, x) in [(1, 1), (1, 22), (21, 1), (21, 22)]:
+        T[y, x] = (0, 0, 0, 0)
+    cx, cy = 11.5, 10.5
+    yy, xx = np.mgrid[0:24, 0:24]
+    r = np.hypot(xx - cx, yy - cy)
+    ang = (np.degrees(np.arctan2(yy - cy, xx - cx)) + 360) % 45
+    tooth = (np.minimum(ang, 45 - ang) < 8) & (r <= 8.8)
+    body = ((r <= 6.4) | tooth) & (r >= 3.1)
+    out = body.copy()
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            out |= np.roll(np.roll(body, dy, 0), dx, 1)
+    T[out & ~body] = (19, 27, 27, 255)
+    T[body] = (242, 234, 241, 255)
+    T[body & (yy - cy > 2.5) & (r > 4.5)] = (184, 220, 229, 255)
+    T[3, 4] = T[18, 19] = (184, 220, 229, 255)
+    return Image.fromarray(T, 'RGBA')
+
+
+save_ui('ic_gear', gear_icon())
 
 # 9-slice frames (4x) + palette-swapped button colours
 TW = A('Ui', 'Theme', 'ThemeWood')
