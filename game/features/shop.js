@@ -58,7 +58,7 @@ function boot() {
       root.appendChild(SS.el('<h3 class="fb-sec"><img src="assets/ui/coin_gold.png" alt="">Altın Paketleri</h3>'));
       const packRows = PACKS.map(p => {
         const row = SS.el(`<div class="row-card fb-pack"><div class="ico"><img src="assets/ui/${p.img}" alt="" class="fb-pile"><img src="assets/ui/${p.img}" alt="" class="fb-pile b"></div>
-          <div class="info"><h4>${p.name}${p.tag ? `<em class="fb-tag">${p.tag}</em>` : ''}</h4><p><b class="fb-amt"></b> · ${p.min >= 60 ? p.min / 60 + ' saatlik' : p.min + ' dakikalık'} gelir</p></div>
+          <div class="info"><h4>${p.name}${p.tag ? `<em class="fb-tag">${p.tag}</em>` : ''}</h4><p><b class="fb-amt"></b> · ${p.min >= 60 ? p.min / 60 + ' sa' : p.min + ' dk'} gelir</p></div>
           <button class="btn blue"><img src="assets/ui/gem_blue.png" alt="">${p.gems}</button></div>`);
         row.querySelector('.btn').onclick = e => {
           if (save.gems < p.gems) { SS.sfx('no'); SS.toast('Yeterli elmas yok'); return; }

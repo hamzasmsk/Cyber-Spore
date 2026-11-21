@@ -88,14 +88,22 @@ function boot() {
     }
     c.restore();
   }
-  // head top of the idle hero sprite (sc 0.74*U, bottom-anchored) ~ y - 86*U; same bob as the core renderer.
+  // head top of the hero sprite (sc 0.74*U, bottom-anchored) ~ y - 70*U; mirrors the core renderer's bob/facing.
+  function drawHatFlip(c, id, x, y, s, t, flip) {
+    if (!flip) return drawHat(c, id, x, y, s, t);
+    c.save(); c.translate(x, 0); c.scale(-1, 1); drawHat(c, id, 0, y, s, t); c.restore();
+  }
   SS.HOOKS.render.push(ctx => {
     const id = K.hat; if (id === 'h_none') return;
-    const U = SS.U, t = SS.R.t;
+    const U = SS.U, t = SS.R.t, sq = SS.R.sq || {};
     for (const h of SS.R.heroes) {
-      const bob = Math.sin(t * 4 + h.ph) * 1.5 * U, sq = 1 - (h.recoil || 0) * 0.04;
-      drawHat(ctx, id, h.x - 1 * U, h.y + 2 + bob - 78 * U * sq, 0.95 * U, t + h.i);
+      if (h.dead || h.gone) continue;
+      const bob = h.moving ? -Math.abs(Math.sin((h.walk || 0) * Math.PI)) * 4 * U : Math.sin(t * 4 + (h.ph || 0)) * 1.5 * U;
+      const squash = 1 - (h.recoil || 0) * 0.04, face = h.face || 1;
+      ctx.globalAlpha = sq.ko > 0 ? 0.35 : 1;
+      drawHatFlip(ctx, id, h.x, h.y + 2 + bob - 71 * U * squash, 0.95 * U, t + (h.i || 0), face < 0);
     }
+    ctx.globalAlpha = 1;
   });
 
   // ---- side button & panel

@@ -41,7 +41,7 @@
 
 /* ---------------- Maden ---------------- */
 .fb-mine{display:flex;flex-direction:column;gap:10px}
-.fb-mine-scene{position:relative;height:130px;border-radius:18px;border:3px solid var(--ink);overflow:hidden;
+.fb-mine-scene{position:relative;height:112px;border-radius:18px;border:3px solid var(--ink);overflow:hidden;
   background:linear-gradient(#5b4a7a 0%,#3b2f55 55%,#6b4a2f 56%,#4e3522 100%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.12)}
 .fb-mine-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44%;background:repeating-linear-gradient(-30deg,rgba(0,0,0,.12) 0 10px,transparent 10px 22px)}
 .fb-rig{position:absolute;left:50%;top:8px;width:70px;height:72px;margin-left:-35px;z-index:2;animation:fb-rig .18s linear infinite alternate}
@@ -113,9 +113,9 @@
 .fb-pigmeter b{position:relative;display:block;text-align:center;font-size:10px;line-height:12px;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
 .fb-pig-btn span{margin-bottom:6px}
 .fb-piggy{display:flex;flex-direction:column;gap:10px}
-.fb-pigstage{position:relative;height:130px;display:grid;place-items:center;border-radius:18px;border:3px solid var(--ink);
+.fb-pigstage{position:relative;height:120px;display:grid;place-items:center;border-radius:18px;border:3px solid var(--ink);
   background:radial-gradient(ellipse at 50% 40%,#ffd6e8 0%,#c95b8f 70%,#8e2f60 100%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2)}
-.fb-bigpig{width:130px;filter:drop-shadow(0 5px 0 rgba(27,32,51,.5));animation:fb-pigbob 1.6s ease-in-out infinite}
+.fb-bigpig{width:112px;filter:drop-shadow(0 5px 0 rgba(27,32,51,.5));animation:fb-pigbob 1.6s ease-in-out infinite}
 .fb-pigstage.smash .fb-bigpig{animation:fb-smash .6s ease-in forwards}
 .fb-coins{position:absolute;left:50%;top:50%;width:0;height:0}
 .fb-coins img{position:absolute;width:30px;margin:-14px 0 0 -15px;opacity:0;animation:fb-fly 1s cubic-bezier(.2,.8,.3,1) forwards;filter:drop-shadow(0 2px 0 var(--ink))}

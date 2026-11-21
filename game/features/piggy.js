@@ -57,7 +57,7 @@ function boot() {
       const root = SS.el(`<div class="fb-piggy">
         <div class="fb-pigstage"><img class="fb-bigpig" src="${PIG}" alt=""><div class="fb-coins"></div></div>
         <div class="fb-store"><img src="assets/ui/gem_blue.png" alt=""><b>${P.gems}</b><small>/ ${CAP}</small></div>
-        <div class="fb-bar pink"><i style="width:${P.gems / CAP * 100}%"></i><span>Sonraki elmas: ${KILLS_PER_GEM - P.kills} düşman</span></div>
+        <div class="fb-bar pink"><i style="width:${P.gems / CAP * 100}%"></i><span>${P.gems >= CAP ? 'KUMBARA DOLU!' : `Sonraki elmas: ${KILLS_PER_GEM - P.kills} düşman`}</span></div>
       </div>`);
       body.appendChild(root);
       body.appendChild(SS.el(`<p class="big-note">Her ${KILLS_PER_GEM} düşmanda kumbaraya 1 elmas düşer (en fazla ${CAP}). Kumbara <b class="fb-hl">dolunca</b> ya da bir <b class="fb-hl">boss yenince</b> ücretsiz kırılır.</p>`));

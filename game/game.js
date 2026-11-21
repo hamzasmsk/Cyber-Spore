@@ -58,6 +58,15 @@ function heroBox() {
 }
 // area enemies may stand in (a bit looser at the top so they stay visible under the HUD)
 function enemyBox() { return { x0: 30 * U, x1: W - 26 * U, y0: 150 + 40 * U, y1: Math.max(260, H - 170) }; }
+// the squad keeps out from under the side button columns (rects re-read twice a second; plugins may add buttons)
+let sideRects = [], sideT = 0;
+function avoidSides(p, half) {
+  for (const r of sideRects) {
+    if (p.y < r.top || p.y - 90 * U > r.bottom) continue;
+    if (r.left < W / 2) p.x = Math.max(p.x, r.right + half); else p.x = Math.min(p.x, r.left - half);
+  }
+  return p;
+}
 const clampBox = (p, b) => ({ x: clamp(p.x, b.x0, b.x1), y: clamp(p.y, b.y0, b.y1) });
 const STAND = 240;   // enemies stop this far (x U) from the squad leader
 
@@ -317,7 +326,7 @@ function startBoss() {
   banner('BOSS!', b.bossName); sfx('boss', 0); R.shake = 12; uiKey = '';
 }
 function bossWin() {
-  const b = R.boss; R.boss = null;
+  const b = R.boss; R.boss = null; R.eb.length = 0;
   runHooks('bossWin', b);
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-60, 60) * U, b.y - rand(20, 160) * U, 1.2), i * 90);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
@@ -431,7 +440,7 @@ function hurtSquad(dmg, x, y) {
   sq.hp -= dmg; sq.inv = 0.7; sq.hit = 0.3; sq.calm = 0;
   R.shake = Math.max(R.shake, 10); R.hurt = 0.45;
   const L = R.heroes[0];
-  addText((L ? L.x : x) + rand(-10, 10) * U, (L ? L.y : y) - 120 * U, '-' + dmg, 'hurt');
+  addText(clamp((L ? L.x : x) + rand(-10, 10) * U, 40 * U, W - 40 * U), (L ? L.y : y) - 140 * U, '-' + dmg, 'hurt');
   if (x !== undefined) confetti(x, y, '#ff4d63', 5);
   sfx('hurt', 0.08);
   runHooks('hurt', dmg);
@@ -469,7 +478,10 @@ function updateSquad(dt) {
   sq.vx = lerp(sq.vx, inp.x * SPD, k); sq.vy = lerp(sq.vy, inp.y * SPD, k);
   if (Math.abs(sq.vx) < 1 && !inp.x) sq.vx = 0; if (Math.abs(sq.vy) < 1 && !inp.y) sq.vy = 0;
   const hb = heroBox();
+  sideT -= dt;
+  if (sideT <= 0) { sideT = 0.5; sideRects = Array.from(document.querySelectorAll('#ui .side')).map(el => el.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0); }
   sq.x = clamp(sq.x + sq.vx * dt, hb.x0, hb.x1); sq.y = clamp(sq.y + sq.vy * dt, hb.y0, hb.y1);
+  avoidSides(sq, 28 * U);
   sq.moving = Math.hypot(sq.vx, sq.vy) > 25 * U;
   if (sq.moving) R.hint = Math.max(0, R.hint - dt * 2);
   if (Math.abs(sq.vx) > 20 * U) sq.face = sq.vx > 0 ? 1 : -1;
@@ -483,7 +495,7 @@ function updateSquad(dt) {
   for (const h of R.heroes) {
     const ox = h.x, oy = h.y;
     if (h.i === 0) { h.x = sq.x; h.y = sq.y; }
-    else if (sq.ko <= 0) { const t = clampBox(slotPos(h.i, sq), fb), f = Math.min(1, dt * 7); h.x = lerp(h.x, t.x, f); h.y = lerp(h.y, t.y, f); }
+    else if (sq.ko <= 0) { const t = avoidSides(clampBox(slotPos(h.i, sq), fb), 22 * U), f = Math.min(1, dt * 7); h.x = lerp(h.x, t.x, f); h.y = lerp(h.y, t.y, f); }
     const sp = Math.hypot(h.x - ox, h.y - oy) / Math.max(dt, 1e-4);
     h.spd = lerp(h.spd || 0, sp, Math.min(1, dt * 10));
     h.moving = h.spd > 30 * U;
@@ -597,7 +609,7 @@ function update(dt) {
     for (const o of R.en) {   // don't stack on top of each other
       if (o === e || o.dead) continue;
       const sx = e.x - o.x, sy = e.y - o.y, sd = Math.hypot(sx, sy);
-      if (sd < 42 * U && sd > 0.01) { const push = (42 * U - sd) * 0.5 * Math.min(1, dt * 8); e.x += sx / sd * push; e.y += sy / sd * push; }
+      if (sd < 56 * U && sd > 0.01) { const push = (56 * U - sd) * 0.5 * Math.min(1, dt * 8); e.x += sx / sd * push; e.y += sy / sd * push; }
     }
     // ranged enemies that reached their spot lob slow projectiles at the squad
     if (e.ranged && e.stopped && !ko) {
@@ -827,19 +839,17 @@ function drawGround(t) {
   }
 }
 function arcsWithGaps(r, gaps, gw) {
+  const g = gaps.map(a => ((a % TAU) + TAU) % TAU).sort((a, c) => a - c);
   ctx.beginPath();
-  const edges = [];
-  for (const g of gaps) edges.push([g - gw, g + gw]);
-  edges.sort((a, c) => ((a[0] % TAU) + TAU) % TAU - ((c[0] % TAU) + TAU) % TAU);
-  for (let i = 0; i < edges.length; i++) {
-    const s0 = edges[i][1], e0 = edges[(i + 1) % edges.length][0];
-    let end = e0; while (end < s0) end += TAU; if (end - s0 > TAU) end -= TAU;
-    ctx.moveTo(Math.cos(s0) * r, Math.sin(s0) * r); ctx.arc(0, 0, r, s0, end);
+  for (let i = 0; i < g.length; i++) {
+    const s0 = g[i] + gw; let e0 = (i + 1 < g.length ? g[i + 1] : g[0] + TAU) - gw;
+    if (e0 <= s0) continue;
+    ctx.moveTo(Math.cos(s0) * r, Math.sin(s0) * r); ctx.arc(0, 0, r, s0, e0);
   }
 }
 // airborne enemy projectiles: chunky outlined orbs
 function drawBall(x, y, r, col, t) {
-  if (!save.eco) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.55; sprT('fx_glow', col, x, y, r / (20 * U) * U); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  if (!save.eco) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.55; sprT('fx_glow', col, x, y, r * 4.5 / 64); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   ctx.lineWidth = 3 * U; ctx.strokeStyle = INK; ctx.fillStyle = col;
   ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.32, 0, TAU); ctx.fill();
@@ -855,7 +865,7 @@ function drawShots(t) {
 }
 function drawSquadHp(t) {
   const sq = R.sq, L = R.heroes[0]; if (!L) return;
-  const w = 70 * U, h = 10 * U, x = L.x - w / 2, y = L.y - 116 * U;
+  const w = 70 * U, h = 10 * U, x = clamp(L.x - w / 2, 18 * U, W - w - 6 * U), y = L.y - 116 * U;
   ctx.fillStyle = INK; rrect(x - 3 * U, y - 3 * U, w + 6 * U, h + 6 * U, 6 * U); ctx.fill();
   const f = clamp(sq.hp / sq.maxHp, 0, 1), fl = clamp(sq.lag / sq.maxHp, 0, 1);
   ctx.fillStyle = '#3a4362'; rrect(x, y, w, h, 4 * U); ctx.fill();
@@ -873,7 +883,8 @@ function drawSquadHp(t) {
   if (sq.ko > 0) {
     ctx.font = FONT(Math.round(24 * U)); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     ctx.lineWidth = 6 * U; ctx.strokeStyle = INK; const s = 'NAKAVT ' + Math.ceil(sq.ko);
-    ctx.strokeText(s, L.x, y - 20 * U); ctx.fillStyle = '#ffcf3a'; ctx.fillText(s, L.x, y - 20 * U);
+    const tx = clamp(L.x, 70 * U, W - 70 * U);
+    ctx.strokeText(s, tx, y - 20 * U); ctx.fillStyle = '#ffcf3a'; ctx.fillText(s, tx, y - 20 * U);
   }
 }
 // floating virtual joystick (screen space) + first-time hint
@@ -904,7 +915,7 @@ function drawJoystick(t) {
     const L = R.heroes[0]; if (!L) return;
     const x = W / 2, y = Math.min(H - 190, L.y + 70 * U), a = Math.min(1, R.hint) * (0.75 + 0.25 * Math.sin(t * 4));
     ctx.globalAlpha = a; ctx.font = FONT(Math.round(17 * U)); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-    const s = 'Sürükle ve hareket et · mermilerden kaç!';
+    const s = 'Sürükle ve hareket et!';
     ctx.lineWidth = 5 * U; ctx.strokeStyle = INK; ctx.strokeText(s, x, y); ctx.fillStyle = '#ffffff'; ctx.fillText(s, x, y);
     ctx.globalAlpha = 1;
   }
@@ -1011,7 +1022,7 @@ const PANELS = {
     btn.onclick = () => {
       if (gain <= 0) return;
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
-      R.en.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
+      R.en.length = 0; R.eb.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
       persist(); buildField(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${(1 + save.rp * 0.3).toFixed(1)}`); sfx('win', 0); uiKey = '';
     };
     body.appendChild(btn);
@@ -1065,6 +1076,8 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
 window.SS = {
   save, R, F, GUNS, TEAM, BIOMES, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, buy, startBoss, setupHeroes,
+  hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, boom, addText, along,
+  get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
   get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; },
   refreshUI() { uiKey = ''; },
 };
