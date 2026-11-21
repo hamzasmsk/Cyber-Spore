@@ -226,8 +226,8 @@ h2,h3,h4{margin:0;font-weight:700}
 .row-card .ico.tile img{width:46px;height:46px;max-width:none;max-height:none}
 
 /* settings: a single pack-style icon tile, same height as the stage nodes row */
-.tilebtn{flex:none;width:44px;height:44px;padding:3px;background:var(--ink);clip-path:var(--notch);pointer-events:auto}
-.tilebtn img{width:38px;height:38px;display:block}
+.tilebtn{flex:none;width:54px;height:54px;padding:3px;display:grid;place-items:center;background:var(--ink);clip-path:var(--notch);pointer-events:auto}
+.tilebtn img{width:48px;height:48px;display:block}
 .tilebtn:active{transform:translateY(2px)}
 /* ultimate: icon tile that fills from the bottom; glows when ready */
 #ultBtn{position:absolute;left:50%;bottom:calc(150px + var(--safe-b));transform:translateX(-50%);width:56px;height:64px;display:flex;flex-direction:column;align-items:center;pointer-events:auto}

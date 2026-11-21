@@ -1219,6 +1219,23 @@ Promise.all([atlasReady, Promise.race([fontReady, new Promise(r => setTimeout(r,
 });
 window.addEventListener('pointerdown', audioInit, { once: true });
 
+// ---------------- pixel-perfect interface images
+// UI PNGs are stored pre-scaled (portraits x3, everything else x4). Whatever size CSS asks for, each image is
+// snapped to a whole multiple of its art pixels so no pixel is drawn wider than its neighbour.
+function snapImg(im) {
+  if (!im || !im.naturalWidth || im.dataset.px || !/assets\/ui\//.test(im.src) || /\/theme\//.test(im.src)) return;
+  const f = /\/(face|mon|boss)_/.test(im.src) ? 3 : /lever/.test(im.src) ? 2 : 4, aw = im.naturalWidth / f, ah = im.naturalHeight / f;
+  const r = im.getBoundingClientRect(); if (!r.width) return;
+  const want = Math.max(r.width / aw, r.height / ah), dev = window.devicePixelRatio || 1;
+  const k = Math.max(1, Math.round(want * dev)) / dev;   // whole device pixels per art pixel
+  im.style.width = aw * k + 'px'; im.style.height = ah * k + 'px'; im.style.maxWidth = 'none'; im.style.maxHeight = 'none'; im.style.objectFit = 'fill';
+  im.dataset.px = '1';
+}
+function snapAll(root = document) { root.querySelectorAll('img').forEach(im => { if (im.complete) snapImg(im); }); }
+document.addEventListener('load', e => { const im = e.target; if (im && im.tagName === 'IMG') { delete im.dataset.px; im.style.width = im.style.height = ''; requestAnimationFrame(() => snapImg(im)); } }, true);
+new MutationObserver(() => requestAnimationFrame(() => snapAll())).observe(document.body, { childList: true, subtree: true });
+window.addEventListener('resize', () => { document.querySelectorAll('img[data-px]').forEach(im => { delete im.dataset.px; im.style.width = im.style.height = ''; }); requestAnimationFrame(() => snapAll()); });
+
 // ---------------- plugin API used by features/*.js
 function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id }) {
   const b = el(`<button class="sbtn ${color}" ${id ? `id="${id}"` : ''}><img src="${icon}" alt=""><span>${label}</span></button>`);
