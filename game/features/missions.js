@@ -102,7 +102,7 @@
   });
 
   // ---------------- side button + badge
-  const btn = SS.addSideButton({ side: 'right', label: 'Görev', icon: 'assets/ui/ic_star.png', color: 'purple', id: 'missionsBtn', onClick: open });
+  const btn = SS.addSideButton({ side: 'right', label: 'Görev', icon: 'assets/ui/flag_green_a.png', color: 'purple', id: 'missionsBtn', onClick: open });
   btn.classList.add('fa-missions-btn');
   const dot = document.createElement('i'); dot.className = 'dot fa-dot'; btn.appendChild(dot);
 
