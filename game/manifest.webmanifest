@@ -1,13 +1,13 @@
 {
   "name": "Swarm Squad",
   "short_name": "Swarm Squad",
-  "description": "Sevimli hayvan kahramanlarla canavar sürülerine karşı hayatta kal.",
+  "description": "Yandan görünümlü koş-ve-vur: takımını kurtar, sürüyü durdur.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
-  "orientation": "portrait",
-  "background_color": "#2fa866",
-  "theme_color": "#2fbe6e",
+  "orientation": "landscape",
+  "background_color": "#1b2033",
+  "theme_color": "#1b2033",
   "icons": [
     { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
