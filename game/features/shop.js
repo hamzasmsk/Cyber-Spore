@@ -74,7 +74,7 @@ function boot() {
       root.appendChild(SS.el('<h3 class="fb-sec"><img src="assets/ui/gem.png" alt="">Elmas Takası</h3>'));
       const exRows = EXCH.map(x => {
         const row = SS.el(`<div class="row-card fb-pack"><div class="ico"><img src="assets/ui/${x.img}" alt=""></div>
-          <div class="info"><h4>${x.gems} Elmas</h4><p>Pahalı takas · ${x.min} dk gelir</p></div>
+          <div class="info"><h4>${x.gems} Elmas</h4><p>${x.min} dk gelir</p></div>
           <button class="btn yellow"><img src="assets/ui/coin.png" alt=""><span></span></button></div>`);
         row.querySelector('.btn').onclick = () => {
           const c = income() * x.min * 60;

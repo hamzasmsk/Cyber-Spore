@@ -9,7 +9,7 @@ function boot() {
   const SKINS = [
     { id: 'NinjaBlue',   name: 'Kaptan (varsayılan)', cost: 0,   desc: 'Sade görünüm' },
     { id: 'SamuraiBlue', name: 'Samuray',        cost: 25,  bonus: { rate: 1.03 },  desc: '+%3 atış hızı' },
-    { id: 'MaskFrog',    name: 'Kurbağa Maskesi', cost: 50,  bonus: { money: 1.05 }, desc: '+%5 altın' },
+    { id: 'MaskFrog',    name: 'Kurbağa',        cost: 50,  bonus: { money: 1.05 }, desc: '+%5 altın' },
     { id: 'Skeleton',    name: 'İskelet',        cost: 80,  bonus: { dmg: 1.06 },   desc: '+%6 hasar' },
     { id: 'RedNinja3',   name: 'Kızıl Gölge',    cost: 120, bonus: { rate: 1.06 },  desc: '+%6 atış hızı' },
     { id: 'KnightGold',  name: 'Altın Şövalye',  cost: 180, bonus: { money: 1.10 }, desc: '+%10 altın' },

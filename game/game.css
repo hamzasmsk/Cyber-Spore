@@ -158,7 +158,7 @@ h2,h3,h4{margin:0;font-weight:700}
 .side.right{right:max(6px,var(--safe-r))}
 .sbtn{position:relative;width:56px;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(var(--drop))}
 .sbtn img{width:48px;height:48px;display:block;padding:3px;box-sizing:content-box;background:var(--ink);clip-path:var(--notch)}
-.sbtn span{margin-top:-7px;font-size:12px;line-height:1;color:var(--cream);text-shadow:var(--o-sm);white-space:nowrap}
+.sbtn span{position:relative;z-index:1;margin-top:-7px;font-size:12px;line-height:1;color:var(--cream);text-shadow:var(--o-sm);white-space:nowrap}
 .sbtn:active{transform:translateY(3px);filter:none}
 .sbtn.on img{background:var(--gold)}
 .sbtn.ready{animation:pulse .8s steps(2) infinite}

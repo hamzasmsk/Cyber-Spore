@@ -42,7 +42,7 @@ function boot() {
   function open() {
     SS.openPanel('Kumbara', 'purple', body => {
       const root = SS.el(`<div class="fb-piggy">
-        <div class="fb-pigstage"><img class="fb-bigpig" src="assets/ui/chest.png" alt=""><div class="fb-coins"></div></div>
+        <div class="fb-pigstage"><img class="fb-bigpig" src="assets/ui/chest.png" alt=""></div>
         <div class="fb-store"><img src="assets/ui/gem.png" alt=""><b>${P.gems}</b><small>/ ${CAP}</small></div>
         <div class="fb-bar pink"><i style="width:${P.gems / CAP * 100}%"></i><span>${P.gems >= CAP ? 'KUMBARA DOLU!' : `Sonraki elmas: ${KILLS_PER_GEM - P.kills} düşman`}</span></div>
       </div>`);
@@ -58,11 +58,13 @@ function boot() {
         P.gems = 0; P.unlocked = false; P.opened++;
         save.gems += n; SS.sfx('magic'); SS.sfx('win');
         const st = root.querySelector('.fb-pigstage'); st.classList.add('smash'); st.querySelector('.fb-bigpig').src = 'assets/ui/chest_open.png';
-        const cs = root.querySelector('.fb-coins');
-        for (let i = 0; i < 14; i++) {
-          const g = SS.el('<img src="assets/ui/gem.png" alt="">');
-          g.style.setProperty('--dx', (Math.random() * 220 - 110) + 'px'); g.style.setProperty('--dy', (-40 - Math.random() * 110) + 'px');
-          g.style.animationDelay = (Math.random() * 0.15) + 's'; cs.appendChild(g);
+        const r = st.getBoundingClientRect();
+        for (let i = 0; i < 12; i++) {   // fixed-position flyers so the notched stage does not clip them
+          const g = SS.el('<img class="fb-fly" src="assets/ui/gem.png" alt="">');
+          g.style.left = (r.left + r.width / 2) + 'px'; g.style.top = (r.top + r.height / 2) + 'px';
+          g.style.setProperty('--dx', (Math.random() * 200 - 100) + 'px'); g.style.setProperty('--dy', (-40 - Math.random() * 90) + 'px');
+          g.style.animationDelay = (i * 0.04) + 's';
+          document.body.appendChild(g); setTimeout(() => g.remove(), 1200);
         }
         root.querySelector('.fb-store b').textContent = '+' + n;
         b.className = 'btn wide grey off'; b.textContent = 'TOPLANDI';
