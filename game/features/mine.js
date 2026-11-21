@@ -27,7 +27,7 @@ function boot() {
     return h ? `${h}sa ${String(m).padStart(2, '0')}dk` : `${m}dk ${String(x).padStart(2, '0')}sn`; };
 
   // ---------- side button
-  const btn = SS.addSideButton({ side: 'right', label: 'Maden', icon: 'assets/ui/gem_blue.png', color: 'blue', id: 'mineBtn', onClick: open });
+  const btn = SS.addSideButton({ side: 'right', label: 'Maden', icon: 'assets/ui/ic_mine.png', color: 'blue', id: 'mineBtn', onClick: open });
   btn.classList.add('fb-mine-btn');
   const badge = SS.el('<em class="fb-badge hidden">0</em>');
   btn.appendChild(badge);
@@ -47,19 +47,19 @@ function boot() {
     SS.openPanel('Elmas Madeni', 'blue', body => {
       const wrap = SS.el(`<div class="fb-mine">
         <div class="fb-mine-scene">
-          <div class="fb-rig"><div class="fb-drill"><i></i></div></div>
-          <div class="fb-rock"><span></span><span></span><span></span></div>
-          <img class="fb-mgem g1" src="assets/ui/gem_blue.png" alt=""><img class="fb-mgem g2" src="assets/ui/gem_blue.png" alt=""><img class="fb-mgem g3" src="assets/ui/gem_blue.png" alt="">
+          <img class="fb-mcry c1" src="assets/ui/crystal.png" alt=""><img class="fb-mcry c2" src="assets/ui/crystal.png" alt="">
+          <img class="fb-pick" src="assets/ui/ic_mine.png" alt="">
+          <img class="fb-mgem g1" src="assets/ui/gem.png" alt=""><img class="fb-mgem g2" src="assets/ui/gem.png" alt=""><img class="fb-mgem g3" src="assets/ui/gem.png" alt="">
           <div class="fb-lv">Sv.<b></b></div>
         </div>
-        <div class="fb-store"><img src="assets/ui/gem_blue.png" alt=""><b class="fb-stored">0</b><small class="fb-cap">/ 0</small></div>
+        <div class="fb-store"><img src="assets/ui/gem.png" alt=""><b class="fb-stored">0</b><small class="fb-cap">/ 0</small></div>
         <div class="fb-bar"><i></i><span class="fb-next"></span></div>
         <div class="fb-stats"><div><small>Üretim</small><b class="fb-rate"></b></div><div><small>Depo</small><b class="fb-capv"></b></div><div><small>Doluluk</small><b class="fb-full"></b></div></div>
       </div>`);
       body.appendChild(wrap);
       body.appendChild(SS.el('<p class="big-note">Maden sen oyunda olmasan da elmas kazar. Depo dolunca üretim durur, sık sık topla!</p>'));
-      const collect = SS.el('<button class="btn green"><img src="assets/ui/gem_blue.png" alt="">TOPLA</button>');
-      const up = SS.el('<div class="row-card fb-up"><div class="ico"><img src="assets/ui/ic_power.png" alt=""></div><div class="info"><h4>Madeni Geliştir</h4><p class="fb-upinfo"></p></div><button class="btn yellow"><img src="assets/ui/coin_gold.png" alt=""><span>0</span></button></div>');
+      const collect = SS.el('<button class="btn green wide"><img src="assets/ui/gem.png" alt="">TOPLA</button>');
+      const up = SS.el('<div class="row-card fb-up"><div class="ico"><img src="assets/ui/ic_boost.png" alt=""></div><div class="info"><h4>Madeni Geliştir</h4><p class="fb-upinfo"></p></div><button class="btn yellow"><img src="assets/ui/coin.png" alt=""><span>0</span></button></div>');
       body.appendChild(collect); body.appendChild(up);
       const upBtn = up.querySelector('.btn');
       collect.onclick = () => {
@@ -112,7 +112,7 @@ function boot() {
   function burst(anchor, n) {
     const r = anchor.getBoundingClientRect();
     for (let i = 0; i < Math.min(12, n + 3); i++) {
-      const g = SS.el('<img class="fb-fly" src="assets/ui/gem_blue.png" alt="">');
+      const g = SS.el('<img class="fb-fly" src="assets/ui/gem.png" alt="">');
       g.style.left = (r.left + r.width / 2) + 'px'; g.style.top = (r.top + r.height / 2) + 'px';
       g.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); g.style.setProperty('--dy', (-60 - Math.random() * 90) + 'px');
       g.style.animationDelay = (i * 0.03) + 's';

@@ -1,4 +1,4 @@
-/* Swarm Squad feature: Görevler (rotating daily missions). Requires window.SS from game.js. */
+/* Shuriken Squad feature: Görevler (rotating daily missions). Requires window.SS from game.js. */
 'use strict';
 (() => {
   const SS = window.SS;
@@ -13,10 +13,14 @@
   const nice = v => { if (v < 100) return Math.ceil(v); const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.ceil(v / p) * p; };
   const killReward = () => { try { return SS.enemyHp() * 0.55 * SS.moneyMul(); } catch (e) { return 10; } };
 
-  // ---------------- mission templates
+  // ---------------- mission templates (icons come from the Ninja Adventure pack in assets/ui/)
+  const bio = () => { try { return SS.biome() || {}; } catch (e) { return {}; } };
+  const monIcon = () => { const p = bio().pool; return `assets/ui/mon_${(p && p[0]) || 'Slime3'}.png`; };
+  const bossIcon = () => { const b = bio().bosses; return `assets/ui/boss_${(b && b[0]) || 'GiantSlime2'}.png`; };
+  const icon = t => { const i = TYPES[t].icon; return typeof i === 'function' ? i() : i; };
   const TYPES = {
     kill: {
-      icon: 'assets/ui/en_slime_normal_walk_a.png',
+      icon: monIcon,
       make: () => { const n = pickOf([30, 50, 80, 120]); return { goal: n, gems: n >= 80 ? 4 : 3, cash: nice(killReward() * n * 0.6) }; },
       text: m => `${m.goal} düşman yok et`,
     },
@@ -26,17 +30,17 @@
       text: m => `${m.goal} yükseltme satın al`,
     },
     boss: {
-      icon: 'assets/ui/boss_brood.png',
+      icon: bossIcon,
       make: () => { const n = Math.random() < 0.7 ? 1 : 2; return { goal: n, gems: 4 + n * 2, cash: 0 }; },
       text: m => m.goal > 1 ? `${m.goal} boss yen` : 'Bir boss yen',
     },
     stage: {
-      icon: 'assets/ui/flag_green_a.png',
+      icon: 'assets/ui/ic_missions.png',
       make: () => { const add = pickOf([1, 1, 2]); return { goal: (save.stage || 1) + add, base: save.stage || 1, gems: 4 + add * 2, cash: 0 }; },
       text: m => `Bölüm ${m.goal}'e ulaş`,
     },
     earn: {
-      icon: 'assets/ui/coin_gold.png',
+      icon: 'assets/ui/coin.png',
       make: () => { const rate = Math.max(save.rate || 0, killReward() * 1.5); const g = nice(rate * pickOf([90, 150, 240])); return { goal: g, gems: 3, cash: 0 }; },
       text: m => `${SS.fmt(m.goal)} altın kazan`,
     },
@@ -102,7 +106,7 @@
   });
 
   // ---------------- side button + badge
-  const btn = SS.addSideButton({ side: 'right', label: 'Görev', icon: 'assets/ui/flag_green_a.png', color: 'purple', id: 'missionsBtn', onClick: open });
+  const btn = SS.addSideButton({ side: 'right', label: 'Görev', icon: 'assets/ui/ic_missions.png', color: 'purple', id: 'missionsBtn', onClick: open });
   btn.classList.add('fa-missions-btn');
   const dot = document.createElement('i'); dot.className = 'dot fa-dot'; btn.appendChild(dot);
 
@@ -150,19 +154,19 @@
       const rows = {};
       const wrap = SS.el('<div class="fa-mwrap"></div>');
       const head = SS.el(`<div class="fa-mhead"><div><b>Günlük görevler</b><small>Tamamla, elmas kazan!</small></div>
-        <div class="fa-timer"><img src="assets/ui/ic_retry.png" alt=""><span></span></div></div>`);
+        <div class="fa-timer"><img src="assets/ui/ic_moon.png" alt=""><span></span></div></div>`);
       wrap.appendChild(head);
       // claimable first
       const list = s.list.slice().sort((a, b) => (isDone(b) ? 1 : 0) - (isDone(a) ? 1 : 0));
       for (const m of list) {
         const done = isDone(m);
         const row = SS.el(`<div class="row-card fa-mission ${done ? 'fa-done' : ''}">
-          <div class="ico"><img src="${TYPES[m.type].icon}" alt=""></div>
+          <div class="ico ${m.type === 'kill' || m.type === 'boss' ? 'face' : ''}"><img src="${icon(m.type)}" alt=""></div>
           <div class="info"><h4>${TYPES[m.type].text(m)}</h4>
             <div class="fa-bar ${done ? 'full' : ''}"><i style="width:${(pct(m) * 100).toFixed(1)}%"></i><span>${progTxt(m)}</span></div>
-            <div class="fa-rew"><span><img src="assets/ui/gem_blue.png" alt="">${m.gems}</span>${m.cash > 0 ? `<span><img src="assets/ui/coin_gold.png" alt="">${SS.fmt(m.cash)}</span>` : ''}</div>
+            <div class="fa-rew"><span><img src="assets/ui/gem.png" alt="">${m.gems}</span>${m.cash > 0 ? `<span><img src="assets/ui/coin.png" alt="">${SS.fmt(m.cash)}</span>` : ''}</div>
           </div>
-          ${done ? '<button class="btn green pulse fa-claim">AL</button>' : '<button class="btn grey off fa-claim">AL</button>'}</div>`);
+          ${done ? '<button class="btn green fa-claim">AL</button>' : '<button class="btn grey off fa-claim">AL</button>'}</div>`);
         if (done) row.querySelector('.fa-claim').onclick = () => claim(m);
         rows[m.id] = { fill: row.querySelector('.fa-bar i'), txt: row.querySelector('.fa-bar span'), done };
         wrap.appendChild(row);

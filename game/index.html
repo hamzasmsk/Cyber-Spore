@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#2b2236">
+<meta name="theme-color" content="#131b1b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Swarm Squad</title>
+<title>Shuriken Squad</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -22,35 +22,35 @@
   <div class="top">
     <div class="pbar"><i id="subFill"></i><span id="subPct">0%</span></div>
     <div class="toprow">
-      <button class="rbtn grey" id="soundBtn" aria-label="Ses"><img id="soundIco" src="assets/ui/ic_sound_on.png" alt=""></button>
+      <button class="rbtn wood" id="soundBtn" aria-label="Ayarlar"><img src="assets/ui/ic_settings.png" alt=""></button>
       <div class="nodes" id="nodes"></div>
       <div class="wallet">
-        <div class="chip money"><img src="assets/ui/coin_gold.png" alt=""><b id="money">0</b></div>
-        <div class="chip gems"><img src="assets/ui/gem_blue.png" alt=""><b id="gems">0</b></div>
+        <div class="chip money"><img src="assets/ui/coin.png" alt=""><b id="money">0</b></div>
+        <div class="chip gems"><img src="assets/ui/gem.png" alt=""><b id="gems">0</b></div>
       </div>
     </div>
-    <div class="stage" id="stageLbl">Bölüm 1-1</div>
+    <div class="stage" id="stageLbl">Bambu Vadisi · 1-1</div>
     <div id="bossHud" class="hidden">
-      <img id="bossImg" src="assets/ui/boss_brood.png" alt="">
+      <img id="bossImg" src="assets/ui/boss_GiantSlime2.png" alt="">
       <div class="bossbar"><i id="bossFill"></i><span id="bossHpTxt"></span></div>
       <div class="btimer" id="bossTime">30</div>
     </div>
   </div>
 
   <div class="side left">
-    <button class="sbtn purple" data-open="rebirth"><img src="assets/ui/ic_star.png" alt=""><span>Doğuş</span></button>
-    <button class="sbtn blue" data-open="guns"><canvas class="gunico" width="96" height="60"></canvas><span>Silah</span></button>
-    <button class="sbtn green" data-open="team"><img src="assets/ui/ic_team.png" alt=""><span>Takım</span></button>
+    <button class="sbtn" data-open="rebirth"><img src="assets/ui/ic_rebirth.png" alt=""><span>Doğuş</span></button>
+    <button class="sbtn" data-open="guns"><img class="gunico" src="assets/ui/ic_weapon.png" alt=""><span>Silah</span></button>
+    <button class="sbtn" data-open="team"><img src="assets/ui/ic_team.png" alt=""><span>Takım</span></button>
   </div>
   <div class="side right">
-    <button class="sbtn grey" id="autoBtn"><img src="assets/ui/ic_retry.png" alt=""><span>Oto</span></button>
-    <button class="sbtn red" id="bossBtn"><img id="bossBtnImg" src="assets/ui/boss_brood.png" alt=""><span>Boss</span></button>
+    <button class="sbtn" id="autoBtn"><img src="assets/ui/ic_auto.png" alt=""><span>Oto</span></button>
+    <button class="sbtn" id="bossBtn"><img id="bossBtnImg" src="assets/ui/boss_GiantSlime2.png" alt=""><span>Boss</span></button>
   </div>
 
   <div class="cards">
-    <button class="ucard" data-up="power"><div class="lbl"><img src="assets/ui/ic_power.png" alt=""><span>Güç</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
-    <button class="ucard" data-up="speed"><div class="lbl"><img src="assets/ui/ic_rate.png" alt=""><span>Hız</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
-    <button class="ucard" data-up="money"><div class="lbl"><img src="assets/ui/coin_gold.png" alt=""><span>Para</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
+    <button class="ucard" data-up="power"><div class="lbl"><img src="assets/ui/ic_power.png" alt=""><span>Güç</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin.png" alt=""><b>0</b></div></button>
+    <button class="ucard" data-up="speed"><div class="lbl"><img src="assets/ui/ic_rate.png" alt=""><span>Hız</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin.png" alt=""><b>0</b></div></button>
+    <button class="ucard" data-up="money"><div class="lbl"><img src="assets/ui/ic_money.png" alt=""><span>Para</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin.png" alt=""><b>0</b></div></button>
   </div>
   <div id="banner"></div>
   <div id="toast"></div>
@@ -59,14 +59,15 @@
 <section id="panel" class="screen hidden">
   <div class="panel pop">
     <div class="ribbon" id="pTitle">Silah</div>
-    <button class="rbtn red pclose" id="pClose" aria-label="Kapat"><img src="assets/ui/ic_back.png" alt=""></button>
+    <button class="rbtn red pclose" id="pClose" aria-label="Kapat"><img src="assets/ui/x.png" alt=""></button>
     <div id="pBody"></div>
   </div>
 </section>
 
-<section id="loading" class="screen"><div class="loading-txt">Yükleniyor…</div></section>
+<section id="loading" class="screen"><img src="assets/ui/shuriken.png" alt=""><div class="loading-txt">Yükleniyor…</div></section>
 
 <script src="assets/atlas.js"></script>
+<script src="assets/sfx.js"></script>
 <script src="game.js"></script>
 <script src="features/missions.js"></script>
 <script src="features/mine.js"></script>

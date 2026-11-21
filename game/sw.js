@@ -1,5 +1,5 @@
 // Network-first service worker: always tries the latest version, falls back to cache offline.
-const CACHE = 'swarmsquad-v1';
+const CACHE = 'shurikensquad-v2';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', e => {

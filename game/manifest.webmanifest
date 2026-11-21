@@ -1,13 +1,13 @@
 {
-  "name": "Swarm Squad",
-  "short_name": "Swarm Squad",
-  "description": "Dikey idle nişancı: takımın otomatik ateş eder, sen güçlendir.",
+  "name": "Shuriken Squad",
+  "short_name": "Shuriken",
+  "description": "Dikey idle ninja nişancı: mangan otomatik atış yapar, sen güçlendir.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
   "orientation": "portrait",
-  "background_color": "#7fc8ff",
-  "theme_color": "#1b2033",
+  "background_color": "#131b1b",
+  "theme_color": "#131b1b",
   "icons": [
     { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]

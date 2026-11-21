@@ -1,15 +1,11 @@
-/* Layout integration (loads last): the settings gear replaces the top-left sound button,
-   since sound is a toggle inside Ayarlar, which frees a slot in the side columns. */
+/* Layout integration (loads last): the top-left square button opens Ayarlar (settings), so the
+   settings side button added by settings.js is hidden to keep the side columns short. */
 (function () {
   function place() {
-    const gear = document.getElementById('settingsBtn'), sound = document.getElementById('soundBtn');
-    if (!gear || !sound) return false;
-    const icon = gear.querySelector('img, svg');
-    const btn = document.createElement('button');
-    btn.className = 'rbtn grey'; btn.id = 'settingsTop'; btn.setAttribute('aria-label', 'Ayarlar');
-    if (icon) btn.appendChild(icon.cloneNode(true));
-    btn.addEventListener('click', () => gear.click());
-    sound.replaceWith(btn);
+    const gear = document.getElementById('settingsBtn'), top = document.getElementById('soundBtn');
+    if (!gear || !top) return false;
+    top.id = 'settingsTop';
+    top.addEventListener('click', () => gear.click());
     gear.style.display = 'none';
     return true;
   }

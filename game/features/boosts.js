@@ -1,4 +1,4 @@
-/* Swarm Squad feature: timed boosts (simulated ad boost x2 damage + x2 money, gem-bought rapid fire). Requires window.SS. */
+/* Shuriken Squad feature: timed boosts (simulated ad boost x2 damage + x2 money, gem-bought rapid fire). Requires window.SS. */
 'use strict';
 (() => {
   const SS = window.SS;
@@ -30,16 +30,16 @@
   function fakeAd(done) {
     if (simulating) return;
     simulating = true;
-    const ov = SS.el(`<div class="fa-ad"><div class="fa-adbox">
-      <div class="fa-adtag">REKLAM</div>
-      <img src="assets/ui/ic_play.png" alt="">
+    const ov = SS.el(`<div class="fa-ad"><div class="panel fa-adbox">
+      <div class="ribbon yellow fa-adtag">REKLAM</div>
+      <img src="assets/ui/play.png" alt="">
       <b>Reklam simülasyonu</b><small>Gerçek reklam gösterilmez</small>
       <div class="fa-bar"><i></i></div></div></div>`);
     document.body.appendChild(ov);
     const fill = ov.querySelector('.fa-bar i'), t0 = performance.now();
     const step = t => {
       const k = Math.min(1, (t - t0) / AD_SIM);
-      fill.style.width = (k * 100).toFixed(1) + '%';
+      fill.style.width = (Math.floor(k * 20) * 5) + '%'; // chunky pixel steps
       if (k < 1) requestAnimationFrame(step);
       else { ov.remove(); simulating = false; done(); }
     };
@@ -67,7 +67,7 @@
   }
 
   // ---------------- side button
-  const btn = SS.addSideButton({ side: 'left', label: 'x2', icon: 'assets/ui/ic_power.png', color: 'red', id: 'boostBtn', onClick: () => open() });
+  const btn = SS.addSideButton({ side: 'left', label: 'x2', icon: 'assets/ui/ic_boost.png', color: 'red', id: 'boostBtn', onClick: () => open() });
   btn.classList.add('fa-boost-btn');
   const lbl = btn.querySelector('span');
   const badge = SS.el('<em class="fa-bbadge">x2</em>'); btn.appendChild(badge);
@@ -107,13 +107,13 @@
       const ad = SS.el(`<div class="row-card fa-boostrow ${a ? 'fa-active' : ''}">
         <div class="ico fa-x"><img src="assets/ui/ic_power.png" alt=""><em>x2</em></div>
         <div class="info"><h4>Süper Güç</h4><p></p></div>
-        ${a ? '<button class="btn grey off">AKTİF</button>' : cd ? '<button class="btn grey off">BEKLE</button>' : '<button class="btn green pulse"><img src="assets/ui/ic_play.png" alt="">İZLE</button>'}</div>`);
+        ${a ? '<button class="btn grey off">AKTİF</button>' : cd ? '<button class="btn grey off">BEKLE</button>' : '<button class="btn green"><img src="assets/ui/play.png" alt="">İZLE</button>'}</div>`);
       if (!a && !cd) ad.querySelector('.btn').onclick = startAd;
       const canBuy = (save.gems || 0) >= RATE_COST, r = rateOn();
       const rate = SS.el(`<div class="row-card fa-boostrow ${r ? 'fa-active' : ''}">
         <div class="ico fa-x"><img src="assets/ui/ic_rate.png" alt=""><em>x1.5</em></div>
         <div class="info"><h4>Hızlı Ateş</h4><p></p></div>
-        ${r ? '<button class="btn grey off">AKTİF</button>' : `<button class="btn yellow ${canBuy ? '' : 'fa-poor'}"><img src="assets/ui/gem_blue.png" alt="">${RATE_COST}</button>`}</div>`);
+        ${r ? '<button class="btn grey off">AKTİF</button>' : `<button class="btn yellow ${canBuy ? '' : 'fa-poor'}"><img src="assets/ui/gem.png" alt="">${RATE_COST}</button>`}</div>`);
       if (!r) rate.querySelector('.btn').onclick = buyRate;
       wrap.appendChild(ad); wrap.appendChild(rate);
       wrap.appendChild(SS.el('<p class="big-note fa-small">Süreler oyun kapalıyken de işler.</p>'));
@@ -123,7 +123,7 @@
     });
   }
 
-  // ---------------- active-boost glow drawn over the field edge
+  // ---------------- boost expiry watcher (no screen glow: the side tile + timer show the active state)
   let tk = 0, wasA = adOn(), wasR = rateOn();
   SS.HOOKS.update.push(dt => {
     tk += dt; if (tk < 0.25) return; tk = 0;
@@ -132,14 +132,6 @@
     if (wasR && !r) { SS.toast('Hızlı Ateş bitti'); SS.refreshUI(); }
     wasA = a; wasR = r;
     paint();
-  });
-  SS.HOOKS.render.push(ctx => {
-    if (!adOn() || save.eco) return;
-    const W = SS.W, H = SS.H, p = 0.18 + Math.sin(performance.now() / 300) * 0.06;
-    const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.75);
-    g.addColorStop(0, 'rgba(255,120,40,0)'); g.addColorStop(1, `rgba(255,120,40,${p.toFixed(3)})`);
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(SS.DPR || 1, SS.DPR || 1);
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
   });
 
   st(); paint();
