@@ -1,134 +1,104 @@
-/* Swarm Squad features B: Maden (mine), Mağaza (shop), Kumbara (piggy), Kostüm (skins). Prefix: fb- */
+/* Swarm Squad features B: Maden (mine), Mağaza (shop), Kumbara (piggy), Kostüm (skins). Prefix: fb-
+   Same pixel system as game.css: hard edges, notched corners, ink outlines, parchment panels, steps() motion. */
 
-/* extra side-button / ribbon colors */
-.sbtn.yellow{--c1:#ffe066;--c2:#ffb21e;--edge:#c96d06}
-.sbtn.pink{--c1:#ffb8d6;--c2:#f0609c;--edge:#b02e68}
-.ribbon.pink{--c1:#ffb8d6;--c2:#f0609c;--edge:#b02e68}
-.ribbon.purple{--c1:#d29bff;--c2:#8d50ea;--edge:#5a2aa8}
-
-/* side columns: when many feature buttons exist, wrap into a second column instead of running under the HUD */
-.side{top:auto;bottom:calc(150px + var(--safe-b));gap:6px;flex-wrap:nowrap}
-.side .sbtn{width:54px;height:54px;border-radius:16px}
-.side .sbtn img,.side .sbtn canvas{width:30px;height:26px}
-.side .sbtn span{font-size:11.5px}
-@media (max-height:700px){
-  .side{gap:5px;bottom:calc(140px + var(--safe-b))}
-  .side .sbtn{width:48px;height:48px;border-radius:14px}
-  .side .sbtn img,.side .sbtn canvas{width:26px;height:22px}
-  .side .sbtn span{font-size:10.5px}
+/* ---------------- side columns ----------------
+   game.css places the columns (bottom:150px). With every feature button the left column holds 6 tiles,
+   so on short screens the tiles shrink to stay clear of the top HUD (incl. the boss bar) and the cards. */
+@media (max-height:760px){
+  .side{gap:3px}
+  .side .sbtn img{width:42px;height:42px}
+  .side .sbtn span{margin-top:-6px;font-size:11px}
+}
+@media (max-height:600px){
+  .side{gap:2px}
+  .side .sbtn img{width:36px;height:36px}
+  .side .sbtn span{font-size:10px}
 }
 
-/* small count badge on side buttons */
-.fb-badge{position:absolute;top:-8px;right:-8px;min-width:24px;height:24px;padding:0 5px;border-radius:12px;background:#ec3b4f;border:3px solid var(--ink);
-  font-style:normal;font-size:13px;line-height:18px;text-align:center;text-shadow:0 1px 0 var(--ink);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+/* small count badge on a side tile (mine) */
+.fb-badge{position:absolute;top:-4px;right:-2px;min-width:20px;height:18px;padding:0 4px;background:var(--red);clip-path:var(--notch);
+  box-shadow:inset 0 0 0 2px var(--ink);font-style:normal;font-size:12px;line-height:18px;text-align:center;color:var(--cream);text-shadow:var(--o-sm)}
 .fb-badge.hidden{display:none}
-.sbtn.fb-bump{animation:fb-bump .35s cubic-bezier(.2,1.6,.4,1)}
-@keyframes fb-bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.sbtn.fb-bump{animation:fb-bump .3s steps(2)}
+@keyframes fb-bump{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 
-/* shared panel bits */
+/* ---------------- shared panel bits ---------------- */
 .fb-store{display:flex;align-items:center;justify-content:center;gap:8px}
-.fb-store img{width:40px;height:36px;object-fit:contain;filter:drop-shadow(0 3px 0 var(--ink))}
-.fb-store b{font-size:44px;line-height:1;color:#7fe3ff;text-shadow:0 4px 0 var(--ink);-webkit-text-stroke:8px var(--ink);paint-order:stroke fill;font-variant-numeric:tabular-nums}
-.fb-store small{font-size:20px;color:var(--muted);align-self:flex-end;margin-bottom:4px}
-.fb-bar{position:relative;height:24px;border-radius:12px;background:rgba(15,19,34,.8);border:3px solid var(--ink);overflow:hidden}
-.fb-bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(#9fe9ff,#2d8cf0);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),inset 0 3px 0 rgba(255,255,255,.4);transition:width .25s}
-.fb-bar.pink i{background:linear-gradient(#ffc2db,#f0609c)}
-.fb-bar span{position:relative;display:block;text-align:center;font-size:13px;line-height:18px;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.fb-hl{color:var(--gold)}
+.fb-store img{width:44px;height:40px;filter:drop-shadow(0 3px 0 var(--ink))}
+.fb-store b{font-size:40px;line-height:1;color:var(--gold2);text-shadow:var(--o);font-variant-numeric:tabular-nums}
+.fb-store small{align-self:flex-end;margin-bottom:3px;font-size:18px;color:var(--muted)}
+.fb-bar{position:relative;height:22px;background:var(--sage3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink)}
+.fb-bar i{position:absolute;inset:3px auto 3px 3px;width:0;max-width:calc(100% - 6px);background:var(--blue);box-shadow:inset 0 3px 0 #7fb0a8;transition:width .3s steps(4)}
+.fb-bar.pink i{background:var(--gold);box-shadow:inset 0 3px 0 var(--gold2)}
+.fb-bar span{position:relative;display:block;text-align:center;font-size:13px;line-height:22px;color:var(--cream);text-shadow:var(--o-sm)}
+.fb-hl{color:var(--wood2)}
 .fb-small{font-size:13px}
-.btn.cant{filter:saturate(.35) brightness(.9)}
-.fb-fly{position:fixed;z-index:30;width:30px;height:27px;margin:-14px 0 0 -15px;pointer-events:none;animation:fb-fly 1s cubic-bezier(.2,.8,.3,1) forwards}
-@keyframes fb-fly{0%{transform:translate(0,0) scale(.4);opacity:1}45%{transform:translate(var(--dx),var(--dy)) scale(1.2);opacity:1}100%{transform:translate(calc(var(--dx)*1.4),calc(var(--dy) - 60px)) scale(.6);opacity:0}}
+.fb-fly{position:fixed;z-index:30;width:26px;height:24px;margin:-12px 0 0 -13px;pointer-events:none;animation:fb-fly .9s steps(6) forwards}
+@keyframes fb-fly{0%{transform:translate(0,0);opacity:1}50%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),calc(var(--dy) - 30px));opacity:0}}
+
+/* dark scene box used by the mine and the piggy bank */
+.fb-mine-scene,.fb-pigstage{position:relative;height:112px;background:var(--sage);clip-path:var(--notch);
+  box-shadow:inset 0 0 0 3px var(--ink),inset 0 -30px 0 var(--sage3),inset 0 -33px 0 var(--ink)}
 
 /* ---------------- Maden ---------------- */
 .fb-mine{display:flex;flex-direction:column;gap:10px}
-.fb-mine-scene{position:relative;height:112px;border-radius:18px;border:3px solid var(--ink);overflow:hidden;
-  background:linear-gradient(#5b4a7a 0%,#3b2f55 55%,#6b4a2f 56%,#4e3522 100%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.25),inset 0 3px 0 rgba(255,255,255,.12)}
-.fb-mine-scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44%;background:repeating-linear-gradient(-30deg,rgba(0,0,0,.12) 0 10px,transparent 10px 22px)}
-.fb-rig{position:absolute;left:50%;top:8px;width:70px;height:72px;margin-left:-35px;z-index:2;animation:fb-rig .18s linear infinite alternate}
-.fb-rig::before{content:"";position:absolute;left:4px;right:4px;top:0;height:36px;border-radius:10px;border:3px solid var(--ink);
-  background:linear-gradient(#ffe066,#ffb21e);box-shadow:inset 0 -5px 0 #c96d06,inset 0 3px 0 rgba(255,255,255,.5)}
-.fb-rig::after{content:"";position:absolute;left:24px;top:10px;width:16px;height:12px;border-radius:4px;background:#7fe3ff;border:2px solid var(--ink)}
-.fb-drill{position:absolute;left:50%;top:32px;width:30px;height:40px;margin-left:-15px;overflow:hidden;clip-path:polygon(0 0,100% 0,50% 100%)}
-.fb-drill i{position:absolute;left:0;right:0;top:-20px;height:80px;background:repeating-linear-gradient(160deg,#d6dbe6 0 6px,#8d9ab0 6px 12px);animation:fb-spin .3s linear infinite}
-.fb-rock{position:absolute;left:0;right:0;bottom:0;height:46%}
-.fb-rock span{position:absolute;bottom:8px;width:10px;height:10px;border-radius:3px;background:#8a6a4a;border:2px solid var(--ink);animation:fb-debris .7s ease-out infinite}
-.fb-rock span:nth-child(1){left:42%;--dx:-34px;animation-delay:0s}
-.fb-rock span:nth-child(2){left:52%;--dx:30px;animation-delay:.23s}
-.fb-rock span:nth-child(3){left:47%;--dx:-8px;animation-delay:.46s}
-.fb-mgem{position:absolute;z-index:1;width:28px;filter:drop-shadow(0 2px 0 var(--ink));animation:fb-twinkle 1.6s ease-in-out infinite}
-.fb-mgem.g1{left:14%;bottom:18px}
-.fb-mgem.g2{right:14%;bottom:30px;width:22px;animation-delay:.5s}
-.fb-mgem.g3{left:28%;bottom:44px;width:18px;animation-delay:1s}
-.fb-lv{position:absolute;left:8px;top:6px;z-index:3;padding:0 10px 2px;border-radius:10px;background:rgba(15,19,34,.75);border:2px solid var(--ink);font-size:15px}
-.fb-lv b{color:var(--gold)}
-.fb-mine.full .fb-rig,.fb-mine.full .fb-drill i,.fb-mine.full .fb-rock span{animation-play-state:paused}
-.fb-mine.full .fb-mine-scene{box-shadow:0 0 0 3px #7fe3ff,inset 0 -6px 0 rgba(0,0,0,.25)}
-.fb-mine-scene.lvup{animation:fb-flash .6s ease}
+.fb-pick{position:absolute;left:50%;top:10px;width:72px;height:72px;margin-left:-36px;z-index:2;filter:drop-shadow(0 3px 0 var(--ink));
+  clip-path:var(--notch);animation:fb-dig 1.6s steps(1) infinite}
+.fb-mcry{position:absolute;bottom:18px;width:60px;height:56px;filter:drop-shadow(0 3px 0 var(--ink))}
+.fb-mcry.c1{left:14px}
+.fb-mcry.c2{right:14px;transform:scaleX(-1)}
+.fb-mgem{position:absolute;z-index:1;width:22px;height:20px;opacity:0;filter:drop-shadow(0 2px 0 var(--ink));animation:fb-sparkle 3s steps(1) infinite}
+.fb-mgem.g1{left:30%;bottom:46px}
+.fb-mgem.g2{right:28%;bottom:54px;animation-delay:1s}
+.fb-mgem.g3{left:58%;bottom:8px;animation-delay:2s}
+.fb-lv{position:absolute;left:8px;top:8px;z-index:3;height:24px;padding:0 8px;background:var(--ink);clip-path:var(--notch);font-size:15px;line-height:24px;color:var(--cream)}
+.fb-lv b{color:var(--gold2)}
+.fb-mine.full .fb-pick,.fb-mine.full .fb-mgem{animation-play-state:paused}
+.fb-mine.full .fb-mine-scene{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold),inset 0 -30px 0 var(--sage3),inset 0 -33px 0 var(--ink)}
+.fb-mine-scene.lvup{animation:fb-flash .45s steps(3)}
 .fb-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.fb-stats div{display:flex;flex-direction:column;align-items:center;padding:4px 2px 6px;border-radius:12px;background:rgba(0,0,0,.22);border:3px solid var(--ink)}
+.fb-stats div{display:flex;flex-direction:column;align-items:center;padding:5px 2px 9px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2)}
 .fb-stats small{font-size:12px;color:var(--muted)}
-.fb-stats b{font-size:17px;line-height:1.1;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
+.fb-stats b{font-size:17px;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
 .fb-up .btn span{font-variant-numeric:tabular-nums}
-@keyframes fb-rig{from{transform:translateY(0)}to{transform:translateY(2px)}}
-@keyframes fb-spin{from{transform:translateY(0)}to{transform:translateY(14px)}}
-@keyframes fb-debris{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),-36px) rotate(200deg);opacity:0}}
-@keyframes fb-twinkle{0%,100%{transform:scale(1);filter:drop-shadow(0 2px 0 var(--ink)) brightness(1)}50%{transform:scale(1.12);filter:drop-shadow(0 2px 0 var(--ink)) brightness(1.4)}}
-@keyframes fb-flash{0%{filter:brightness(2)}100%{filter:brightness(1)}}
+@keyframes fb-dig{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes fb-sparkle{0%{opacity:0}10%{opacity:1;transform:translateY(0)}25%{opacity:1;transform:translateY(-3px)}40%,100%{opacity:0}}
+@keyframes fb-flash{0%,100%{filter:none}50%{filter:brightness(1.4)}}
 
 /* ---------------- Mağaza ---------------- */
-.fb-shop{display:flex;flex-direction:column;gap:10px}
-.fb-free-note{margin:0;padding:4px 10px 6px;border-radius:12px;background:rgba(0,0,0,.25);border:2px dashed rgba(169,182,220,.6);text-align:center;font-size:13px;color:var(--muted)}
-.fb-free-note b{color:#8ef05f}
-.fb-sec{display:flex;align-items:center;gap:6px;margin:4px 0 0;font-size:18px;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.fb-sec img{width:24px;height:24px;object-fit:contain}
-.fb-gift{display:flex;align-items:center;gap:10px;padding:10px;border-radius:18px;border:3px solid var(--ink);
-  background:linear-gradient(#8a5ad8,#5a2aa8);box-shadow:inset 0 3px 0 rgba(255,255,255,.2),0 4px 0 var(--ink)}
-.fb-gift.ready{background:linear-gradient(#ff8ac0,#c33a7e);animation:fb-glow 1.4s ease-in-out infinite}
-.fb-gift .info{flex:1;min-width:0}
-.fb-gift h4{margin:0;font-size:19px;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.fb-gift p{margin:0;display:flex;align-items:center;gap:3px;font-size:14px;color:#ffe9f4;flex-wrap:wrap}
-.fb-gift p img{width:18px;height:18px;object-fit:contain}
-.fb-gift .btn{min-height:46px;font-size:17px;padding:2px 12px 8px;min-width:96px;font-variant-numeric:tabular-nums}
-.fb-gift .btn.grey{font-size:15px}
-.fb-gift-box{position:relative;width:58px;height:54px;flex:none}
-.fb-box{position:absolute;left:6px;right:6px;bottom:0;height:34px;border-radius:6px;border:3px solid var(--ink);background:linear-gradient(#ffe066,#ffb21e);box-shadow:inset 0 -4px 0 #c96d06}
-.fb-box::before{content:"";position:absolute;left:-6px;right:-6px;top:-12px;height:12px;border-radius:5px;border:3px solid var(--ink);background:#ffcf3a}
-.fb-box i{position:absolute;left:50%;top:-12px;bottom:0;width:10px;margin-left:-5px;background:#ec3b4f;border-left:2px solid var(--ink);border-right:2px solid var(--ink)}
-.fb-gift.ready .fb-box{animation:fb-wiggle 1.2s ease-in-out infinite}
-.fb-gift-star{position:absolute;right:-4px;top:-6px;width:22px;z-index:1;animation:fb-twinkle 1.2s infinite}
-.fb-pack .ico{position:relative}
-.fb-pile{position:absolute;width:30px;height:30px;object-fit:contain;left:12px;top:12px;filter:drop-shadow(0 2px 0 var(--ink))}
-.fb-pile.b{left:26px;top:6px;width:26px}
-.fb-tag{font-style:normal;margin-left:6px;padding:0 6px;border-radius:8px;background:#ec3b4f;border:2px solid var(--ink);font-size:12px;vertical-align:middle;-webkit-text-stroke:3px var(--ink)}
-.fb-pack p b{color:#8ef05f}
-@keyframes fb-glow{0%,100%{box-shadow:inset 0 3px 0 rgba(255,255,255,.2),0 4px 0 var(--ink),0 0 0 0 rgba(255,138,192,.0)}50%{box-shadow:inset 0 3px 0 rgba(255,255,255,.2),0 4px 0 var(--ink),0 0 18px 4px rgba(255,138,192,.55)}}
-@keyframes fb-wiggle{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-8deg)}80%{transform:rotate(8deg)}90%{transform:rotate(-4deg)}}
+.fb-shop{display:flex;flex-direction:column;gap:8px}
+.fb-free-note{margin:0;padding:4px 10px 6px;background:var(--paper2);clip-path:var(--notch);text-align:center;font-size:13px;color:var(--dark)}
+.fb-free-note b{color:var(--wood2)}
+.fb-sec{display:flex;align-items:center;gap:6px;margin:4px 2px 0;font-size:17px;color:var(--dark)}
+.fb-sec::after{content:"";flex:1;height:3px;background:var(--paper2)}
+.fb-sec img{width:22px;height:22px;object-fit:contain}
+.fb-gift p{display:flex;align-items:center;flex-wrap:wrap;gap:3px}
+.fb-gift p img{width:16px;height:16px;object-fit:contain}
+.fb-gift .btn{min-width:92px;font-variant-numeric:tabular-nums}
+.fb-gift .ico{background:var(--wood2)}
+.fb-gift.ready .ico img{animation:fb-dig 1.2s steps(1) infinite}
+.fb-tag{display:inline-block;margin-left:6px;padding:0 5px;background:var(--red);clip-path:var(--notch);font-style:normal;font-size:12px;line-height:17px;vertical-align:2px;color:var(--cream);text-shadow:var(--o-sm)}
+.fb-pack p b{color:var(--green)}
+.fb-pack .btn{min-width:78px}
 
 /* ---------------- Kumbara ---------------- */
 .fb-pig-btn{overflow:visible}
-.fb-pig-btn img{width:38px}
-.fb-pigmeter{position:absolute;left:-4px;right:-4px;bottom:-9px;height:16px;border-radius:8px;background:#1b2033;border:2px solid var(--ink);overflow:hidden}
-.fb-pigmeter i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(#9fe9ff,#2d8cf0);transition:width .3s}
-.fb-pig-btn.full .fb-pigmeter i{background:linear-gradient(#ffe066,#f3a712)}
-.fb-pigmeter b{position:relative;display:block;text-align:center;font-size:10px;line-height:12px;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
-.fb-pig-btn span{margin-bottom:6px}
+.fb-pigmeter{position:absolute;left:50%;top:100%;width:58px;margin:2px 0 0 -29px;height:18px;display:flex;align-items:center;justify-content:center;gap:2px;
+  background:var(--ink);clip-path:var(--notch)}
+.fb-pigmeter i{position:absolute;inset:2px auto 2px 2px;width:0;max-width:calc(100% - 4px);background:var(--wood2);transition:width .3s steps(3)}
+.fb-pig-btn.full .fb-pigmeter i{background:var(--green)}
+.side .sbtn .fb-pigmeter img{position:relative;width:12px;height:11px;margin:0;padding:0;background:none;clip-path:none}
+.fb-pigmeter b{position:relative;font-size:11px;line-height:18px;color:var(--cream);text-shadow:var(--o-sm);font-variant-numeric:tabular-nums}
 .fb-piggy{display:flex;flex-direction:column;gap:10px}
-.fb-pigstage{position:relative;height:120px;display:grid;place-items:center;border-radius:18px;border:3px solid var(--ink);
-  background:radial-gradient(ellipse at 50% 40%,#ffd6e8 0%,#c95b8f 70%,#8e2f60 100%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2)}
-.fb-bigpig{width:112px;filter:drop-shadow(0 5px 0 rgba(27,32,51,.5));animation:fb-pigbob 1.6s ease-in-out infinite}
-.fb-pigstage.smash .fb-bigpig{animation:fb-smash .6s ease-in forwards}
+.fb-pigstage{display:grid;place-items:center}
+.fb-bigpig{width:128px;height:auto;margin-bottom:6px;filter:drop-shadow(0 3px 0 var(--ink));animation:fb-dig 2s steps(1) infinite}
+.fb-pigstage.smash .fb-bigpig{animation:fb-open .5s steps(3) forwards}
 .fb-coins{position:absolute;left:50%;top:50%;width:0;height:0}
-.fb-coins img{position:absolute;width:30px;margin:-14px 0 0 -15px;opacity:0;animation:fb-fly 1s cubic-bezier(.2,.8,.3,1) forwards;filter:drop-shadow(0 2px 0 var(--ink))}
-@keyframes fb-pigbob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
-@keyframes fb-smash{0%{transform:scale(1)}30%{transform:scale(1.25,.8)}60%{transform:scale(.9,1.15) rotate(8deg);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.fb-coins img{position:absolute;width:26px;height:24px;margin:-12px 0 0 -13px;opacity:0;animation:fb-fly .9s steps(6) forwards;filter:drop-shadow(0 2px 0 var(--ink))}
+@keyframes fb-open{0%{transform:translateY(0)}40%{transform:translateY(-6px)}100%{transform:translateY(0)}}
 
 /* ---------------- Kostüm ---------------- */
-.fb-skins{display:flex;flex-direction:column;gap:10px}
-.fb-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:16px;background:rgba(0,0,0,.25);border:3px solid var(--ink)}
-.fb-tab{height:40px;border-radius:12px;font-size:18px;color:var(--muted)}
-.fb-tab.on{color:#fff;background:linear-gradient(#ffb8d6,#f0609c);border:3px solid var(--ink);box-shadow:inset 0 -4px 0 #b02e68;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.fb-skin .ico canvas{width:64px;height:50px}
+.fb-skins{display:flex;flex-direction:column;gap:8px}
 .fb-skin .btn{min-width:84px}
 
 /* settings gear in the top row (moved there by layout.js) */
