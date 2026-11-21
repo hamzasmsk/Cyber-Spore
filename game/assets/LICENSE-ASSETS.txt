@@ -1,0 +1,4 @@
+Graphics: Kenney (www.kenney.nl), Creative Commons Zero (CC0) - free for personal and commercial use.
+Packs: Animal Pack Remastered, Monster Builder Pack, Topdown Shooter, Background Elements Remastered,
+Particle Pack, Splat Pack, New Platformer Pack, UI Pack, Game Icons.
+Font: Baloo 2 by Ek Type, SIL Open Font License 1.1 (via @fontsource/baloo-2).

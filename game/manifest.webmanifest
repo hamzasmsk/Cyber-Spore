@@ -1,14 +1,14 @@
 {
-  "name": "Neon Swarm",
-  "short_name": "Neon Swarm",
-  "description": "Neon sürülere karşı hayatta kalma nişancısı.",
+  "name": "Swarm Squad",
+  "short_name": "Swarm Squad",
+  "description": "Sevimli hayvan kahramanlarla canavar sürülerine karşı hayatta kal.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
   "orientation": "portrait",
-  "background_color": "#07100c",
-  "theme_color": "#07100c",
+  "background_color": "#2fa866",
+  "theme_color": "#2fbe6e",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

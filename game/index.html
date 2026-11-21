@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#07100c">
+<meta name="theme-color" content="#2fbe6e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Neon Swarm</title>
+<title>Swarm Squad</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="stylesheet" href="game.css">
 </head>
 <body>
@@ -19,94 +19,101 @@
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div class="hud-top">
+    <div class="portrait"><img id="hudHero" src="assets/ui/hero_panda.png" alt=""><b id="lvTxt">1</b></div>
     <div class="bars">
-      <div class="bar hp"><i id="hpFill"></i><span id="hpTxt">100</span></div>
-      <div class="bar xp"><i id="xpFill"></i><span id="lvTxt">Sv 1</span></div>
+      <div class="bar hp"><img src="assets/ui/heart.png" alt=""><div class="track"><i id="hpFill"></i><span id="hpTxt">100</span></div></div>
+      <div class="bar xp"><img src="assets/ui/gem_green.png" alt=""><div class="track"><i id="xpFill"></i></div></div>
     </div>
-    <button id="pauseBtn" class="icon-btn" aria-label="Duraklat">❚❚</button>
+    <button id="pauseBtn" class="round-btn" aria-label="Duraklat"><img src="assets/ui/icon_pause.png" alt=""></button>
   </div>
-  <div class="hud-stats">
-    <span id="timeTxt">0:00</span>
-    <span>💀 <b id="killTxt">0</b></span>
-    <span>🪙 <b id="coinTxt">0</b></span>
+  <div class="hud-row">
+    <div class="pill timer" id="timeTxt">2:30</div>
   </div>
-  <div id="bossBar" class="hidden"><div class="boss-name" id="bossName"></div><div class="bar boss"><i id="bossFill"></i></div></div>
+  <div class="hud-chips">
+    <div class="pill small"><img src="assets/ui/mon_mite.png" alt=""><b id="killTxt">0</b></div>
+    <div class="pill small"><img src="assets/ui/coin.png" alt=""><b id="coinTxt">0</b></div>
+  </div>
+  <div id="bossBar" class="hidden">
+    <img id="bossImg" src="assets/ui/mon_boss_brood.png" alt="">
+    <div class="boss-info"><div class="boss-name" id="bossName"></div><div class="track boss"><i id="bossFill"></i></div></div>
+  </div>
   <div id="banner"></div>
 </div>
 
 <!-- Main menu -->
 <section id="menu" class="screen">
-  <div class="panel center">
-    <div class="logo">NEON<br><em>SWARM</em></div>
-    <p class="tag">Neon sürülere karşı hayatta kalma nişancısı</p>
-    <div class="coins">🪙 <b class="coinTotal">0</b></div>
-    <button class="btn primary" data-go="stages">OYNA</button>
-    <button class="btn" data-go="chars">KARAKTERLER</button>
-    <button class="btn" data-go="shop">GELİŞTİRMELER</button>
-    <button class="btn ghost" id="soundBtn">Ses: Açık</button>
-    <p class="hint">Hareket: ekrana dokun ve sürükle (masaüstü: WASD). Ateş otomatik.</p>
+  <div class="topbar"><div class="pill coins"><img src="assets/ui/coin.png" alt=""><b class="coinTotal">0</b></div>
+    <button class="round-btn" id="soundBtn" aria-label="Ses"><img id="soundIco" src="assets/ui/icon_audio_on.png" alt=""></button></div>
+  <div class="menu-main">
+    <h1 class="logo"><span>SWARM</span><span>SQUAD</span></h1>
+    <div class="hero-show"><div class="hero-shadow"></div><img id="menuHero" src="assets/ui/hero_panda.png" alt=""></div>
+    <div class="hero-name" id="menuHeroName">Panda</div>
+  </div>
+  <div class="menu-bottom">
+    <button class="kbtn yellow big" data-go="stages">OYNA</button>
+    <div class="row">
+      <button class="kbtn green" data-go="chars">KAHRAMANLAR</button>
+      <button class="kbtn green" data-go="shop">GELİŞTİR</button>
+    </div>
   </div>
 </section>
 
-<section id="stages" class="screen hidden">
-  <div class="panel">
-    <div class="head"><button class="back" data-go="menu">‹</button><h2>Bölümler</h2><div class="coins small">🪙 <b class="coinTotal">0</b></div></div>
-    <div id="stageList" class="list"></div>
-  </div>
+<section id="stages" class="screen">
+  <div class="head"><button class="round-btn" data-go="menu" aria-label="Geri"><img src="assets/ui/icon_back.png" alt=""></button><h2>Bölümler</h2><div class="pill coins"><img src="assets/ui/coin.png" alt=""><b class="coinTotal">0</b></div></div>
+  <div id="stageList" class="list"></div>
 </section>
 
-<section id="chars" class="screen hidden">
-  <div class="panel">
-    <div class="head"><button class="back" data-go="menu">‹</button><h2>Karakterler</h2><div class="coins small">🪙 <b class="coinTotal">0</b></div></div>
-    <div id="charList" class="list"></div>
-  </div>
+<section id="chars" class="screen">
+  <div class="head"><button class="round-btn" data-go="menu" aria-label="Geri"><img src="assets/ui/icon_back.png" alt=""></button><h2>Kahramanlar</h2><div class="pill coins"><img src="assets/ui/coin.png" alt=""><b class="coinTotal">0</b></div></div>
+  <div id="charList" class="grid"></div>
 </section>
 
-<section id="shop" class="screen hidden">
-  <div class="panel">
-    <div class="head"><button class="back" data-go="menu">‹</button><h2>Kalıcı Geliştirmeler</h2><div class="coins small">🪙 <b class="coinTotal">0</b></div></div>
-    <div id="shopList" class="list"></div>
-  </div>
+<section id="shop" class="screen">
+  <div class="head"><button class="round-btn" data-go="menu" aria-label="Geri"><img src="assets/ui/icon_back.png" alt=""></button><h2>Geliştir</h2><div class="pill coins"><img src="assets/ui/coin.png" alt=""><b class="coinTotal">0</b></div></div>
+  <div id="shopList" class="list"></div>
 </section>
 
-<section id="levelup" class="screen hidden dim">
-  <div class="panel center">
-    <h2 class="glow">SEVİYE ATLADIN!</h2>
-    <p class="tag">Bir güç seç</p>
+<section id="levelup" class="screen overlay">
+  <div class="modal">
+    <div class="ribbon">SEVİYE ATLADIN!</div>
     <div id="upgList" class="upg-list"></div>
-    <button id="rerollBtn" class="btn ghost small">Yenile (1)</button>
+    <button id="rerollBtn" class="kbtn grey">YENİLE</button>
   </div>
 </section>
 
-<section id="pause" class="screen hidden dim">
-  <div class="panel center">
-    <h2>Duraklatıldı</h2>
+<section id="pause" class="screen overlay">
+  <div class="modal">
+    <div class="ribbon blue">DURAKLATILDI</div>
     <div id="pauseUpgs" class="chips"></div>
-    <button class="btn primary" id="resumeBtn">DEVAM</button>
-    <button class="btn" id="quitBtn">ANA MENÜ</button>
+    <button class="kbtn yellow" id="resumeBtn">DEVAM</button>
+    <button class="kbtn grey" id="quitBtn">ANA MENÜ</button>
   </div>
 </section>
 
-<section id="over" class="screen hidden dim">
-  <div class="panel center">
-    <h2 id="overTitle">ÖLDÜN</h2>
+<section id="over" class="screen overlay">
+  <div class="modal">
+    <div class="ribbon" id="overTitle">YENİLDİN</div>
+    <img id="overHero" class="over-hero" src="assets/ui/hero_panda.png" alt="">
     <div class="results">
       <div><span>Süre</span><b id="rTime">0:00</b></div>
       <div><span>Öldürme</span><b id="rKills">0</b></div>
       <div><span>Seviye</span><b id="rLevel">1</b></div>
-      <div><span>Altın</span><b id="rCoins">0</b></div>
+      <div class="gold"><span>Altın</span><b><img src="assets/ui/coin.png" alt=""><em id="rCoins">0</em></b></div>
     </div>
-    <p id="overNote" class="tag"></p>
-    <button class="btn primary" id="againBtn">TEKRAR</button>
-    <button class="btn" id="nextBtn">SONRAKİ BÖLÜM</button>
-    <button class="btn ghost" id="menuBtn">ANA MENÜ</button>
+    <p id="overNote" class="note"></p>
+    <button class="kbtn yellow" id="nextBtn">SONRAKİ BÖLÜM</button>
+    <button class="kbtn green" id="againBtn">TEKRAR</button>
+    <button class="kbtn grey" id="menuBtn">ANA MENÜ</button>
   </div>
 </section>
 
+<div id="loading" class="screen"><div class="loading-txt">Yükleniyor…</div></div>
+
+<script src="assets/atlas.js"></script>
 <script src="game.js"></script>
 <script>
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(function(){});
+if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) {
+  navigator.serviceWorker.register('sw.js').catch(function () {});
 }
 </script>
 </body>

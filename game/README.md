@@ -1,29 +1,39 @@
-# Neon Swarm
+# Swarm Squad
 
-Mobil öncelikli bir hayatta kalma nişancısı (survivor shooter). Saf HTML5 Canvas + JavaScript, hiçbir bağımlılık yok.
-Tamamen bağımsız bir projedir: `game/` klasörü tek başına çalışır, ayrı bir depoya olduğu gibi taşınabilir.
-Telefonda "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
+Mobil öncelikli bir hayatta kalma nişancısı (survivor shooter): sevimli hayvan kahramanlar canavar sürülerine karşı.
+Saf HTML5 Canvas + JavaScript, hiçbir kütüphane bağımlılığı yok. `game/` klasörü tek başına çalışır ve ayrı bir depoya
+olduğu gibi taşınabilir. Telefonda "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
 
 ## Oynanış
 - Ekrana dokun ve sürükle: hareket (masaüstünde WASD / ok tuşları). Ateş otomatik, en yakın düşmana nişan alır.
-- Düşmanlardan düşen yeşil kürelerle seviye atla ve 3 güçten birini seç (14 farklı güç).
-- Her bölümde süre dolunca boss gelir; bossu yenince sonraki bölüm açılır (5 bölüm, 5 boss).
-- Toplanan altınla kalıcı geliştirmeler (7 adet) ve yeni karakterler (4 adet) alınır.
+- Düşmanlardan düşen kristallerle seviye atla ve 3 güçten birini seç (14 güç).
+- Her bölümde süre dolunca boss gelir; bossu yenince sonraki bölüm açılır (5 bölüm / 5 biyom / 5 boss).
+- Altınla kalıcı geliştirmeler (7) ve yeni kahramanlar (4) alınır.
+
+## Görseller
+Tüm grafikler [Kenney](https://kenney.nl) paketlerinden (CC0, ticari kullanım serbest):
+Animal Pack Remastered (kahramanlar), Monster Builder Pack (canavarlar parçalardan birleştirilir),
+Topdown Shooter (zemin), Background Elements Remastered (ağaç/çalı), Particle Pack, Splat Pack,
+New Platformer Pack (kristal/altın/kalp), UI Pack ve Game Icons. Yazı tipi: Baloo 2 (OFL).
+
+`tools/build_assets.py` bu paketlerden `assets/atlas.png` + `assets/atlas.js` ve `assets/ui/` dosyalarını üretir:
+
+```
+git clone --depth 1 https://github.com/shorepine/kenney /tmp/kenney   # Kenney paketlerinin aynası
+python3 game/tools/build_assets.py /tmp/kenney
+```
+
+Yeni canavar eklemek için betikteki `MONSTERS` tablosuna bir tarif (gövde + göz + ağız + boynuz) eklemek yeterli.
 
 ## Dosyalar
 | Dosya | İçerik |
 |---|---|
-| `index.html` | Ekranlar (menü, bölümler, karakterler, mağaza, seviye atlama, sonuç) |
-| `game.css` | Arayüz stili |
+| `index.html`, `game.css` | Ekranlar ve arayüz |
 | `game.js` | Oyun motoru: veri tabloları (CHARS, META, ENEMIES, BOSSES, STAGES, UPGRADES), güncelleme, çizim |
-| `sw.js`, `manifest.webmanifest`, `icon.svg` | PWA (çevrimdışı çalışma, ana ekrana ekleme) |
-
-Yeni düşman, boss, bölüm veya güç eklemek için `game.js` başındaki tablolara bir satır eklemek yeterli.
+| `assets/` | Atlas, arayüz görselleri, yazı tipi |
+| `sw.js`, `manifest.webmanifest`, `icon.png` | PWA |
 
 ## Yol haritası
-1. **Denge ve his** – gerçek telefonda test, zorluk eğrisi, ses efektleri, titreşim ayarı.
-2. **İçerik** – daha fazla bölüm, silah türleri (lazer, roket, alev), güç evrimleri, günlük görevler.
-3. **Görsel** – sprite çizimleri / animasyonlar, bölüme özel arka planlar, müzik.
-4. **Mağaza yayını** – Capacitor ile aynı kodu Android (Google Play) ve iOS (App Store) uygulamasına sarmak;
-   ödüllü reklam ve uygulama içi satın alma eklemek.
-5. **Gerekirse motor değişikliği** – oyun çok büyürse Godot veya Unity'ye taşımak.
+1. Gerçek telefonda test, zorluk dengesi, ses efektleri ve müzik.
+2. İçerik: yeni silahlar, güç evrimleri, günlük görevler, daha fazla bölüm; kurbağa ve penguen kahramanları hazır.
+3. Capacitor ile Android/iOS uygulaması; ödüllü reklam ve uygulama içi satın alma.
