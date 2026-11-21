@@ -33,7 +33,7 @@ let W = 390, H = 844, DPR = 1, U = 1;
 const F = {};   // field geometry (CSS px)
 let fieldBg = null;
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, 3);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
@@ -69,12 +69,14 @@ function tinted(name, color) {
 }
 function spr(name, x, y, sc = 1, ax = 0.5, ay = 0.5, flip = false, rot = 0, sx = 1, sy = 1) {
   const f = AF[name]; if (!f) return;
+  if (f[4]) sc *= f[4];
   const w = f[2] * sc * sx, h = f[3] * sc * sy;
   if (!flip && !rot) { ctx.drawImage(atlasImg, f[0], f[1], f[2], f[3], x - w * ax, y - h * ay, w, h); return; }
   ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(atlasImg, f[0], f[1], f[2], f[3], -w * ax, -h * ay, w, h); ctx.restore();
 }
 function sprT(name, color, x, y, sc = 1, ax = 0.5, ay = 0.5, flip = false, rot = 0, sx = 1, sy = 1) {
+  const f0 = AF[name]; if (f0 && f0[4]) sc *= f0[4];
   const c = tinted(name, color), w = c.width * sc * sx, h = c.height * sc * sy;
   ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (flip) ctx.scale(-1, 1);
   ctx.drawImage(c, -w * ax, -h * ay, w, h); ctx.restore();
@@ -138,9 +140,11 @@ const stat = {
   money: l => Math.pow(1.13, l),
 };
 const COST = { power: l => 8 * Math.pow(1.2, l), speed: l => 12 * Math.pow(1.24, l), money: l => 15 * Math.pow(1.22, l) };
-const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * rebirthMul();
-const fireRate = () => stat.speed(save.lv.speed);
-const moneyMul = () => stat.money(save.lv.money) * rebirthMul();
+const MODS = { dmg: [], rate: [], money: [] };   // feature plugins push functions returning a multiplier
+const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
+const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * rebirthMul() * modMul('dmg');
+const fireRate = () => stat.speed(save.lv.speed) * modMul('rate');
+const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
 const enemyHp = () => 10 * Math.pow(1.3, stageIdx());
 const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 18;
@@ -265,6 +269,7 @@ function startBoss() {
 }
 function bossWin() {
   const b = R.boss; R.boss = null;
+  runHooks('bossWin', b);
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-60, 60) * U, b.y - rand(20, 160) * U, 1.2), i * 90);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - 80 * U, 24);
@@ -287,6 +292,7 @@ function damage(target, dmg, crit, isBoss) {
 }
 function kill(e) {
   e.dead = true;
+  runHooks('kill', e);
   puff(e.x, e.y - 20 * U, 0.7); confetti(e.x, e.y - 20 * U, e.d.col, 8);
   addMoney(e.maxHp * 0.55 * moneyMul(), e.x, e.y - 30 * U, 4);
   sfx('kill', 0.05);
@@ -336,6 +342,8 @@ function fire(h, tgt) {
 }
 
 // ================================================================ update
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], buy: [], stage: [] };
+const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
   if (!R.boss) {
@@ -398,6 +406,7 @@ function update(dt) {
   if (R.shake > 0) R.shake = Math.max(0, R.shake - dt * 40);
   if (R.flash > 0) R.flash = Math.max(0, R.flash - dt * 2);
   if (R.walletPop > 0) R.walletPop -= dt;
+  runHooks('update', dt);
   R.earnT += dt; if (R.earnT >= 10) { save.rate = lerp(save.rate || 0, R.earned / R.earnT, 0.5); R.earned = 0; R.earnT = 0; }
 }
 
@@ -504,6 +513,7 @@ function render() {
     ctx.fillText(s, x, tx.y);
   }
   ctx.globalAlpha = 1;
+  runHooks('render', ctx);
   const b = biome();
   if (R.motes.length < 28) R.motes.push({ x: Math.random() * W, y: Math.random() * H, s: rand(1, 2.6), ph: rand(0, 6) });
   ctx.fillStyle = `rgba(${b.motes},0.7)`;
@@ -553,7 +563,7 @@ function buy(k) {
   const lv = save.lv[k], cost = COST[k](lv);
   if (k === 'speed' && fireRate() >= 12) return false;
   if (save.money < cost) { sfx('no', 0.2); return false; }
-  save.money -= cost; save.lv[k]++; sfx('buy', 0.05);
+  save.money -= cost; save.lv[k]++; sfx('buy', 0.05); runHooks('buy', k);
   return true;
 }
 cards.forEach(c => {
@@ -657,5 +667,18 @@ Promise.all([atlasReady, Promise.race([fontReady, new Promise(r => setTimeout(r,
 });
 window.addEventListener('pointerdown', audioInit, { once: true });
 
+// ---------------- plugin API used by features/*.js
+function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id }) {
+  const b = el(`<button class="sbtn ${color}" ${id ? `id="${id}"` : ''}><img src="${icon}" alt=""><span>${label}</span></button>`);
+  b.addEventListener('click', () => { audioInit(); sfx('click'); onClick(); });
+  document.querySelector('.side.' + side).appendChild(b);
+  return b;
+}
+window.SS = {
+  save, R, F, GUNS, TEAM, BIOMES, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, buy, startBoss, setupHeroes,
+  get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; },
+  refreshUI() { uiKey = ''; },
+};
 window.SwarmSquad = { save, R, buy, startBoss, fmt };
 })();
