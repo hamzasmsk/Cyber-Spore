@@ -4,15 +4,17 @@ Telefon için yandan görünümlü bir **koş-ve-vur** (run-and-gun) aksiyon oyu
 hiçbir kütüphane yok. `game/` klasörü tek başına çalışır, ayrı bir depoya olduğu gibi taşınabilir.
 Telefonda yatay oynanır; "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
 
-## Oynanış (dikey, tek dokunuş)
-- Telefon **dik** tutulur. Karakter kendiliğinden sağa koşar ve otomatik nişan alıp ateş eder.
-- Önüne düşman, kasa veya kafes çıkınca durur ve vurur; temizlenince koşmaya devam eder.
-- **Ekrana dokun = zıpla**, havada tekrar dokun = çift zıplama (basılı tutarsan daha yüksek). Dikenler, çukurlar ve boss'un şok dalgaları zıplanarak aşılır.
-- **Kafesleri vurup kır**: içindeki esir takımına katılır ve seninle ateş eder (en fazla 3).
-- Kasalardan altın, can, **özel silahlar** (pompalı, makineli, lazer, roketatar; otomatik takılır) ve **kaykay** (kalkan + hız + ekstra zıplama) çıkar. Düşmanların üstüne düşerek ezebilirsin.
-- **5 dünya × 5 bölüm**, her dünyanın sonunda boss. Dünya haritasında bölüm bölüm ilerlenir; her bölümden 3 yıldız.
-- Altınla 5 kahraman ve 5 kalıcı geliştirme (Atölye). Ölünce altınla bir kez dirilme.
-- Masaüstünde Boşluk / W / yukarı ok = zıpla.
+## Oynanış (dikey idle nişancı)
+- Takım çapraz yolun ortasında durur ve sağdan gelen düşmanlara **otomatik ateş eder**; elinde telefon olmasa da savaşır.
+- Her düşman **altın** düşürür (para banknotları cüzdana uçar). Alttaki 3 kartla geliştirme alınır:
+  **Güç** (atış başına hasar), **Hız** (saniyedeki atış), **Para** (düşmanların verdiği altın çarpanı). Karta basılı tutunca art arda alır.
+- **Bölüm X-Y**: her bölümde 5 aşama var; her aşamada 8 düşman. 5. aşamadan sonra **30 saniyelik boss** gelir.
+  Süre içinde yenersen sonraki bölüm açılır ve **elmas** kazanırsın; yenemezsen güçlenip tekrar denersin (Oto açıksa kendisi dener).
+- **Silah**: elmasla 8 silah kademesi (tabancadan plazma topuna, hasar x900'e kadar).
+- **Takım**: altınla 5 astronota kadar; her biri bir silah daha demek.
+- **Yeniden Doğuş**: 6. bölümden sonra; bölüm, seviyeler ve altın sıfırlanır, kalıcı hasar ve para bonusu kazanırsın.
+- **Çevrimdışı kazanç**: oyunu kapattığında takım savaşmaya devam eder (8 saate kadar).
+- Sayılar büyüdükçe K, M, B, T, aa, ab... şeklinde kısaltılır. 5 farklı bölge (çimen, mantar, çöl, buz, lav) döngüyle değişir.
 
 ## Görseller
 Kenney (CC0, ticari kullanım serbest): New Platformer Pack (karakterler, düşmanlar, zeminler, arka planlar, eşyalar),

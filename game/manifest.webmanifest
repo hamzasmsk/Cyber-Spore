@@ -1,7 +1,7 @@
 {
   "name": "Swarm Squad",
   "short_name": "Swarm Squad",
-  "description": "Yandan görünümlü koş-ve-vur: takımını kurtar, sürüyü durdur.",
+  "description": "Dikey idle nişancı: takımın otomatik ateş eder, sen güçlendir.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

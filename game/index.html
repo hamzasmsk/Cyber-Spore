@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#7fc8ff">
+<meta name="theme-color" content="#2b2236">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,164 +16,49 @@
 <body>
 <canvas id="c"></canvas>
 
-<!-- ================= HUD ================= -->
-<div id="hud" class="hidden">
-  <div class="hud-top">
-    <div class="hud-l">
-      <div class="portrait"><img id="hudHelmet" src="assets/ui/helmet_beige.png" alt=""></div>
-      <div class="hpbox">
-        <div class="bar hp"><i id="hpFill"></i><span id="hpTxt">100</span></div>
-        <div class="tags">
-          <span class="tag" id="teamTag"><img src="assets/ui/ic_team.png" alt=""><b id="teamTxt">0</b></span>
-          <span class="tag gold hidden" id="boardTag">KAYKAY</span>
-          <span class="tag gold hidden" id="wpnTag"><b id="wpnTxt"></b></span>
-        </div>
+<div id="ui">
+  <div class="top">
+    <div class="pbar"><i id="subFill"></i><span id="subPct">0%</span></div>
+    <div class="toprow">
+      <button class="rbtn grey" id="soundBtn" aria-label="Ses"><img id="soundIco" src="assets/ui/ic_sound_on.png" alt=""></button>
+      <div class="nodes" id="nodes"></div>
+      <div class="wallet">
+        <div class="chip money"><img src="assets/ui/coin_gold.png" alt=""><b id="money">0</b></div>
+        <div class="chip gems"><img src="assets/ui/gem_blue.png" alt=""><b id="gems">0</b></div>
       </div>
     </div>
-    <div class="hud-c">
-      <div class="stage-lbl" id="stageLbl">1-1</div>
-      <div class="track" id="track"><div class="track-fill" id="trackFill"></div><div id="trackIcons"></div><img class="me" id="trackMe" src="assets/ui/helmet_beige.png" alt=""></div>
-      <div id="bossBox" class="hidden"><img id="bossImg" src="assets/ui/boss_brood.png" alt=""><div class="bossinfo"><b id="bossName">BOSS</b><div class="bar boss"><i id="bossFill"></i></div></div></div>
+    <div class="stage" id="stageLbl">Bölüm 1-1</div>
+    <div id="bossHud" class="hidden">
+      <img id="bossImg" src="assets/ui/boss_brood.png" alt="">
+      <div class="bossbar"><i id="bossFill"></i><span id="bossHpTxt"></span></div>
+      <div class="btimer" id="bossTime">30</div>
     </div>
-    <div class="hud-r">
-      <div class="chip"><img src="assets/ui/coin_gold.png" alt=""><b id="coinTxt">0</b></div>
-      <button id="pauseBtn" class="rbtn blue" aria-label="Duraklat"><img src="assets/ui/ic_pause.png" alt=""></button>
-    </div>
+  </div>
+
+  <div class="side left">
+    <button class="sbtn purple" data-open="rebirth"><img src="assets/ui/ic_star.png" alt=""><span>Doğuş</span></button>
+    <button class="sbtn blue" data-open="guns"><canvas class="gunico" width="96" height="60"></canvas><span>Silah</span></button>
+    <button class="sbtn green" data-open="team"><img src="assets/ui/ic_team.png" alt=""><span>Takım</span></button>
+  </div>
+  <div class="side right">
+    <button class="sbtn grey" id="autoBtn"><img src="assets/ui/ic_retry.png" alt=""><span>Oto</span></button>
+    <button class="sbtn red" id="bossBtn"><img id="bossBtnImg" src="assets/ui/boss_brood.png" alt=""><span>Boss</span></button>
+  </div>
+
+  <div class="cards">
+    <button class="ucard" data-up="power"><div class="lbl"><img src="assets/ui/ic_power.png" alt=""><span>Güç</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
+    <button class="ucard" data-up="speed"><div class="lbl"><img src="assets/ui/ic_rate.png" alt=""><span>Hız</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
+    <button class="ucard" data-up="money"><div class="lbl"><img src="assets/ui/coin_gold.png" alt=""><span>Para</span><small>Sv.<b class="lv">0</b></small></div><div class="val">0</div><div class="cost"><img src="assets/ui/coin_gold.png" alt=""><b>0</b></div></button>
   </div>
   <div id="banner"></div>
   <div id="toast"></div>
-  <div id="tapHint"><div class="finger"></div><b>Zıplamak için dokun</b><small>Havada tekrar dokun: çift zıplama</small></div>
 </div>
 
-<!-- ================= MENU ================= -->
-<section id="menu" class="screen">
-  <div class="topbar">
-    <div class="chip big"><img src="assets/ui/coin_gold.png" alt=""><b class="coinTotal">0</b></div>
-    <div class="chip big"><img src="assets/ui/star.png" alt=""><b id="starTotal">0</b></div>
-    <span class="grow"></span>
-    <button class="rbtn blue" id="soundBtn" aria-label="Ses"><img id="soundIco" src="assets/ui/ic_sound_on.png" alt=""></button>
-  </div>
-  <div class="menu-body">
-    <div class="menu-left">
-      <h1 class="logo"><span>SWARM</span><span>SQUAD</span></h1>
-      <p class="sub">Tek dokunuşla koş, zıpla, takımını kurtar!</p>
-    </div>
-    <div class="menu-right">
-      <button class="btn yellow huge" id="playBtn"><img src="assets/ui/ic_play.png" alt=""><span>OYNA<small id="playStage">BÖLÜM 1-1</small></span></button>
-      <button class="btn green" data-go="map"><img src="assets/ui/flag_green_a.png" alt="">HARİTA</button>
-      <div class="row2">
-        <button class="btn blue" data-go="heroes"><img src="assets/ui/helmet_green.png" alt="">KAHRAMAN</button>
-        <button class="btn purple" data-go="shop"><img src="assets/ui/ic_power.png" alt="">ATÖLYE</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= WORLD MAP ================= -->
-<section id="map" class="screen dark">
-  <div class="topbar">
-    <button class="rbtn blue" data-go="menu" aria-label="Geri"><img src="assets/ui/ic_back.png" alt=""></button>
-    <h2>Dünya Haritası</h2>
-    <span class="grow"></span>
-    <div class="chip big"><img src="assets/ui/star.png" alt=""><b class="starTotal2">0</b></div>
-    <div class="chip big"><img src="assets/ui/coin_gold.png" alt=""><b class="coinTotal">0</b></div>
-  </div>
-  <div id="mapScroll"></div>
-</section>
-
-<section id="stagePop" class="screen overlay">
+<section id="panel" class="screen hidden">
   <div class="panel pop">
-    <div class="ribbon" id="spTitle">1-1</div>
-    <div class="sp-body">
-      <div class="sp-scene" id="spScene"><img id="spBoss" class="hidden" src="assets/ui/boss_brood.png" alt=""></div>
-      <div class="sp-info">
-        <h3 id="spName">Yeşil Tepeler</h3>
-        <div class="stars big" id="spStars"></div>
-        <ul class="goals">
-          <li><img src="assets/ui/flag_green_a.png" alt="">Bitiş bayrağına ulaş</li>
-          <li><img src="assets/ui/chain.png" alt=""><span id="spCages">Tüm esirleri kurtar</span></li>
-          <li><img src="assets/ui/heart.png" alt="">Canının yarısından fazlasıyla bitir</li>
-        </ul>
-      </div>
-    </div>
-    <div class="btnrow">
-      <button class="btn grey" data-close="stagePop">KAPAT</button>
-      <button class="btn yellow" id="spGo"><img src="assets/ui/ic_play.png" alt="">BAŞLA</button>
-    </div>
-  </div>
-</section>
-
-<!-- ================= HEROES ================= -->
-<section id="heroes" class="screen dark">
-  <div class="topbar">
-    <button class="rbtn blue" data-go="menu" aria-label="Geri"><img src="assets/ui/ic_back.png" alt=""></button>
-    <h2>Kahramanlar</h2><span class="grow"></span>
-    <div class="chip big"><img src="assets/ui/coin_gold.png" alt=""><b class="coinTotal">0</b></div>
-  </div>
-  <div class="hero-wrap">
-    <div class="panel hero-view">
-      <div class="hero-stage"><img id="hvImg" src="assets/ui/hero_beige.png" alt=""><div class="pedestal"></div></div>
-      <div class="hero-meta">
-        <h3 id="hvName">Kaptan</h3>
-        <p class="perk" id="hvPerk"></p>
-        <div class="stat"><span>Can</span><div class="sbar"><i id="hvHp"></i></div></div>
-        <div class="stat"><span>Hız</span><div class="sbar"><i id="hvSpd"></i></div></div>
-        <div class="stat"><span>Hasar</span><div class="sbar"><i id="hvDmg"></i></div></div>
-        <button class="btn yellow" id="hvBtn">SEÇ</button>
-      </div>
-    </div>
-    <div class="hero-grid" id="heroGrid"></div>
-  </div>
-</section>
-
-<!-- ================= SHOP ================= -->
-<section id="shop" class="screen dark">
-  <div class="topbar">
-    <button class="rbtn blue" data-go="menu" aria-label="Geri"><img src="assets/ui/ic_back.png" alt=""></button>
-    <h2>Atölye</h2><span class="grow"></span>
-    <div class="chip big"><img src="assets/ui/coin_gold.png" alt=""><b class="coinTotal">0</b></div>
-  </div>
-  <div class="shop-grid" id="shopGrid"></div>
-</section>
-
-<!-- ================= IN-GAME MODALS ================= -->
-<section id="pause" class="screen overlay">
-  <div class="panel pop narrow">
-    <div class="ribbon blue">DURAKLATILDI</div>
-    <button class="btn green" id="resumeBtn"><img src="assets/ui/ic_play.png" alt="">DEVAM</button>
-    <div class="btnrow">
-      <button class="btn blue" id="restartBtn"><img src="assets/ui/ic_retry.png" alt="">TEKRAR</button>
-      <button class="btn purple" id="quitBtn"><img src="assets/ui/flag_green_a.png" alt="">HARİTA</button>
-    </div>
-    <div class="toggles">
-      <button class="toggle" id="tSound"><span>Ses</span><b></b></button>
-    </div>
-  </div>
-</section>
-
-<section id="revive" class="screen overlay">
-  <div class="panel pop narrow">
-    <div class="ribbon red">DEVAM?</div>
-    <div class="countdown" id="revCount">5</div>
-    <button class="btn green" id="revYes"><img src="assets/ui/heart.png" alt="">DİRİL &nbsp;<img src="assets/ui/coin_gold.png" alt=""><span id="revCost">100</span></button>
-    <button class="btn grey" id="revNo">VAZGEÇ</button>
-  </div>
-</section>
-
-<section id="result" class="screen overlay">
-  <div class="panel pop">
-    <div class="ribbon" id="resTitle">BÖLÜM TAMAM!</div>
-    <div class="stars huge" id="resStars"></div>
-    <div class="res-row">
-      <div class="res-item"><img src="assets/ui/coin_gold.png" alt=""><b id="resCoins">+0</b></div>
-      <div class="res-item"><img src="assets/ui/en_slime_normal_walk_a.png" alt=""><b id="resKills">0</b></div>
-      <div class="res-item"><img src="assets/ui/chain.png" alt=""><b id="resCages">0/0</b></div>
-    </div>
-    <div class="btnrow">
-      <button class="btn purple" id="resMap"><img src="assets/ui/flag_green_a.png" alt="">HARİTA</button>
-      <button class="btn blue" id="resRetry"><img src="assets/ui/ic_retry.png" alt="">TEKRAR</button>
-      <button class="btn yellow" id="resNext"><img src="assets/ui/ic_play.png" alt="">SONRAKİ</button>
-    </div>
+    <div class="ribbon" id="pTitle">Silah</div>
+    <button class="rbtn red pclose" id="pClose" aria-label="Kapat"><img src="assets/ui/ic_back.png" alt=""></button>
+    <div id="pBody"></div>
   </div>
 </section>
 
