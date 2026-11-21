@@ -51,6 +51,15 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 const along = (p, a, b) => ({ x: p.x + F.dir.x * a + F.perp.x * b, y: p.y + F.dir.y * a + F.perp.y * b });
+// walkable area for the squad (feet position): clear of the top HUD, the bottom cards and the screen edges
+function heroBox() {
+  const y0 = 140 + 92 * U, y1 = Math.max(y0 + 60, H - 165);
+  return { x0: 34 * U, x1: W - 34 * U, y0, y1 };
+}
+// area enemies may stand in (a bit looser at the top so they stay visible under the HUD)
+function enemyBox() { return { x0: 30 * U, x1: W - 26 * U, y0: 150 + 40 * U, y1: Math.max(260, H - 170) }; }
+const clampBox = (p, b) => ({ x: clamp(p.x, b.x0, b.x1), y: clamp(p.y, b.y0, b.y1) });
+const STAND = 240;   // enemies stop this far (x U) from the squad leader
 
 // ================================================================ atlas
 const AF = window.ATLAS.frames;
@@ -194,13 +203,24 @@ function sfx(n, gap = 0.03) {
 }
 
 // ================================================================ runtime state
-const R = { en: [], bul: [], parts: [], txt: [], bills: [], boss: null, spawnT: 0.5, t: 0, shake: 0, flash: 0, earned: 0, earnT: 0, retryT: 0, heroes: [], motes: [], nextId: 1, walletPop: 0, leavingBoss: null };
+const R = { en: [], bul: [], eb: [], parts: [], txt: [], bills: [], boss: null, spawnT: 0.5, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0, heroes: [], motes: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null, hint: 1 };
+// the squad: leader position (feet), velocity, health
+const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)));
+const hpBase = () => 100 + 12 * (save.stage - 1);   // damage of enemy attacks scales with this
+function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 82 * U, s[0] * F.pathW * 0.4); }
 function setupHeroes() {
+  const hb = heroBox();
+  if (!R.sq) { const mh = sqMaxHp(); R.sq = { x: F.S.x, y: F.S.y, vx: 0, vy: 0, hp: mh, maxHp: mh, lag: mh, ko: 0, inv: 0, hit: 0, calm: 9, face: 1, moving: false, dustT: 0 }; }
+  const p = clampBox(R.sq, hb); R.sq.x = p.x; R.sq.y = p.y;
+  const old = R.heroes;
   R.heroes = TEAM.slice(0, save.team).map((h, i) => {
-    const s = SLOTS[i], pos = along(F.S, s[1] * 82 * U, s[0] * F.pathW * 0.4);
-    return { color: h.color, x: pos.x, y: pos.y, fireT: rand(0, 0.6), recoil: 0, ang: -0.6, muzzle: 0, ph: rand(0, 6), i };
+    if (old[i]) { const o = old[i]; if (i === 0) { o.x = p.x; o.y = p.y; } return o; }
+    const pos = clampBox(slotPos(i, R.sq), followBox());
+    if (old.length) puff(pos.x, pos.y - 30 * U, 0.6);
+    return { color: h.color, x: pos.x, y: pos.y, fireT: rand(0, 0.6), recoil: 0, ang: -0.6, muzzle: 0, ph: rand(0, 6), i, face: 1, walk: 0, moving: false, spd: 0 };
   });
 }
+function followBox() { const b = heroBox(); return { x0: 22 * U, x1: W - 22 * U, y0: b.y0 - 24 * U, y1: b.y1 + 30 * U }; }
 
 // ================================================================ field rendering (pre-rendered per biome)
 function buildField() {
@@ -241,28 +261,55 @@ function buildField() {
   items.filter(it => { const dx = it.x - F.B.x, dy = it.y - F.B.y; return Math.abs(dx * F.perp.x + dy * F.perp.y) > hw + 16 * U; })
     .sort((a, c) => a.y - c.y).forEach(it => {
       g.fillStyle = 'rgba(0,0,0,0.18)'; g.beginPath(); g.ellipse(it.x, it.y + 2, 22 * it.s, 6 * it.s, 0, 0, TAU); g.fill();
-      if (it.f === 'p_torch_on_a') { g.globalCompositeOperation = 'lighter'; const gl = tinted('fx_glow', '#ff9a3b'); g.globalAlpha = 0.5; g.drawImage(gl, it.x - 50 * it.s, it.y - 90 * it.s, 100 * it.s, 100 * it.s); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
+      if (it.f === 'p_torch_on_a' && !save.eco) { g.globalCompositeOperation = 'lighter'; const gl = tinted('fx_glow', '#ff9a3b'); g.globalAlpha = 0.5; g.drawImage(gl, it.x - 50 * it.s, it.y - 90 * it.s, 100 * it.s, 100 * it.s); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; }
       spr(it.f, it.x, it.y + 4, it.s, 0.5, 1, it.flip);
     });
   ctx = keep;
 }
 
 // ================================================================ combat
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+// spawn far from the squad: ahead on the path if possible, else the farthest free spot on screen
+function spawnPoint(lane) {
+  const eb = enemyBox(), sq = R.sq;
+  let p = clampBox(along(sq, rand(380, 470) * U, lane * F.pathW), eb);
+  if (dist(p, sq) < 320 * U) {
+    let best = p, bd = dist(p, sq);
+    for (let i = 0; i < 10; i++) {
+      const c = { x: rand(eb.x0, eb.x1), y: rand(eb.y0, eb.y1) }, d = dist(c, sq) + (c.x - sq.x) * 0.15 - (c.y - sq.y) * 0.1;
+      if (d > bd) { bd = d; best = c; }
+    }
+    p = best;
+  }
+  return p;
+}
+// where an enemy wants to stand: STAND px from the leader at its lane, facing the squad
+function enemyGoal(e) {
+  const eb = enemyBox(), sq = R.sq, st = STAND * U;
+  let g = clampBox(along(sq, st, e.lane * F.pathW * 0.8), eb);
+  if (dist(g, sq) < st * 0.85) {   // squad is near the top/right edge: hold position on the radial line instead
+    const dx = e.x - sq.x, dy = e.y - sq.y, d = Math.hypot(dx, dy) || 1;
+    g = clampBox({ x: sq.x + dx / d * st, y: sq.y + dy / d * st }, eb);
+  }
+  return g;
+}
+const RANGED = { fireslime: 1, spikeslime: 1, blockslime: 1, bee: 1, fly: 1, frog: 1, worm: 1, ladybug: 1 };
 function spawnEnemy() {
   const b = biome(), type = pick(b.pool), d = EDEF[type];
   const lane = rand(-0.38, 0.38);
-  let p = along(F.front, rand(90, 170) * U, lane * F.pathW);
-  if (p.x > W - 30 * U) p = { x: W - 30 * U - rand(0, 30) * U, y: p.y };
+  const p = spawnPoint(lane);
   puff(p.x, p.y - 20 * U, 0.45);
   const hp = enemyHp() * (d.hp || 1);
-  R.en.push({ id: R.nextId++, type, d, x: p.x, y: p.y, lane, hp, maxHp: hp, sp: 75 * U * (d.spd || 1), flash: 0, anim: rand(0, 1), knock: 0, age: 0, sc: (d.sc || 1) * 1.4 * U, hopT: rand(0, 1) });
+  R.en.push({ id: R.nextId++, type, d, x: p.x, y: p.y, lane, hp, maxHp: hp, sp: 75 * U * (d.spd || 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 1, ky: 0, kb: 0, age: 0, sc: (d.sc || 1) * 1.4 * U, hopT: rand(0, 1),
+    ranged: !!RANGED[type], stopped: false, atk: rand(1.4, 2.6), wind: 0 });
 }
 function startBoss() {
   if (R.boss || !save.bossReady) return;
   const b = biome();
   for (const e of R.en) { e.dead = true; puff(e.x, e.y - 20 * U, 0.5); }
+  R.eb.length = 0;
   const p = along(F.A, 40 * U, 0), hp = bossHp();
-  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: BOSS_TIME, flash: 0, anim: 0, key: b.boss, name: b.bossName, arrive: 0, leaving: 0 };
+  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: BOSS_TIME, flash: 0, anim: 0, key: b.boss, name: b.bossName, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [] };
   $('bossImg').src = `assets/ui/boss_${b.boss}.png`;
   $('bossHud').classList.remove('hidden');
   banner('BOSS!', b.bossName); sfx('boss', 0); R.shake = 12; uiKey = '';
@@ -279,14 +326,15 @@ function bossWin() {
   persist(); setTimeout(buildField, 700);
 }
 function bossFail() {
-  const b = R.boss; b.leaving = 0.01; R.boss = null; R.leavingBoss = b;
+  const b = R.boss; if (!b) return;
+  b.leaving = 0.01; R.boss = null; R.leavingBoss = b; R.eb.length = 0;
   $('bossHud').classList.add('hidden');
   banner('BOSS KAÇTI!', 'Güçlen ve tekrar dene'); sfx('fail', 0);
   R.retryT = 10;
 }
 function damage(target, dmg, crit, isBoss) {
   target.hp -= dmg; target.flash = 0.07;
-  if (!isBoss) target.knock = 10 * U;
+  if (!isBoss) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = 10 * U; }
   addText(target.x + rand(-24, 24) * U, target.y - (isBoss ? 150 : 50) * U + rand(-10, 10) * U, fmt(dmg), crit ? 'crit' : 'dmg');
   if (target.hp <= 0) { if (isBoss) bossWin(); else kill(target); }
 }
@@ -314,9 +362,11 @@ function addMoney(v, x, y, bills) {
   sfx('coin', 0.06);
 }
 function addText(x, y, s, kind) { if (R.txt.length > 70) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.1 : 0.8, max: kind === 'money' ? 1.1 : 0.8 }); }
-function puff(x, y, s) { R.parts.push({ k: 'puff', x, y, s: s * U, life: 0.45, max: 0.45, rot: rand(0, TAU) }); }
-function confetti(x, y, col, n) { for (let i = 0; i < n; i++) { const a = rand(-Math.PI, 0), s = rand(80, 300) * U; R.parts.push({ k: 'chunk', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.4, 0.8), max: 0.8, col, r: rand(4, 8) * U, rot: rand(0, TAU) }); } }
-function boom(x, y, s) { R.parts.push({ k: 'expl', x, y, s: s * U, life: 0.5, max: 0.5, rot: rand(0, TAU) }); R.parts.push({ k: 'glow', x, y, s: s * 2.4 * U, life: 0.25, max: 0.25, col: '#ffb43a' }); R.shake = Math.max(R.shake, 8); R.flash = Math.max(R.flash, 0.2); sfx('boom', 0.08); }
+// particles: eco mode (save.eco) halves them and drops glow sprites
+function part(p) { if (save.eco && (p.k === 'glow' || (p.k !== 'expl' && Math.random() < 0.5))) return; if (R.parts.length < 400) R.parts.push(p); }
+function puff(x, y, s) { part({ k: 'puff', x, y, s: s * U, life: 0.45, max: 0.45, rot: rand(0, TAU) }); }
+function confetti(x, y, col, n) { for (let i = 0; i < n; i++) { const a = rand(-Math.PI, 0), s = rand(80, 300) * U; part({ k: 'chunk', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.4, 0.8), max: 0.8, col, r: rand(4, 8) * U, rot: rand(0, TAU) }); } }
+function boom(x, y, s) { R.parts.push({ k: 'expl', x, y, s: s * U, life: 0.5, max: 0.5, rot: rand(0, TAU) }); part({ k: 'glow', x, y, s: s * 2.4 * U, life: 0.25, max: 0.25, col: '#ffb43a' }); R.shake = Math.max(R.shake, 8); R.flash = Math.max(R.flash, 0.2); sfx('boom', 0.08); }
 function nearestTarget(h) {
   if (R.boss && R.boss.arrive >= 1) return R.boss;
   let best = null, bd = 1e9;
@@ -337,7 +387,7 @@ function fire(h, tgt) {
     const mx = hx + Math.cos(h.ang) * g.len * U, my = hy + Math.sin(h.ang) * g.len * U;
     R.bul.push({ x: mx, y: my, a, sp: (g.rocket ? 900 : 1700) * U, tgt, dmg: total / g.shots, crit, col: g.bullet, w: g.w * U, rocket: g.rocket, life: 0.9 });
   }
-  if (!g.rocket) R.parts.push({ k: 'casing', x: hx, y: hy, vx: rand(-120, -40) * U, vy: rand(-260, -160) * U, life: 0.6, max: 0.6, rot: 0 });
+  if (!g.rocket) part({ k: 'casing', x: hx, y: hy, vx: rand(-120, -40) * U, vy: rand(-260, -160) * U, life: 0.6, max: 0.6, rot: 0 });
   sfx('shoot', 0.06);
 }
 
@@ -381,13 +431,13 @@ function update(dt) {
     const t = q.tgt, alive = t && !t.dead && (t === R.boss || R.en.includes(t));
     if (alive) { const want = Math.atan2(aimY(t) - q.y, t.x - q.x); let da = want - q.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; q.a += da * Math.min(1, dt * 18); }
     q.x += Math.cos(q.a) * q.sp * dt; q.y += Math.sin(q.a) * q.sp * dt;
-    if (q.rocket && Math.random() < 0.6) R.parts.push({ k: 'puff', x: q.x, y: q.y, s: 0.18 * U, life: 0.35, max: 0.35, rot: rand(0, TAU) });
+    if (q.rocket && Math.random() < 0.6) part({ k: 'puff', x: q.x, y: q.y, s: 0.18 * U, life: 0.35, max: 0.35, rot: rand(0, TAU) });
     if (alive) {
       const rr = t === R.boss ? 70 * U : 26 * U;
       if (Math.hypot(t.x - q.x, aimY(t) - q.y) < rr) {
         q.dead = true;
-        R.parts.push({ k: 'glow', x: q.x, y: q.y, s: (q.crit ? 2.2 : 1.4) * U * (t === R.boss ? 0.6 : 1), life: 0.16, max: 0.16, col: q.col });
-        R.parts.push({ k: 'spark', x: q.x, y: q.y, s: (q.crit ? 1 : 0.6) * U, life: 0.12, max: 0.12, rot: rand(0, TAU) });
+        part({ k: 'glow', x: q.x, y: q.y, s: (q.crit ? 2.2 : 1.4) * U * (t === R.boss ? 0.6 : 1), life: 0.16, max: 0.16, col: q.col });
+        part({ k: 'spark', x: q.x, y: q.y, s: (q.crit ? 1 : 0.6) * U, life: 0.12, max: 0.12, rot: rand(0, TAU) });
         if (q.rocket) boom(q.x, q.y, 1);
         damage(t, q.dmg, q.crit, t === R.boss);
       }

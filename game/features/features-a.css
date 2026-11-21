@@ -1,0 +1,84 @@
+/* Swarm Squad features A: missions, boosts, settings. Reuses tokens from game.css (--ink, --navy*, --gold, --muted). */
+
+/* ribbons for panel colours the core does not define */
+.ribbon.purple{--c1:#d29bff;--c2:#8d50ea;--edge:#5a2aa8}
+.ribbon.grey{--c1:#aab3c8;--c2:#7d879f;--edge:#5d6680}
+
+.fa-mwrap{display:flex;flex-direction:column;gap:10px}
+.fa-gold{color:var(--gold)}
+.fa-small{font-size:13px}
+
+/* ---------- shared progress bar (matches .pbar) ---------- */
+.fa-bar{position:relative;height:20px;border-radius:10px;background:rgba(15,19,34,.75);border:3px solid var(--ink);overflow:hidden;margin:4px 0 3px}
+.fa-bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(#ffe066,#f3a712);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),inset 0 2px 0 rgba(255,255,255,.35);transition:width .25s}
+.fa-bar.full i{background:linear-gradient(#8ef05f,#33c14d)}
+.fa-bar span{position:relative;display:block;text-align:center;font-size:13px;line-height:14px;color:#fff;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;font-variant-numeric:tabular-nums}
+
+/* ---------- missions ---------- */
+.fa-mhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px 8px;border-radius:14px;background:rgba(0,0,0,.22);border:3px solid var(--ink)}
+.fa-mhead b{display:block;font-size:18px;line-height:1.1;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
+.fa-mhead small{display:block;font-size:13px;color:var(--muted)}
+.fa-timer{display:flex;align-items:center;gap:4px;flex:none;height:32px;padding:0 10px 0 4px;border-radius:11px;background:#1b2033;border:2px solid var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.fa-timer img{width:22px;height:22px}
+.fa-mission{align-items:center}
+.fa-mission .ico{width:54px;height:54px}
+.fa-mission .ico img{max-width:44px;max-height:42px}
+.fa-mission h4{font-size:16px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fa-mission .btn{min-width:62px}
+.fa-mission.fa-done{background:linear-gradient(#3f7a5a,#2f6248);box-shadow:0 0 0 3px #8ef05f,0 4px 0 var(--ink)}
+.fa-rew{display:flex;gap:6px}
+.fa-rew span{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px 0 3px;border-radius:8px;background:rgba(0,0,0,.3);font-size:14px;color:#fff}
+.fa-rew img{width:18px;height:18px;object-fit:contain}
+.sbtn .fa-dot{display:block;animation:fa-bob 1s ease-in-out infinite}
+.sbtn.fa-glow{box-shadow:inset 0 -5px 0 var(--edge),inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 var(--ink),0 0 0 3px rgba(255,207,58,.85),0 0 16px rgba(255,207,58,.8)}
+@keyframes fa-bob{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* ---------- boost button ---------- */
+.fa-boost-btn{overflow:visible}
+.fa-boost-btn span{font-variant-numeric:tabular-nums}
+.fa-boost-btn.fa-cool{--c1:#aab3c8;--c2:#7d879f;--edge:#5d6680;animation:none}
+.fa-boost-btn.fa-cool img{filter:grayscale(1) brightness(.85)}
+.fa-boost-btn.fa-rate{--c1:#ffe066;--c2:#ffb21e;--edge:#c96d06}
+.fa-boost-btn.on{animation:fa-hot 1.2s ease-in-out infinite}
+.fa-bbadge{position:absolute;top:-9px;left:-7px;padding:0 6px 1px;border-radius:9px;background:#ffcf3a;border:3px solid var(--ink);font-style:normal;font-size:12px;line-height:15px;color:#fff;
+  text-shadow:0 1px 0 var(--ink);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;transform:rotate(-10deg)}
+.fa-btime{position:absolute;left:5px;bottom:5px;height:4px;border-radius:2px;background:#fff;opacity:.9;width:0;max-width:calc(100% - 10px)}
+@keyframes fa-hot{0%,100%{box-shadow:inset 0 -5px 0 var(--edge),inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 var(--ink),0 0 0 0 rgba(142,240,95,.9)}
+  50%{box-shadow:inset 0 -5px 0 var(--edge),inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 var(--ink),0 0 0 6px rgba(142,240,95,0)}}
+
+.fa-boostrow .ico.fa-x{position:relative;width:58px;height:54px}
+.fa-boostrow .ico em{position:absolute;right:-6px;bottom:-6px;padding:0 5px 1px;border-radius:8px;background:#ec3b4f;border:2px solid var(--ink);font-style:normal;font-size:13px;line-height:16px;color:#fff;
+  text-shadow:0 1px 0 var(--ink);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+.fa-boostrow.fa-active{box-shadow:0 0 0 3px #8ef05f,0 4px 0 var(--ink)}
+.fa-boostrow p{font-variant-numeric:tabular-nums}
+.fa-boostrow .btn{min-width:84px}
+.btn.fa-poor{filter:saturate(.4) brightness(.85)}
+
+/* ---------- simulated ad overlay ---------- */
+.fa-ad{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(8,10,20,.88);pointer-events:auto;touch-action:none}
+.fa-adbox{position:relative;width:min(320px,84vw);display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 18px 18px;border-radius:22px;
+  background:linear-gradient(var(--navy2),var(--navy));border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
+.fa-adbox>img{width:64px;height:64px;animation:pulse .8s infinite}
+.fa-adbox b{font-size:22px;text-shadow:0 3px 0 var(--ink);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+.fa-adbox small{font-size:13px;color:var(--muted)}
+.fa-adbox .fa-bar{align-self:stretch;height:18px;margin-top:6px}
+.fa-adbox .fa-bar i{transition:none;background:linear-gradient(#8ef05f,#33c14d)}
+.fa-adtag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:0 12px 2px;border-radius:10px;background:#ffcf3a;border:3px solid var(--ink);font-size:14px;color:#fff;
+  text-shadow:0 1px 0 var(--ink);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;letter-spacing:.08em}
+
+/* ---------- settings ---------- */
+.fa-toggle{width:100%;gap:10px;text-align:left;color:#fff}
+.fa-toggle img{width:30px;height:30px;object-fit:contain;flex:none}
+.fa-toggle span{flex:1;min-width:0;line-height:1.1;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
+.fa-toggle span small{display:block;font-size:12px;color:var(--muted);text-shadow:none;-webkit-text-stroke:0}
+.fa-toggle em{font-style:normal;font-size:12px;color:var(--muted);flex:none}
+.fa-toggle.on em{color:#8ef05f}
+.fa-toggle b{flex:none}
+.fa-toggle:active{transform:translateY(2px)}
+.fa-danger{display:flex;flex-direction:column;gap:10px;padding:10px;border-radius:16px;background:rgba(236,59,79,.12);border:3px dashed rgba(236,59,79,.6)}
+.fa-danger .btn{font-size:19px}
+.fa-danger .btn img{height:24px}
+.fa-confirm{border-style:solid;background:rgba(236,59,79,.22);animation:pop .25s ease-out}
+.fa-warn{margin:0;text-align:center;font-size:14px;color:#ffd6da}
+.fa-warn b{display:block;font-size:22px;color:#fff;text-shadow:0 2px 0 var(--ink);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+.fa-credits{margin:2px 0 0;text-align:center;font-size:12px;color:var(--muted);opacity:.85}

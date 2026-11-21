@@ -7,11 +7,17 @@ Usage:  python3 game/tools/build_assets.py <path-to-kenney-checkout>
 Produces:
   assets/atlas.png + assets/atlas.js   every in-game sprite (heroes, enemies, bosses, tiles, props, backgrounds, fx)
   assets/ui/*.png                      images used by the HTML interface
+
+High-DPI: sprites come from Kenney's "Double" (2x) folders wherever they exist. A frame stored at 2x carries a
+5th number in atlas.js: [x, y, w, h, scale] with scale 0.5, so spr()/sprT() draw it at the same logical size
+as the 1x art while phones (devicePixelRatio 2-3) get twice the pixels.
 """
 import json
 import os
 import shutil
 import sys
+
+import numpy as np
 
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
@@ -48,8 +54,26 @@ def fit(im, h=None, w=None):
     return im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
 
 
-def add(name, im):
+scales = {}
+
+
+def dbl(path):
+    """the 2x ("Double") version of a Kenney sprite path"""
+    d, f = os.path.split(path)
+    return os.path.join(d, 'Double', f)
+
+
+def load2(path):
+    """load the Double (2x) sprite; returns (image, draw scale)"""
+    if os.path.exists(dbl(path)):
+        return load(dbl(path)), 0.5
+    return load(path), None
+
+
+def add(name, im, s=None):
     frames[name] = im
+    if s:
+        scales[name] = s
 
 
 # ------------------------------------------------------------------ heroes (same 128x128 canvas for every frame)
@@ -57,7 +81,7 @@ COLORS = ['beige', 'green', 'pink', 'purple', 'yellow']
 POSES = ['idle', 'walk_a', 'walk_b', 'jump', 'hit', 'duck', 'front']
 for c in COLORS:
     for p in POSES:
-        add(f'ch_{c}_{p}', load(f'{NP}/Characters/character_{c}_{p}.png'))
+        add(f'ch_{c}_{p}', *load2(f'{NP}/Characters/character_{c}_{p}.png'))
 
 # ------------------------------------------------------------------ enemies (64x64 canvases, kept untrimmed so frames line up)
 EN = ['slime_normal_walk_a', 'slime_normal_walk_b', 'slime_normal_flat', 'slime_fire_walk_a', 'slime_fire_walk_b', 'slime_spike_walk_a', 'slime_spike_walk_b',
@@ -65,17 +89,20 @@ EN = ['slime_normal_walk_a', 'slime_normal_walk_b', 'slime_normal_flat', 'slime_
       'bee_a', 'bee_b', 'fly_a', 'fly_b', 'ladybug_walk_a', 'ladybug_walk_b', 'barnacle_attack_a', 'barnacle_attack_b', 'barnacle_attack_rest',
       'worm_normal_move_a', 'worm_normal_move_b', 'saw_a', 'saw_b']
 for n in EN:
-    add('en_' + n, load(f'{NP}/Enemies/{n}.png'))
+    add('en_' + n, *load2(f'{NP}/Enemies/{n}.png'))
 
 
 # ------------------------------------------------------------------ bosses composed from Monster Builder parts
+BK = 2  # bosses are composed from the Double parts (all offsets below are in 1x units, times BK)
+
+
 def part(n):
-    return load(f'{MON}/{n}.png')
+    return load(f'{MON}/Double/{n}.png')
 
 
 def compose(body, eyes, mouth, legs=None, arms=None, top=None):
     b = part(body)
-    pad = 110
+    pad = 110 * BK
     c = Image.new('RGBA', (b.width + pad * 2, b.height + pad * 2))
     bx = by = pad
 
@@ -89,7 +116,7 @@ def compose(body, eyes, mouth, legs=None, arms=None, top=None):
     if legs:
         L = part(legs)
         for sx in (-1, 1):
-            put(L, bx + b.width / 2 + sx * b.width * 0.2, by + b.height - 10, 0.55, flip=sx > 0)
+            put(L, bx + b.width / 2 + sx * b.width * 0.2, by + b.height - 10 * BK, 0.55, flip=sx > 0)
     if arms:
         A = part(arms)
         for sx in (-1, 1):
@@ -114,15 +141,15 @@ BOSSES = {
     'core': compose('body_yellowD', [('eye_angry_red', 0.28, 0.36, 1.2), ('eye_red', 0.5, 0.24, 1.0), ('eye_angry_red', 0.72, 0.36, 1.2)], ('mouthF', 0.5, 0.74, 1.6), 'leg_yellowD', 'arm_yellowE', ('detail_yellow_horn_large', 0.36, 0.0, 1.5)),
 }
 for n, im in BOSSES.items():
-    add('boss_' + n, fit(im, h=260))
+    add('boss_' + n, fit(im, h=260 * BK), 1 / BK)
 
 # ------------------------------------------------------------------ terrain (64px tiles)
 for b in ['grass', 'dirt', 'sand', 'snow', 'stone', 'purple']:
     for p in ['top', 'top_left', 'top_right', 'center', 'left', 'right']:
-        add(f't_{b}_{p}', load(f'{NP}/Tiles/terrain_{b}_block_{p}.png'))
+        add(f't_{b}_{p}', *load2(f'{NP}/Tiles/terrain_{b}_block_{p}.png'))
     if os.path.exists(f'{NP}/Tiles/terrain_{b}_horizontal_middle.png'):
         for p in ['left', 'middle', 'right']:
-            add(f't_{b}_h_{p}', load(f'{NP}/Tiles/terrain_{b}_horizontal_{p}.png'))
+            add(f't_{b}_h_{p}', *load2(f'{NP}/Tiles/terrain_{b}_horizontal_{p}.png'))
 
 # ------------------------------------------------------------------ props & pickups
 PROPS = ['block_planks', 'block_strong_empty', 'block_exclamation', 'block_coin', 'spring', 'spring_out', 'spikes', 'bush', 'cactus', 'rock',
@@ -130,19 +157,16 @@ PROPS = ['block_planks', 'block_strong_empty', 'block_exclamation', 'block_coin'
          'flag_green_a', 'flag_green_b', 'flag_red_a', 'flag_red_b', 'flag_off', 'chain', 'bomb', 'bomb_active', 'heart', 'coin_gold',
          'coin_gold_side', 'gem_blue', 'gem_red', 'gem_yellow', 'gem_green', 'star', 'hill', 'hill_top', 'lock_yellow', 'key_yellow', 'bridge']
 for n in PROPS:
-    add('p_' + n, load(f'{NP}/Tiles/{n}.png'))
+    add('p_' + n, *load2(f'{NP}/Tiles/{n}.png'))
 
 # ------------------------------------------------------------------ parallax backgrounds (256x256, tile horizontally)
 def keyout(im, rgb, tol=10, soft=40):
     """make one flat colour transparent (soft edge) so the layers can be stacked as parallax"""
-    px = im.load()
-    for yy in range(im.height):
-        for xx in range(im.width):
-            r, g, b2, a = px[xx, yy]
-            d = abs(r - rgb[0]) + abs(g - rgb[1]) + abs(b2 - rgb[2])
-            if d < tol + soft:
-                px[xx, yy] = (r, g, b2, int(a * max(0, d - tol) / soft))
-    return im
+    a = np.asarray(im).astype(np.int32)
+    d = np.abs(a[..., :3] - np.array(rgb, np.int32)).sum(axis=2)
+    near = d < tol + soft
+    a[..., 3] = np.where(near, a[..., 3] * np.maximum(0, d - tol) // soft, a[..., 3])
+    return Image.fromarray(a.astype(np.uint8), 'RGBA')
 
 
 for n in ['color_hills', 'color_trees', 'color_desert', 'color_mushrooms', 'fade_hills', 'fade_trees', 'fade_desert', 'fade_mushrooms']:
@@ -150,34 +174,52 @@ for n in ['color_hills', 'color_trees', 'color_desert', 'color_mushrooms', 'fade
 add('bg_clouds', keyout(load(f'{NP}/Backgrounds/background_clouds.png'), (195, 227, 255)))
 
 # ------------------------------------------------------------------ fx
+# stored at 2x of their logical width (scale 0.5); sources are 171-550px so this is a downscale
+FK = 2
 for i in range(9):
-    add(f'fx_expl_{i}', fit(load(f'{EXP}/Regular explosion/regularExplosion0{i}.png'), w=128))
+    add(f'fx_expl_{i}', fit(load(f'{EXP}/Regular explosion/regularExplosion0{i}.png'), w=128 * FK), 1 / FK)
 for i in range(6):
-    add(f'fx_puff_{i}', fit(load(f'{SMOKE}/White puff/whitePuff0{i}.png'), w=96))
-add('fx_flash', fit(load(f'{SMOKE}/Flash/flash00.png'), w=128))
-add('fx_burst', fit(load(f'{EXP}/Particles/burst.png'), w=64))
+    add(f'fx_puff_{i}', fit(load(f'{SMOKE}/White puff/whitePuff0{i}.png'), w=96 * FK), 1 / FK)
+add('fx_flash', fit(load(f'{SMOKE}/Flash/flash00.png'), w=128 * FK), 1 / FK)
+add('fx_burst', fit(load(f'{EXP}/Particles/burst.png'), w=64 * FK), 1 / FK)
 for n, f, w in [('spark', 'star_06', 64), ('muzzle', 'muzzle_02', 64), ('glow', 'circle_05', 64), ('ring', 'circle_02', 128), ('zap', 'spark_05', 64), ('light', 'light_01', 128)]:
-    add('fx_' + n, fit(load(f'{PART}/{f}.png'), w=w))
+    add('fx_' + n, fit(load(f'{PART}/{f}.png'), w=w * FK), 1 / FK)
 
 # ------------------------------------------------------------------ pack atlas
+MAXDIM = 4096  # mobile GPU texture limit
 items = sorted(frames.items(), key=lambda kv: (-kv[1].height, kv[0]))
-AW = 2048
-x = y = rowh = 0
-pos = {}
-for n, im in items:
-    if x + im.width + 2 > AW:
-        x = 0
-        y += rowh + 2
-        rowh = 0
-    pos[n] = (x, y)
-    x += im.width + 2
-    rowh = max(rowh, im.height)
-atlas = Image.new('RGBA', (AW, y + rowh))
+
+
+def pack(aw):
+    """shelf packing (tallest first) into a strip aw wide; returns positions and the height used"""
+    x = y = rowh = 0
+    pos = {}
+    for n, im in items:
+        if x + im.width + 2 > aw:
+            x = 0
+            y += rowh + 2
+            rowh = 0
+        pos[n] = (x, y)
+        x += im.width + 2
+        rowh = max(rowh, im.height)
+    return pos, y + rowh
+
+
+# smallest-area layout that keeps both sides within MAXDIM
+best = None
+for aw in range(1024, MAXDIM + 1, 128):
+    pos, ah = pack(aw)
+    if ah <= MAXDIM and (best is None or aw * ah < best[0] * best[1]):
+        best = (aw, ah, pos)
+if best is None:
+    sys.exit(f'atlas does not fit in {MAXDIM}x{MAXDIM}')
+AW, AH, pos = best
+atlas = Image.new('RGBA', (AW, AH))
 meta = {}
 for n, im in frames.items():
     px, py = pos[n]
     atlas.alpha_composite(im, (px, py))
-    meta[n] = [px, py, im.width, im.height]
+    meta[n] = [px, py, im.width, im.height] + ([scales[n]] if n in scales else [])
 atlas.save(os.path.join(OUT, 'atlas.png'), optimize=True)
 with open(os.path.join(OUT, 'atlas.js'), 'w') as f:  # JS (not JSON) so it also loads from file://
     f.write('window.ATLAS=' + json.dumps({'frames': meta}, separators=(',', ':')) + ';\n')
@@ -185,25 +227,26 @@ with open(os.path.join(OUT, 'atlas.js'), 'w') as f:  # JS (not JSON) so it also 
 
 # ------------------------------------------------------------------ UI images
 def ui(name, im):
-    im.save(os.path.join(UIDIR, name + '.png'))
+    im.save(os.path.join(UIDIR, name + '.png'), optimize=True)
 
 
+# UI images are 2x (CSS sizes them, so only the pixel density changes)
 for c in COLORS:
     ui('hero_' + c, trim(frames[f'ch_{c}_idle']))
-    ui('helmet_' + c, load(f'{NP}/Tiles/hud_player_helmet_{c}.png'))
+    ui('helmet_' + c, load2(f'{NP}/Tiles/hud_player_helmet_{c}.png')[0])
 for n in ['coin_gold', 'heart', 'gem_blue', 'star', 'bomb', 'lock_yellow', 'flag_green_a', 'chain']:
     ui(n, trim(frames['p_' + n]))
 for n in BOSSES:
-    ui('boss_' + n, fit(frames['boss_' + n], h=140))
+    ui('boss_' + n, fit(frames['boss_' + n], h=280))
 for n in ['slime_normal_walk_a', 'bee_a', 'snail_walk_a', 'barnacle_attack_a', 'slime_spike_walk_a']:
     ui('en_' + n, trim(frames['en_' + n]))
 for n in ['color_hills', 'color_mushrooms', 'color_desert', 'color_trees']:
-    ui('bg_' + n, frames['bg_' + n])
+    ui('bg_' + n, keyout(load2(f'{NP}/Backgrounds/background_{n}.png')[0], (255, 255, 255)))
 for t in ['grass', 'dirt', 'sand', 'snow', 'purple']:
     ui('tile_' + t, frames[f't_{t}_top'])
 
 
-def sticker(im, size=96, boost=1.0, thick=0):
+def sticker(im, size=192, boost=1.0, thick=0):
     """white symbol with a thick dark outline (used on buttons and cards)"""
     r, g, b, al = im.convert('RGBA').split()
     if boost != 1:
@@ -214,14 +257,20 @@ def sticker(im, size=96, boost=1.0, thick=0):
     white = Image.new('RGBA', im.size, (255, 255, 255, 255))
     white.putalpha(al)
     white = trim(white)
-    white.thumbnail((size - 20, size - 20), Image.LANCZOS)
+    k = size / 96  # all pixel measures below were designed for 96px
+    inner = size - round(20 * k)
+    sc = inner / max(white.size)
+    white = white.resize((max(1, round(white.width * sc)), max(1, round(white.height * sc))), Image.LANCZOS)
+    if sc > 1:  # upscaled (the icon sources are 100px): re-sharpen the anti-aliased edge
+        white.putalpha(white.split()[3].point(lambda v: max(0, min(255, round((v - 128) * 1.8 + 128)))))
     c = Image.new('RGBA', (size, size))
     ox, oy = (size - white.width) // 2, (size - white.height) // 2
     mask = Image.new('L', (size, size))
     mask.paste(white.split()[3], (ox, oy))
-    mask = mask.filter(ImageFilter.MaxFilter(9)).point(lambda v: 255 if v > 60 else 0)
+    grow = round(4 * k) * 2 + 1  # 9px outline at 96px
+    mask = mask.filter(ImageFilter.MaxFilter(grow)).filter(ImageFilter.GaussianBlur(k * 0.6)).point(lambda v: 255 if v > 110 else 0)
     dark = Image.new('RGBA', (size, size), (27, 32, 51, 255))
-    c.paste(dark, (0, 3), mask)
+    c.paste(dark, (0, round(3 * k)), mask)
     c.paste(dark, (0, 0), mask)
     c.alpha_composite(white, (ox, oy))
     return c
@@ -286,4 +335,4 @@ with open(os.path.join(OUT, 'LICENSE-ASSETS.txt'), 'w') as f:
     f.write('Graphics: Kenney (www.kenney.nl), Creative Commons Zero (CC0) - free for personal and commercial use.\n'
             'Packs: New Platformer Pack, Monster Builder Pack, Explosion Pack, Smoke Particles, Particle Pack, Game Icons.\n'
             'Font: Baloo 2 by Ek Type, SIL Open Font License 1.1 (via @fontsource/baloo-2).\n')
-print('atlas', AW, atlas.height, len(frames), 'frames')
+print('atlas', AW, AH, len(frames), 'frames', os.path.getsize(os.path.join(OUT, 'atlas.png')) // 1024, 'KB')
