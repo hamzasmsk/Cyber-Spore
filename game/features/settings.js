@@ -28,7 +28,7 @@
   ];
 
   function resetAll() {
-    const keep = { sound: save.sound, music: save.music, eco: save.eco, vibrate: save.vibrate };
+    const keep = { sound: save.sound, music: save.music, eco: save.eco, vibrate: save.vibrate, vol: save.vol };
     for (const k of Object.keys(save)) delete save[k];
     Object.assign(save, {
       money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1,
@@ -50,7 +50,7 @@
         const t = SS.el(`<button class="toggle fa-toggle ${on ? 'on' : ''}"><img src="${!on && it.iconOff ? it.iconOff : it.icon}" alt="">
           <span>${it.label}<small>${it.note}</small></span><em>${on ? 'AÇIK' : 'KAPALI'}</em><b></b></button>`);
         t.onclick = () => {
-          save[it.key] = !save[it.key];
+          save[it.key] = !save[it.key]; if (SS.applyVol) SS.applyVol();
           SS.sfx('click');
           if (it.key === 'vibrate' && save.vibrate) SS.vibrate(40);
           if (it.key === 'music') { try { SS.audioInit && SS.audioInit(); } catch (e) { /* ignore */ } SS.musicUpdate && SS.musicUpdate(); }
@@ -60,6 +60,17 @@
         tg.appendChild(t);
       }
       wrap.appendChild(tg);
+      // volume sliders: master / music / effects (0-100), applied live to the audio graph
+      if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
+      const vols = SS.el('<div class="toggles"></div>');
+      [['master', 'Genel', 'ic_sun'], ['music', 'Müzik', 'ic_book'], ['sfx', 'Efekt', 'ic_sound_on']].forEach(([k, label, ic]) => {
+        const row = SS.el(`<div class="vol"><img src="assets/ui/${ic}.png" alt=""><label>${label}</label><input type="range" min="0" max="100" step="5" value="${Math.round((save.vol[k] ?? 0.7) * 100)}"><em>${Math.round((save.vol[k] ?? 0.7) * 100)}</em></div>`);
+        const inp = row.querySelector('input'), out = row.querySelector('em');
+        inp.addEventListener('input', () => { save.vol[k] = inp.value / 100; out.textContent = inp.value; SS.applyVol && SS.applyVol(); });
+        inp.addEventListener('change', () => { SS.sfx(k === 'music' ? 'tick' : 'coin', 0); SS.persist(); });
+        vols.appendChild(row);
+      });
+      wrap.appendChild(vols);
 
       const zone = SS.el('<div class="fa-danger"></div>');
       if (!confirming) {

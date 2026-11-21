@@ -139,22 +139,22 @@ const EDEF = {
 };
 // thrown weapons: ori = direction the art points; trail / hit choose the effects; sc = art scale (0.5 steps)
 const GUNS = [
-  { name: 'Shuriken',     mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 900,  trail: 'ghost', hit: 'spark' },
-  { name: 'Kunai',        mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1100, trail: 'ghost', hit: 'cut' },
-  { name: 'Üçlü Ok',      mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, sp: 1100, trail: 'ghost', hit: 'cut', bits: 'q_Wood' },
-  { name: 'Büyük Kunai',  mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, trail: 'ghost', hit: 'claw' },
-  { name: 'Büyü Yıldızı', mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 2, sp: 950,  trail: 'spark', hit: 'star' },
-  { name: 'Buz Mızrağı',  mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, trail: 'snow',  hit: 'ice' },
-  { name: 'Ateş Topu',    mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, trail: 'fire', hit: 'fire', boom: 1 },
-  { name: 'Ruh Küresi',   mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, trail: 'aura', hit: 'thunder', boom: 1 },
+  { name: 'Shuriken',     mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 900,  trail: 'ghost', hit: 'spark' , snd: 'shoot', hsnd: 'hit' },
+  { name: 'Kunai',        mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1100, trail: 'ghost', hit: 'cut' , snd: 'throw2', hsnd: 'hit2' },
+  { name: 'Üçlü Ok',      mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, sp: 1100, trail: 'ghost', hit: 'cut', bits: 'q_Wood' , snd: 'throw2', hsnd: 'hit3' },
+  { name: 'Büyük Kunai',  mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, trail: 'ghost', hit: 'claw' , snd: 'shoot', hsnd: 'hit2' },
+  { name: 'Büyü Yıldızı', mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 2, sp: 950,  trail: 'spark', hit: 'star' , snd: 'throw_magic', hsnd: 'magic' },
+  { name: 'Buz Mızrağı',  mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, trail: 'snow',  hit: 'ice' , snd: 'throw_magic', hsnd: 'hit_ice' },
+  { name: 'Ateş Topu',    mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, trail: 'fire', hit: 'fire', boom: 1 , snd: 'throw_fire', hsnd: 'hit_fire' },
+  { name: 'Ruh Küresi',   mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, trail: 'aura', hit: 'thunder', boom: 1 , snd: 'throw_magic', hsnd: 'magic' },
 ];
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
-  { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0 },
-  { id: 'NinjaRed',    name: 'Kızıl',   cost: 300 },
-  { id: 'NinjaYellow', name: 'Altın',   cost: 30000 },
-  { id: 'NinjaBomb',   name: 'Bombacı', cost: 3e6 },
-  { id: 'NinjaMasked', name: 'Maske',   cost: 3e8 },
+  { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
+  { id: 'NinjaRed',    name: 'Kızıl',   cost: 500,  perk: 'Takıma +%10 atış hızı' },
+  { id: 'NinjaYellow', name: 'Altın',   cost: 2e5,  perk: 'Takıma +%20 altın' },
+  { id: 'NinjaBomb',   name: 'Bombacı', cost: 1e8,  perk: 'Atışların %20si patlar (alan hasarı)' },
+  { id: 'NinjaMasked', name: 'Maske',   cost: 5e10, perk: '+%6 kritik şansı' },
 ];
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
 const SUBS = 5, KILLS_PER_SUB = 8, BOSS_TIME = 30;
@@ -168,81 +168,146 @@ function persist() { save.t = Date.now(); try { localStorage.setItem(SAVE_KEY, J
 
 // ================================================================ economy
 const rebirthMul = () => 1 + save.rp * 0.3;
-const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(12, 1.4 + 0.08 * l), money: l => Math.pow(1.13, l) };
-const COST = { power: l => 8 * Math.pow(1.2, l), speed: l => 12 * Math.pow(1.24, l), money: l => 15 * Math.pow(1.22, l) };
+// Balance (checked with an economy simulation): enemy HP grows x1.30 per stage step but gold only x1.28, power
+// costs grow faster than power, and the gold card is linear — so progress is quick at first, then slows into
+// walls that weapons (gems) and rebirth break through. Rebirth pays off around stage 25-30.
+const SPEED_CAP = 10;
+const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(SPEED_CAP, 1.2 + 0.06 * l), money: l => 1 + 0.15 * l };
+const COST = { power: l => 8 * Math.pow(1.25, l), speed: l => 12 * Math.pow(1.28, l), money: l => 15 * Math.pow(1.2, l) };
 const MODS = { dmg: [], rate: [], money: [] };
 const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
 const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * rebirthMul() * modMul('dmg');
-const fireRate = () => stat.speed(save.lv.speed) * modMul('rate');
+const fireRate = () => stat.speed(save.lv.speed) * modMul('rate') * (R.ultT > 0 ? 3 : 1);
 const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
 const enemyHp = () => 10 * Math.pow(1.3, stageIdx());
-const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 18;
+const reward = () => 10 * Math.pow(1.28, stageIdx());
+const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 22;
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
 const rebirthGain = () => save.stage >= 6 ? Math.floor((save.stage - 1) * 1.5) : 0;
 const heroId = i => (i === 0 && save.skin) ? save.skin : TEAM[i].id;
 
-// ================================================================ audio: soft sampled effects + calm music per biome
-let AC = null, master = null, bus = null;
+// ================================================================ audio
+// Signal chain:  samples ─┬─> sfx bus ──> gentle high-cut ──┐
+//                         └─> reverb send ─> short room ────┼─> soft compressor ─> master ─> out
+//   music <audio> ──> music bus ──> low-pass (muffles while a panel is open or the squad is down) ─┘
+//   wind bed (filtered noise, slow swell per region) ──> ambience gain ───────────────────────────┘
+// Effects are pitched to a pentatonic scale for kill streaks, coin pickups and repeated purchases, panned by
+// screen position, and every sample is the pack's softest, high-cut and loudness-matched (see build_assets.py).
+let AC = null, master = null, sfxBus = null, musBus = null, musFilter = null, ambGain = null, ambFilter = null, noiseBuf = null, routed = false;
 const SND = {};
+if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
+const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+function applyVol() {
+  if (!AC) return;
+  const v = save.vol, now = AC.currentTime;
+  master.gain.setTargetAtTime(save.sound === false && save.music === false ? 0 : 0.75 * v.master, now, 0.05);
+  sfxBus.gain.setTargetAtTime(save.sound === false ? 0 : v.sfx, now, 0.05);
+  musBus.gain.setTargetAtTime(save.music === false ? 0 : v.music, now, 0.05);
+}
 function audioInit() {
   if (AC) { if (AC.state === 'suspended') AC.resume(); musicUpdate(); return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
-    master = AC.createGain(); master.gain.value = 0.55;
-    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 6500; lp.Q.value = 0.5;
-    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 18; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.2;
-    bus = AC.createGain(); bus.connect(lp); lp.connect(comp); comp.connect(master); master.connect(AC.destination);
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 20; comp.ratio.value = 3.5; comp.attack.value = 0.006; comp.release.value = 0.25;
+    master = AC.createGain(); comp.connect(master); master.connect(AC.destination);
+    const hc = AC.createBiquadFilter(); hc.type = 'lowpass'; hc.frequency.value = 7000; hc.Q.value = 0.4; hc.connect(comp);
+    sfxBus = AC.createGain(); sfxBus.connect(hc);
+    // short, warm room: generated impulse response, mixed low so effects sit in one shared space
+    const n = Math.floor(AC.sampleRate * 1.4), ir = AC.createBuffer(2, n, AC.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
+    const rev = AC.createConvolver(); rev.buffer = ir; const send = AC.createGain(); send.gain.value = 0.16;
+    const revLp = AC.createBiquadFilter(); revLp.type = 'lowpass'; revLp.frequency.value = 3200;
+    sfxBus.connect(send); send.connect(rev); rev.connect(revLp); revLp.connect(comp);
+    musFilter = AC.createBiquadFilter(); musFilter.type = 'lowpass'; musFilter.frequency.value = 16000; musFilter.Q.value = 0.5;
+    musBus = AC.createGain(); musBus.connect(musFilter); musFilter.connect(comp);
+    // wind bed
+    noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+    { const d = noiseBuf.getChannelData(0); let b0 = 0; for (let i = 0; i < d.length; i++) { b0 = 0.985 * b0 + 0.015 * (Math.random() * 2 - 1); d[i] = b0 * 6; } }
+    const ns = AC.createBufferSource(); ns.buffer = noiseBuf; ns.loop = true;
+    ambFilter = AC.createBiquadFilter(); ambFilter.type = 'bandpass'; ambFilter.frequency.value = 500; ambFilter.Q.value = 0.7;
+    ambGain = AC.createGain(); ambGain.gain.value = 0; ns.connect(ambFilter); ambFilter.connect(ambGain); ambGain.connect(sfxBus); ns.start();
+    routed = location.protocol !== 'file:' && !!AC.createMediaElementSource;
+    applyVol();
     const D = window.SFXDATA || {};
     for (const k in D) {
       const bin = atob(D[k]), buf = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-      try { AC.decodeAudioData(buf.buffer, b => { SND[k] = b; }, () => {}); } catch (e) { /* unsupported */ }
+      try { AC.decodeAudioData(buf.buffer, bb => { SND[k] = bb; }, () => {}); } catch (e) { /* unsupported */ }
     }
   } catch (e) { AC = null; }
   musicUpdate();
 }
+// name: [samples, volume, pitch jitter, minimum gap]
 const SFXMAP = {
-  shoot: ['throw', 0.14, 0.12, 0.1], hit: ['hit', 0.14, 0.15, 0.08], kill: ['kill', 0.3, 0.12, 0.06],
-  coin: ['coin', 0.12, 0.1, 0.1], buy: ['buy', 0.3, 0.04, 0.05], no: ['no', 0.25, 0, 0.2], boom: ['boom', 0.28, 0.1, 0.14],
-  boss: ['boss', 0.5, 0, 0.5], win: ['win', 0.45, 0, 0.5], fail: ['fail', 0.4, 0, 0.5], hurt: ['hurt', 0.26, 0.1, 0.12],
-  lob: ['lob', 0.14, 0.12, 0.15], click: ['click', 0.3, 0.05, 0.05], magic: ['magic', 0.3, 0.05, 0.1],
-  gold: ['gold', 0.3, 0.05, 0.2], bonus: ['bonus', 0.35, 0, 0.2], accept: ['accept', 0.35, 0, 0.1],
+  shoot: [['throw'], 0.1, 0.12, 0.12], throw2: [['throw2'], 0.1, 0.1, 0.12], throw_fire: [['throw_fire'], 0.12, 0.08, 0.15], throw_magic: [['throw_magic'], 0.1, 0.1, 0.14],
+  hit: [['hit'], 0.13, 0.15, 0.07], hit2: [['hit2'], 0.12, 0.12, 0.07], hit3: [['hit3'], 0.12, 0.12, 0.07], hit_ice: [['hit_ice'], 0.14, 0.1, 0.09], hit_fire: [['hit_fire'], 0.14, 0.1, 0.12],
+  kill: [['kill'], 0.26, 0, 0.04], coin: [['coin'], 0.1, 0, 0.05], tick: [['tick'], 0.08, 0, 0.03], gem: [['gem'], 0.3, 0, 0.1],
+  buy: [['buy'], 0.22, 0, 0.05], no: [['no'], 0.2, 0, 0.25], boom: [['boom'], 0.24, 0.1, 0.14], boss: [['boss'], 0.45, 0, 0.5],
+  win: [['win'], 0.42, 0, 0.5], fail: [['fail'], 0.34, 0, 0.5], hurt: [['hurt'], 0.2, 0.1, 0.15], voice: [['voice'], 0.16, 0.12, 0.4],
+  lob: [['lob'], 0.12, 0.12, 0.15], click: [['click'], 0.26, 0.04, 0.05], magic: [['magic'], 0.26, 0.05, 0.1], gold: [['gold'], 0.28, 0, 0.2],
+  bonus: [['bonus'], 0.32, 0, 0.2], accept: [['accept'], 0.3, 0, 0.1], open: [['open'], 0.22, 0, 0.08], close: [['close'], 0.18, 0, 0.08],
+  skill: [['skill'], 0.4, 0, 0.3], stage: [['stage'], 0.2, 0, 0.6], elite: [['elite'], 0.24, 0, 0.5], treasure: [['treasure'], 0.32, 0, 0.5],
 };
 const sndLast = {};
-function sfx(n, gap) {
-  if (!AC || !save.sound) return;
+function sfx(n, gap, x, semi) {
+  if (!AC || save.sound === false) return;
   const m = SFXMAP[n]; if (!m) return;
   const now = AC.currentTime; if (sndLast[n] && now - sndLast[n] < (gap === 0 ? 0 : Math.max(gap || 0, m[3]))) return; sndLast[n] = now;
-  const b = SND[m[0]]; if (!b) return;
+  const bf = SND[pick(m[0])]; if (!bf) return;
   const s = AC.createBufferSource(), g = AC.createGain();
-  s.buffer = b; s.playbackRate.value = 1 + (Math.random() * 2 - 1) * m[2]; g.gain.value = m[1];
-  s.connect(g); g.connect(bus); s.start();
+  s.buffer = bf; s.playbackRate.value = Math.pow(2, (semi || 0) / 12) * (1 + (Math.random() * 2 - 1) * m[2]); g.gain.value = m[1];
+  s.connect(g);
+  if (x !== undefined && AC.createStereoPanner) { const pn = AC.createStereoPanner(); pn.pan.value = clamp(x / W * 2 - 1, -1, 1) * 0.55; g.connect(pn); pn.connect(sfxBus); }
+  else g.connect(sfxBus);
+  s.start();
 }
+// soft synthesized footstep (filtered noise tap) for the march
+function step(x) {
+  if (!AC || save.sound === false || !noiseBuf) return;
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(), t = AC.currentTime;
+  s.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.value = 380 + Math.random() * 120;
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+  s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t, Math.random()); s.stop(t + 0.1);
+}
+const AMB = { forest: [520, 0.022], grass: [620, 0.02], sand: [300, 0.026], snow: [1300, 0.024], ash: [180, 0.03] };
 const tracks = {};
-let musicKey = null;
+let musicKey = null, muffled = null;
 function musicUpdate() {
   const want = (save.music !== false && AC && !document.hidden) ? biome().ground : null;
   if (want !== musicKey) {
     musicKey = want;
-    if (want && !tracks[want]) { const a = new Audio('assets/music/' + want + '.mp3'); a.loop = true; a.volume = 0; a.preload = 'auto'; tracks[want] = a; }
+    if (want && !tracks[want]) {
+      const a = new Audio('assets/music/' + want + '.mp3'); a.loop = true; a.volume = 0; a.preload = 'auto'; a.fade = 0; tracks[want] = a;
+      if (routed) { try { AC.createMediaElementSource(a).connect(musBus); a.routed = true; } catch (e) { a.routed = false; } }
+    }
   }
 }
 function musicTick(dt) {
   musicUpdate();
+  if (!AC) return;
   for (const k in tracks) {
-    const a = tracks[k], target = k === musicKey ? (R.boss ? 0.24 : 0.3) : 0;
-    a.volume = clamp(a.volume + clamp(target - a.volume, -dt * 0.25, dt * 0.25), 0, 1);
+    const a = tracks[k], target = k === musicKey ? (R.boss ? 0.85 : 1) : 0;
+    a.fade = clamp(a.fade + clamp(target - a.fade, -dt * 0.35, dt * 0.35), 0, 1);
+    a.volume = clamp(a.routed ? a.fade : a.fade * save.vol.music * save.vol.master * 0.5, 0, 1);
     if (target > 0 && a.paused) a.play().catch(() => {});
-    if (target === 0 && a.volume <= 0.001 && !a.paused) a.pause();
+    if (target === 0 && a.fade <= 0.001 && !a.paused) a.pause();
   }
+  const muff = panelOpen() || (R.sq && R.sq.ko > 0);
+  if (muff !== muffled) { muffled = muff; musFilter.frequency.setTargetAtTime(muff ? 650 : 16000, AC.currentTime, 0.25); }
+  const am = AMB[biome().ground] || AMB.forest, sw = 0.6 + 0.4 * Math.sin(R.t * 0.21) * Math.sin(R.t * 0.13 + 1);
+  ambFilter.frequency.setTargetAtTime(am[0] * (0.85 + 0.3 * sw), AC.currentTime, 0.5);
+  ambGain.gain.setTargetAtTime(save.eco ? 0 : am[1] * sw, AC.currentTime, 0.5);
 }
 
 // ================================================================ runtime state
 const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
-  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: 0, manual: false, ctrlT: 0, hintT: 0 };
+  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: 0, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0 };
+MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
+MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
+const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0);
 const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)));
 const hpBase = () => 100 + 12 * (save.stage - 1);
 function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 70 * U, s[0] * F.pathW * 0.4); }
@@ -315,6 +380,7 @@ function startWave() {
   R.phase = 'fight';
   R.toSpawn = 3 + Math.floor(Math.random() * 3) + (save.stage > 3 ? 1 : 0);
   R.spawnT = 0.1;
+  if (save.stage >= 2 && Math.random() < 0.16) setTimeout(spawnTreasure, 1200);
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
   const CHT = CH * 16 * P;
@@ -339,9 +405,18 @@ function spawnEnemy() {
   const b = biome(), type = pick(b.pool), d = EDEF[type];
   const lane = rand(-0.4, 0.4);
   const x = clamp(W / 2 + lane * F.pathW * 1.1, 60 * U, W - 60 * U), y = 120 + rand(-20, 20) * U;
-  const hp = enemyHp() * (d.hp || 1);
-  R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 80 * U * (d.spd || 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
-    ranged: !!d.ranged, stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd' });
+  const elite = save.stage >= 2 && Math.random() < 0.12, hp = enemyHp() * (d.hp || 1) * (elite ? 4 : 1);
+  R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 80 * U * (d.spd || 1) * (elite ? 0.8 : 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
+    ranged: !!d.ranged, stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd', elite, sc: elite ? 1.5 : 1, gold: (d.hp || 1) * (elite ? 4 : 1) });
+  if (elite) sfx('elite', 0, x);
+}
+// golden racoon: runs across the field, never attacks; catch it for gems and a shower of gold
+function spawnTreasure() {
+  if (R.boss || R.phase !== 'fight') return;
+  const fromL = Math.random() < 0.5, hp = enemyHp() * 5;
+  R.en.push({ id: R.nextId++, type: 'GoldRacoon', d: { runner: 1 }, x: fromL ? -20 : W + 20, y: rand(230, 320) * U + 40, lane: 0, hp, maxHp: hp, sp: 95 * U, vx: fromL ? 1 : -1,
+    flash: 0, anim: 0, knock: 0, kx: 0, ky: 0, kb: 0, age: 0, ranged: false, stopped: false, atk: 9, wind: 0, dir: fromL ? 'r' : 'l', sc: 1, gold: 10, treasure: true, spark: 0 });
+  toast('Hazine canavarı! Kaçmadan yakala'); sfx('treasure', 0);
 }
 function startBoss() {
   if (R.boss || !save.bossReady) return;
@@ -361,6 +436,7 @@ function bossWin() {
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
+  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25);
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
   banner('ZAFER!', `+${gems} elmas · ${biome().name}`); sfx('win', 0);
@@ -374,24 +450,29 @@ function bossFail() {
   $('bossHud').classList.add('hidden');
   banner('BOSS KAÇTI!', 'Güçlen ve tekrar dene'); sfx('fail', 0);
   R.retryT = 12; startAdvance(160 * U, 110 * U);
+  R.bossFails++; if (R.bossFails >= 2 && rebirthGain() > 0) setTimeout(() => toast('İpucu: Doğuş ile kalıcı güç kazan!'), 2300);
+  uiKey = '';
 }
 function damage(target, dmg, crit, isBoss) {
   target.hp -= dmg; target.flash = 0.08;
   if (!isBoss) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = 6 * U; }
-  const top = isBoss ? bossH(target) : 18 * P;
+  const top = isBoss ? bossH(target) : 18 * P * (target.sc || 1);
   addText(target.x + rand(-14, 14) * U, target.y - top - 2 * U + rand(-6, 6) * U, fmt(dmg), crit ? 'crit' : 'dmg');
   if (target.hp <= 0) { if (isBoss) bossWin(); else kill(target); }
 }
 function kill(e) {
   e.dead = true;
   runHooks('kill', e);
-  puff(e.x, e.y, 2); bits(e.x, e.y - 8 * P, biome().bits, 4);
-  addMoney(e.maxHp * 0.55 * moneyMul(), e.x, e.y - 10 * P, 3);
-  sfx('kill');
+  puff(e.x, e.y, e.elite ? 3 : 2); bits(e.x, e.y - 8 * P, biome().bits, e.elite ? 7 : 4);
+  addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul(), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 3);
+  R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.3;
+  sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
+  if (e.treasure) { const g = 1 + (save.stage >= 10 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
+  R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04));
   if (!R.boss && !save.bossReady) {
     save.kills++;
     if (save.kills >= KILLS_PER_SUB) {
-      if (save.sub < SUBS) { save.sub++; save.kills = 0; toast(`Aşama ${save.stage}-${save.sub}`); runHooks('stage'); }
+      if (save.sub < SUBS) { save.sub++; save.kills = 0; toast(`Aşama ${save.stage}-${save.sub}`); sfx('stage', 0); runHooks('stage'); }
       else { save.kills = KILLS_PER_SUB; save.bossReady = true; R.retryT = 0; if (!save.auto) toast('Boss hazır!'); }
     }
   }
@@ -434,7 +515,11 @@ function hitFx(q, t) {
   }
   if (g.bits) bits(x, y, g.bits, 2);
   if (q.crit) fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22);
-  if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx('hit');
+  if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx(g.hsnd || 'hit', 0, x);
+  if (save.team >= 4 && t !== R.boss && Math.random() < 0.2) {   // Bombacı perk: splash
+    boom(x, y, 0.5);
+    for (const e of R.en) if (e !== t && !e.dead && Math.hypot(e.x - x, e.y - 8 * P - y) < 60 * U) damage(e, q.dmg * 0.6, false, false);
+  }
 }
 function nearestTarget(h) {
   if (R.boss && R.boss.arrive >= 1) return R.boss;
@@ -442,18 +527,28 @@ function nearestTarget(h) {
   for (const e of R.en) { if (e.dead || e.y < 140) continue; const d = Math.hypot(e.x - h.x, e.y - h.y); if (d < bd) { bd = d; best = e; } }
   return best;
 }
-const aimY = t => t === R.boss ? t.y - bossH(t) * 0.5 : t.y - 8 * P - (t.d && t.d.fly ? 5 * P : 0);
+const aimY = t => t === R.boss ? t.y - bossH(t) * 0.5 : t.y - 8 * P * (t.sc || 1) - (t.d && t.d.fly ? 5 * P : 0);
 function fire(h, tgt) {
   const g = GUNS[save.gun];
   const hx = h.x, hy = h.y - 9 * P;
   h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx); h.atk = 0.14; h.dir = dirOf(Math.cos(h.ang), Math.sin(h.ang));
-  const crit = Math.random() < 0.1, total = dmgPerShot() * (crit ? 3 : 1);
+  const crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1);
   for (let k = 0; k < g.shots; k++) {
     const a = h.ang + (g.shots > 1 ? (k - (g.shots - 1) / 2) * 0.12 : 0);
     R.bul.push({ x: hx, y: hy, a, sp: g.sp * U, tgt, dmg: total / g.shots, crit, g, age: rand(0, 1), life: 1.2, trail: [], tt: 0 });
   }
-  sfx('shoot');
+  sfx(g.snd || 'shoot', 0.12, hx);
 }
+
+// ================================================================ ultimate: Shuriken Storm (charges with kills)
+function useUlt() {
+  if (R.ult < 1 || R.ultT > 0 || !R.sq || R.sq.ko > 0) return;
+  R.ult = 0; R.ultT = 5; R.ultFull = 0; R.flash = 0.25; R.shake = 4;
+  for (const h of R.heroes) { fx('fx_circlew', h.x, h.y - 8 * P, 1, 0.35); fx('fx_aura', h.x, h.y, 1, 0.4, 1); }
+  banner('FIRTINA!', '5 saniye x3 atış'); sfx('skill', 0); uiKey = '';
+  if (save.tut) save.tut.ult = true;
+}
+$('ultBtn').addEventListener('click', () => { audioInit(); useUlt(); });
 
 // ================================================================ squad: input, AI steering, health
 const keys = {};
@@ -523,7 +618,7 @@ function hurtSquad(dmg, x, y) {
   const L0 = R.heroes[0];
   addText(clamp((L0 ? L0.x : x) + rand(-10, 10) * U, 40 * U, W - 40 * U), (L0 ? L0.y : y) - 30 * P, '-' + dmg, 'hurt');
   fx('fx_cut', x || 0, y || 0, 0.5, 0.2);
-  sfx('hurt');
+  sfx('hurt', 0, x); sfx('voice', 0, x, rand(-2, 2));
   runHooks('hurt', dmg);
   if (sq.hp <= 0) knockout();
   return true;
@@ -587,7 +682,7 @@ function updateSquad(dt) {
     const walking = h.spd > 30 * U || (adv && sq.ko <= 0);
     h.moving = walking;
     if (walking) {
-      h.walk += dt * 8;
+      const wf = Math.floor(h.walk); h.walk += dt * 8; if (h.i === 0 && Math.floor(h.walk) !== wf && Math.floor(h.walk) % 2 === 0) step(h.x);
       if (h.atk <= 0) h.dir = h.spd > 30 * U ? dirOf(h.x - ox, h.y - oy) : 'u';
       h.dust = (h.dust || 0) - dt;
       if (h.dust <= 0) { h.dust = 0.32; part({ k: 'anim', a: 'fx_smoke', x: h.x, y: h.y + 2 * P, s: 0.5, life: 0.3, max: 0.3, ay: 1, alpha: 0.45 }); }
@@ -672,6 +767,9 @@ function update(dt) {
   const ko = R.sq.ko > 0;
   if (R.lobGap > 0) R.lobGap -= dt;
   if (R.retryT > 0) R.retryT -= dt;
+  if (R.comboT > 0) R.comboT -= dt; if (R.coinT > 0) R.coinT -= dt; else R.coinN = 0; if (R.buyT > 0) R.buyT -= dt; else R.buyN = 0;
+  if (R.ultT > 0) { R.ultT -= dt; if (Math.random() < 0.5) for (const h of R.heroes) if (Math.random() < 0.3) fx('fx_aura', h.x, h.y, 0.5, 0.3, 1); if (R.ultT <= 0) uiKey = ''; }
+  if (R.ult >= 1 && R.ultT <= 0) { R.ultFull += dt; if (save.auto && R.ultFull > 8 && (R.en.length || R.boss)) useUlt(); } else R.ultFull = 0;
   // the march: scroll the world while advancing, then hold for the wave
   if (!R.boss) {
     if (R.phase === 'advance' && !ko) {
@@ -691,6 +789,12 @@ function update(dt) {
   for (const e of R.en) {
     if (e.dead) continue;
     e.age += dt; e.anim += dt; if (e.flash > 0) e.flash -= dt;
+    if (e.treasure) {
+      e.x += e.vx * e.sp * dt; e.spark -= dt;
+      if (e.spark <= 0) { e.spark = 0.25; fx('fx_spark', e.x + rand(-10, 10) * U, e.y - rand(4, 16) * P, 0.5, 0.2); }
+      if (e.x < -40 || e.x > W + 40) { e.dead = true; toast('Hazine kaçtı!'); }
+      continue;
+    }
     const goal = enemyGoal(e);
     const dx = goal.x - e.x, dy = goal.y - e.y, d = Math.hypot(dx, dy);
     if (e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * dt); e.x += dx / d * m; e.y += dy / d * m; }
@@ -737,7 +841,7 @@ function update(dt) {
     const t = q.tgt, alive = t && !t.dead && (t === R.boss || R.en.includes(t));
     if (alive) { const want = Math.atan2(aimY(t) - q.y, t.x - q.x); let da = want - q.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; q.a += da * Math.min(1, dt * 16); }
     q.x += Math.cos(q.a) * q.sp * dt; q.y += Math.sin(q.a) * q.sp * dt;
-    if (alive && Math.hypot(t.x - q.x, aimY(t) - q.y) < (t === R.boss ? 60 * U : 22 * U)) { q.dead = true; hitFx(q, t); damage(t, q.dmg, q.crit, t === R.boss); }
+    if (alive && Math.hypot(t.x - q.x, aimY(t) - q.y) < (t === R.boss ? 60 * U : 22 * U * (t.sc || 1))) { q.dead = true; hitFx(q, t); damage(t, q.dmg, q.crit, t === R.boss); }
     if (q.life <= 0 || q.x > W + 100 || q.x < -100 || q.y < -100 || q.y > H + 100) q.dead = true;
   }
   updateEnemyShots(dt);
@@ -750,7 +854,7 @@ function update(dt) {
   for (const m of R.coins) {
     m.t += dt;
     if (m.t < 0.4) { m.x += m.vx * dt; m.y += m.vy * dt; m.vy += 600 * U * dt; }
-    else { const dx = F.wallet.x - m.x, dy = F.wallet.y - m.y, d = Math.hypot(dx, dy), sp = (700 + m.t * 900) * U; if (d < 16) { m.dead = true; R.walletPop = 0.12; } else { const k = Math.min(d, sp * dt); m.x += dx / d * k; m.y += dy / d * k; } }
+    else { const dx = F.wallet.x - m.x, dy = F.wallet.y - m.y, d = Math.hypot(dx, dy), sp = (700 + m.t * 900) * U; if (d < 16) { m.dead = true; R.walletPop = 0.12; R.coinT = 0.5; sfx('tick', 0.03, F.wallet.x, PENTA[Math.min(R.coinN++, PENTA.length - 1)] + 7); } else { const k = Math.min(d, sp * dt); m.x += dx / d * k; m.y += dy / d * k; } }
   }
   R.en = R.en.filter(e => !e.dead); R.bul = R.bul.filter(q => !q.dead); R.parts = R.parts.filter(p => p.life > 0);
   R.txt = R.txt.filter(t => t.life > 0); R.coins = R.coins.filter(m => !m.dead);
@@ -780,7 +884,7 @@ function render() {
   for (const h of R.heroes) list.push({ y: h.y, k: 2, o: h });
   list.sort((a, b) => a.y - b.y);
   ctx.globalAlpha = 0.8;
-  for (const it of list) spr('shadow', it.o.x, it.o.y + P, it.k === 1 ? 4 : 1, 0.5, 0.5);
+  for (const it of list) spr('shadow', it.o.x, it.o.y + P, it.k === 1 ? 4 : (it.o.sc || 1), 0.5, 0.5);
   ctx.globalAlpha = 1;
   for (const it of list) {
     const o = it.o;
@@ -788,11 +892,12 @@ function render() {
       const fly = o.d.fly, n = Math.floor(o.anim * (o.stopped ? 4 : 8)) % 4;
       const name = `m_${o.type}_${o.dir}${n}`, lift = fly ? (5 + (Math.floor(t * 3 + o.id) % 2)) * P : 0;
       if (o.age < 0.2) ctx.globalAlpha = o.age / 0.2;
-      spr(name, o.x, o.y - lift);
-      if (o.flash > 0) spr(name, o.x, o.y - lift, 1, 0.5, 1, false, 0, '#ffffff');
-      else if (o.wind > 0 && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, 1, 0.5, 1, false, 0, '#fce2ca');
+      const es = o.sc || 1;
+      spr(name, o.x, o.y - lift, es);
+      if (o.flash > 0) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#ffffff');
+      else if (o.wind > 0 && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#fce2ca');
       ctx.globalAlpha = 1;
-      if (o.hp < o.maxHp) drawBar(o.x, o.y - lift - 19 * P, 16, o.hp / o.maxHp);
+      if (o.hp < o.maxHp || o.elite || o.treasure) drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, o.hp / o.maxHp, o.elite || o.treasure ? '#f1c471' : '#e0394c');
     } else if (it.k === 1) {
       const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * 7) % n}`;
       ctx.globalAlpha = o.leaving ? Math.max(0, 1 - o.leaving / 2) : 1;
@@ -834,7 +939,8 @@ function render() {
   for (const tx of R.txt) {
     ctx.globalAlpha = Math.min(1, tx.life * 4);
     const age = tx.max - tx.life, big = tx.kind === 'crit';
-    btext(big ? tx.s + '!' : tx.kind === 'money' ? '+' + tx.s : tx.s, tx.x, tx.y, tx.kind === 'money' ? 'y' : big ? 'o' : tx.kind === 'hurt' ? 'r' : 'w', big ? (age < 0.08 ? 1.5 : 1) : 0.5);
+    if (tx.kind === 'gem') { spr('gem_icon', tx.x - 6 * P, tx.y, 0.5, 0.5, 0.5); }
+    btext(big ? tx.s + '!' : tx.kind === 'money' ? '+' + tx.s : tx.s, tx.x, tx.y, tx.kind === 'money' ? 'y' : big ? 'o' : tx.kind === 'hurt' ? 'r' : tx.kind === 'gem' ? 'w' : 'w', big ? (age < 0.08 ? 1.5 : 1) : tx.kind === 'gem' ? 1 : 0.5);
   }
   ctx.globalAlpha = 1;
   runHooks('render', ctx);
@@ -956,7 +1062,7 @@ function ctrlBadge() {
 }
 function updateUI(dt) {
   uiT -= dt; if (uiT > 0 && uiKey) return; uiT = 0.12;
-  const key = [Math.floor(save.money), save.gems, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
+  const key = [Math.floor(save.money), save.gems, Math.round(R.ult * 20), R.ultT > 0, R.bossFails, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
   if (key === uiKey) return; uiKey = key;
   $('money').textContent = fmt(save.money);
   $('gems').textContent = fmt(save.gems);
@@ -971,7 +1077,7 @@ function updateUI(dt) {
     if (i + 1 === SUBS) n.querySelector('img').src = `assets/ui/boss_${bossKey()}.png`;
   });
   for (const c of cards) {
-    const k = c.dataset.up, lv = save.lv[k], cost = COST[k](lv), maxed = k === 'speed' && fireRate() >= 12;
+    const k = c.dataset.up, lv = save.lv[k], cost = COST[k](lv), maxed = k === 'speed' && stat.speed(lv) >= SPEED_CAP;
     c.querySelector('.lv').textContent = lv;
     c.querySelector('.val').textContent = k === 'power' ? fmt(dmgPerShot()) : k === 'speed' ? fireRate().toFixed(2) + '/sn' : 'x' + fmt(moneyMul());
     c.querySelector('.cost b').textContent = maxed ? 'MAKS' : fmt(cost);
@@ -987,12 +1093,29 @@ function updateUI(dt) {
     const bt = $('bossTime'); bt.textContent = Math.max(0, Math.ceil(R.boss.t)); bt.classList.toggle('low', R.boss.t < 8);
   }
   const gi = document.querySelector('.gunico'); if (gi) gi.src = `assets/ui/wi_${GUNS[save.gun].spr}.png`;
+  // ultimate meter
+  const ub = $('ultBtn'); ub.querySelector('i').style.height = Math.round(R.ult * 100) + '%';
+  ub.classList.toggle('full', R.ult >= 1 && R.ultT <= 0); ub.classList.toggle('active', R.ultT > 0);
+  // red "something to do" dots: affordable weapon, team member, rebirth worth taking
+  const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
+  note('[data-open="guns"]', save.gun < GUNS.length - 1 && save.gems >= GUNS[save.gun + 1].cost);
+  note('[data-open="team"]', save.team < TEAM.length && save.money >= TEAM[save.team].cost);
+  note('[data-open="rebirth"]', rebirthGain() > 0 && R.bossFails >= 2);
+  // first steps
+  if (!save.tut) save.tut = {};
+  const tp = $('tut');
+  let tgt = null, txt = '';
+  if (!save.tut.power && save.money >= COST.power(save.lv.power)) { tgt = document.querySelector('.ucard[data-up="power"]'); txt = 'Dokun: Güç al'; }
+  else if (!save.tut.ult && R.ult >= 1) { tgt = ub; txt = 'Fırtınayı başlat!'; }
+  if (tgt) { const r = tgt.getBoundingClientRect(); tp.style.left = (r.left + r.width / 2) + 'px'; tp.style.top = (r.top - 8) + 'px'; tp.querySelector('span').textContent = txt; tp.classList.remove('hidden'); }
+  else tp.classList.add('hidden');
 }
 function buy(k) {
   const lv = save.lv[k], cost = COST[k](lv);
-  if (k === 'speed' && fireRate() >= 12) return false;
+  if (k === 'speed' && stat.speed(save.lv.speed) >= SPEED_CAP) return false;
   if (save.money < cost) { sfx('no'); return false; }
-  save.money -= cost; save.lv[k]++; sfx('buy'); runHooks('buy', k); uiKey = '';
+  save.money -= cost; save.lv[k]++; R.buyT = 0.6; sfx('buy', 0, undefined, PENTA[Math.min(R.buyN++, 6)]); runHooks('buy', k); uiKey = '';
+  if (save.tut && !save.tut.power && save.lv.power >= 3) save.tut.power = true;
   return true;
 }
 cards.forEach(c => {
@@ -1012,10 +1135,11 @@ function el(html) { const t = document.createElement('template'); t.innerHTML = 
 function openPanel(title, color, build) {
   $('pTitle').textContent = title; $('pTitle').className = 'ribbon ' + (color || '');
   const body = $('pBody'); body.innerHTML = ''; build(body);
+  if ($('panel').classList.contains('hidden')) sfx('open', 0);
   $('panel').classList.remove('hidden');
 }
-function closePanel() { $('panel').classList.add('hidden'); }
-$('pClose').onclick = () => { sfx('click'); closePanel(); };
+function closePanel() { if (!$('panel').classList.contains('hidden')) sfx('close', 0); $('panel').classList.add('hidden'); }
+$('pClose').onclick = () => closePanel();
 $('panel').addEventListener('pointerdown', e => { if (e.target.id === 'panel') closePanel(); });
 const PANELS = {
   guns: () => openPanel('Silahlar', 'blue', body => {
@@ -1034,7 +1158,7 @@ const PANELS = {
     TEAM.forEach((h, i) => {
       const owned = i < save.team, next = i === save.team;
       const row = el(`<div class="row-card ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt=""></div>
-        <div class="info"><h4>${h.name}</h4><p>${owned ? 'Takımda, atış yapıyor' : 'Takıma katılmayı bekliyor'}</p></div>
+        <div class="info"><h4>${h.name}</h4><p>${h.perk}</p></div>
         ${owned ? '<button class="btn grey off">TAKIMDA</button>' : next ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(h.cost)}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
       if (next) row.querySelector('.btn').onclick = () => { if (save.money < h.cost) { sfx('no'); toast('Yeterli altın yok'); return; } save.money -= h.cost; save.team++; setupHeroes(); sfx('bonus', 0); persist(); uiKey = ''; PANELS.team(); };
       body.appendChild(row);
@@ -1105,7 +1229,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
 window.SS = {
   save, R, F, GUNS, TEAM, BIOMES, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, buy, startBoss, setupHeroes, heroId,
-  hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate,
+  hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
   get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; }, get P() { return P; },
   refreshUI() { uiKey = ''; }, get sounds() { return Object.keys(SND); }, get music() { return musicKey; },

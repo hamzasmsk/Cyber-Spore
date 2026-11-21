@@ -114,7 +114,7 @@ MONSTERS = ['Slime3', 'Mushroom', 'Snake2', 'Butterfly',
             'Bamboo', 'KappaGreen', 'Racoon', 'SpiderRed', 'BlueBat',
             'Lizard', 'Mole', 'Reptile2', 'YellowsBat', 'Skull',
             'Slime', 'AxolotBlue', 'Octopus2', 'Eye', 'SkullBlue',
-            'Flam', 'Spirit2', 'Cyclope', 'Beast2', 'LanternRed']
+            'Flam', 'Spirit2', 'Cyclope', 'Beast2', 'LanternRed', 'GoldRacoon']
 for m in MONSTERS:
     src = [p for p in glob.glob(A('Actor', 'Monsters', m, '*.png')) if 'Faceset' not in p][0]
     sh = load(src)
@@ -162,6 +162,7 @@ add_strip('coin', coin, 4)
 hearts = load(A('Ui', 'heart.png'))
 add('heart', hearts.crop((64, 0, 80, 16)))
 add('heart_empty', hearts.crop((0, 0, 16, 16)))
+add('gem_icon', trim(load(A('Backgrounds', 'Tilesets', 'TilesetNature.png')).crop((16, 240, 32, 256))))
 add('bar_under', load(A('Ui', 'LifeBarMiniUnder.png')))
 add('bar_red', load(A('Ui', 'LifeBarMiniProgress.png')))
 
@@ -392,12 +393,21 @@ ic.resize((512, 512), Image.NEAREST).save(os.path.join(OUT, '..', 'icon.png'), o
 # Effects are the pack's softest (lowest spectral centroid) sounds, high-cut and loudness-matched so nothing is
 # shrill; a few "reward" sounds get a short room echo. Music: one calm, warm track per biome (loudness -24 LUFS).
 SFX = {  # name: (source, low-pass Hz, echo)
-    'throw': ('Game/Sword', 2600, 0), 'hit': ('Game/Hit', 3200, 0), 'kill': ('Game/MiniImpact', 3600, 0),
-    'coin': ('Game/Coin', 4200, 0), 'buy': ('Game/PowerUp1', 5000, 1), 'no': ('Menu/Menu11', 3500, 0),
-    'boom': ('Game/Explosion2', 2400, 0), 'boss': ('Game/Secret1', 5000, 1), 'win': ('Game/Success3', 5000, 1),
-    'fail': ('Game/GameOver2', 4000, 1), 'hurt': ('Game/Hit2', 2600, 0), 'lob': ('Game/Fireball', 3000, 0),
-    'click': ('Menu/Menu12', 4500, 0), 'magic': ('Game/Magic2', 4500, 1), 'gold': ('Game/Gold1', 4500, 1),
-    'bonus': ('Game/Bonus', 4500, 1), 'accept': ('Menu/Accept2', 4500, 1)}
+    # throws (one per weapon family) and impacts
+    'throw': ('Game/Sword', 2600, 0), 'throw2': ('Game/Sword2', 2400, 0), 'throw_fire': ('Game/Fireball2', 2600, 0),
+    'throw_magic': ('Game/Magic2', 3600, 0), 'hit': ('Game/Hit', 3200, 0), 'hit2': ('Game/Hit1', 3000, 0),
+    'hit3': ('Game/Hit5', 3000, 0), 'hit_ice': ('Menu/Menu9', 4200, 0), 'hit_fire': ('Game/Fire3', 2600, 0),
+    'kill': ('Game/MiniImpact', 3600, 0), 'boom': ('Game/Explosion2', 2400, 0), 'lob': ('Game/Fireball', 3000, 0),
+    # rewards and progression
+    'coin': ('Game/Coin', 4200, 0), 'gold': ('Game/Gold1', 4500, 1), 'gem': ('Game/Gold3', 4500, 1),
+    'buy': ('Game/PowerUp1', 5000, 1), 'bonus': ('Game/Bonus', 4500, 1), 'skill': ('Game/PowerUp2', 5000, 1),
+    'stage': ('Game/Success2', 5000, 1), 'win': ('Game/Success3', 5000, 1), 'boss': ('Game/Secret1', 5000, 1),
+    'elite': ('Game/Alert2', 3000, 1), 'treasure': ('Game/Gold2', 4500, 1), 'magic': ('Game/Magic2', 4500, 1),
+    # squad
+    'hurt': ('Game/Hit2', 2600, 0), 'fail': ('Game/GameOver2', 4000, 1), 'voice': ('Game/Voice2', 4000, 0),
+    # interface
+    'click': ('Menu/Menu12', 4500, 0), 'open': ('Menu/Menu4', 4500, 1), 'close': ('Menu/Menu5', 4000, 0),
+    'tick': ('Menu/Menu8', 4500, 0), 'no': ('Menu/Menu11', 3500, 0), 'accept': ('Menu/Accept2', 4500, 1)}
 tmp = tempfile.mkdtemp()
 data = {}
 for k, (v, lp, echo) in SFX.items():

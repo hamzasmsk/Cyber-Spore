@@ -224,3 +224,33 @@ h2,h3,h4{margin:0;font-weight:700}
 @keyframes blink3{50%{opacity:.6}}
 .row-card .ico.tile{background:var(--ink);padding:0}
 .row-card .ico.tile img{width:46px;height:46px;max-width:none;max-height:none}
+
+/* settings: a single pack-style icon tile, same height as the stage nodes row */
+.tilebtn{flex:none;width:44px;height:44px;padding:3px;background:var(--ink);clip-path:var(--notch);pointer-events:auto}
+.tilebtn img{width:38px;height:38px;display:block}
+.tilebtn:active{transform:translateY(2px)}
+/* ultimate: icon tile that fills from the bottom; glows when ready */
+#ultBtn{position:absolute;left:50%;bottom:calc(150px + var(--safe-b));transform:translateX(-50%);width:56px;height:64px;display:flex;flex-direction:column;align-items:center;pointer-events:auto}
+#ultBtn i{position:absolute;left:3px;right:3px;bottom:17px;height:0;background:rgba(255,225,141,.55);z-index:1;pointer-events:none}
+#ultBtn img{width:48px;height:48px;padding:3px;box-sizing:content-box;background:var(--ink);clip-path:var(--notch);filter:grayscale(.7) brightness(.8)}
+#ultBtn span{position:relative;z-index:2;margin-top:-7px;font-size:12px;color:var(--cream);text-shadow:var(--o-sm)}
+#ultBtn.full img{filter:none;background:var(--gold2);animation:pulse .8s steps(2) infinite}
+#ultBtn.active img{filter:none;background:var(--red)}
+#ultBtn:active{transform:translate(-50%,3px)}
+#ctrl{bottom:auto!important;top:calc(132px + var(--safe-t))}
+#hint{bottom:auto!important;top:calc(160px + var(--safe-t))}
+/* first-steps pointer */
+#tut{position:fixed;z-index:6;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;pointer-events:none;animation:bob 0.8s steps(2) infinite}
+#tut span{padding:4px 8px 5px;background:var(--gold2);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink);font-size:14px;color:var(--ink);white-space:nowrap}
+#tut b{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid var(--ink);margin-top:-1px}
+@keyframes bob{50%{margin-top:-6px}}
+/* red "something to do" marker on side tiles */
+.sbtn.notify::after{content:"";position:absolute;top:-3px;right:1px;width:14px;height:14px;background:var(--red);box-shadow:inset 0 0 0 3px var(--ink);animation:blink2 1s steps(2) infinite;z-index:3}
+/* volume sliders (settings) */
+.vol{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);color:var(--dark);font-size:15px}
+.vol img{width:28px;height:28px}
+.vol label{width:64px}
+.vol input{flex:1;-webkit-appearance:none;appearance:none;height:12px;background:var(--sage2);box-shadow:inset 0 0 0 3px var(--ink);touch-action:pan-x}
+.vol input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:26px;background:var(--wood);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--wood2)}
+.vol input::-moz-range-thumb{width:20px;height:26px;border:0;border-radius:0;background:var(--wood)}
+.vol em{width:34px;text-align:right;font-style:normal;font-size:13px;color:var(--muted)}
