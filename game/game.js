@@ -1,4 +1,4 @@
-/* Spore Strike — Cyber-Spore survivor shooter (HTML5 canvas, no dependencies) */
+/* Neon Swarm — survivor shooter (HTML5 canvas, no dependencies) */
 'use strict';
 (() => {
 
@@ -27,8 +27,8 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---------------------------------------------------------------- save data
-const SAVE_KEY = 'sporestrike_save_v1';
-const DEFAULT_SAVE = { coins: 0, meta: {}, unlocked: 1, chars: { spora: true }, char: 'spora', best: {}, sound: true };
+const SAVE_KEY = 'neonswarm_save_v1';
+const DEFAULT_SAVE = { coins: 0, meta: {}, unlocked: 1, chars: { blip: true }, char: 'blip', best: {}, sound: true };
 function loadSave() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { s = null; }
@@ -41,7 +41,7 @@ function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save));
 
 // ---------------------------------------------------------------- game data
 const CHARS = {
-  spora:   { name: 'Spora',   ico: '🟢', desc: 'Dengeli avcı. Hızlı ve isabetli mermiler.', cost: 0,   color: '#59ffb0', hp: 100, speed: 170, dmg: 10, rate: 3.0, shots: 1, gap: 0.14, pierce: 0, bspd: 1 },
+  blip:    { name: 'Blip',    ico: '🟢', desc: 'Dengeli avcı. Hızlı ve isabetli mermiler.', cost: 0,   color: '#59ffb0', hp: 100, speed: 170, dmg: 10, rate: 3.0, shots: 1, gap: 0.14, pierce: 0, bspd: 1 },
   volt:    { name: 'Volt',    ico: '⚡', desc: 'Makineli ateş. Düşük can, yüksek hız.',      cost: 400, color: '#ffd84a', hp: 75,  speed: 190, dmg: 5.5, rate: 6.5, shots: 1, gap: 0.14, pierce: 0, bspd: 1.15 },
   bulwark: { name: 'Bulwark', ico: '🛡️', desc: 'Tank. Pompalı tüfek: 3 saçma, yüksek can.',  cost: 900, color: '#ff6ad5', hp: 170, speed: 150, dmg: 9,  rate: 1.6, shots: 3, gap: 0.24, pierce: 0, bspd: 0.9 },
   phantom: { name: 'Phantom', ico: '👁️', desc: 'Keskin nişancı. Delici, ağır vuruşlar.',     cost: 1600, color: '#8fa8ff', hp: 90,  speed: 175, dmg: 26, rate: 1.4, shots: 1, gap: 0.14, pierce: 2, bspd: 1.5 },
@@ -85,7 +85,7 @@ const STAGES = [
 ];
 
 const UPGRADES = [
-  { id: 'dmg',    ico: '⚔️', name: 'Keskin Spor',    desc: '+25% hasar',                     max: 8, apply: p => { p.dmgMul += 0.25; } },
+  { id: 'dmg',    ico: '⚔️', name: 'Keskin Mermi',   desc: '+25% hasar',                     max: 8, apply: p => { p.dmgMul += 0.25; } },
   { id: 'rate',   ico: '🔥', name: 'Hızlı Tetik',    desc: '+18% atış hızı',                 max: 8, apply: p => { p.rateMul += 0.18; } },
   { id: 'multi',  ico: '🔱', name: 'Çoklu Atış',     desc: '+1 mermi',                       max: 4, apply: p => { p.extraShots++; } },
   { id: 'pierce', ico: '🗡️', name: 'Delici Mermi',   desc: 'Mermi +1 düşmanı deler',         max: 4, apply: p => { p.pierce++; } },
@@ -97,7 +97,7 @@ const UPGRADES = [
   { id: 'magnet', ico: '🧲', name: 'Mıknatıs',       desc: '+45% toplama alanı',             max: 4, apply: p => { p.magnet *= 1.45; } },
   { id: 'orbit',  ico: '🌀', name: 'Yörünge Bıçağı', desc: 'Etrafında dönen bıçak (+1)',     max: 5, apply: p => { p.orbit++; } },
   { id: 'nova',   ico: '💥', name: 'Şok Dalgası',    desc: 'Düzenli alan hasarı + itme',     max: 5, apply: p => { p.nova++; } },
-  { id: 'drone',  ico: '🛸', name: 'Spor Drone',     desc: 'Otomatik ateş eden yardımcı',    max: 3, apply: p => { p.drones++; } },
+  { id: 'drone',  ico: '🛸', name: 'Drone',          desc: 'Otomatik ateş eden yardımcı',    max: 3, apply: p => { p.drones++; } },
   { id: 'chain',  ico: '⚡', name: 'Zincir Şimşek',  desc: 'Düzenli olarak düşmanlara sekmeli yıldırım', max: 5, apply: p => { p.chain++; } },
 ];
 const xpNeed = l => Math.floor(3 + l * 3 + l * l * 0.6);
@@ -324,7 +324,7 @@ let G = null;
 let nextId = 1;
 
 function newPlayer() {
-  const c = CHARS[save.char] || CHARS.spora;
+  const c = CHARS[save.char] || CHARS.blip;
   const maxHp = c.hp + metaLv('vital') * 12;
   return {
     x: 0, y: 0, r: 14, col: c.color, char: save.char,
@@ -1011,11 +1011,11 @@ function drawPlayer(p) {
   ctx.fillStyle = '#04241a';
   ctx.beginPath(); ctx.arc(p.x - 4.5 + ex * 1.4, p.y - 2 + ey * 1.4 + bob, 1.8, 0, TAU); ctx.arc(p.x + 4.5 + ex * 1.4, p.y - 2 + ey * 1.4 + bob, 1.8, 0, TAU); ctx.fill();
 }
-// drifting spores behind menus
-const menuSpores = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: rand(2, 9), s: rand(0.01, 0.04), h: rand(120, 330) }));
+// drifting particles behind menus
+const menuDots = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: rand(2, 9), s: rand(0.01, 0.04), h: rand(120, 330) }));
 function renderMenuBg() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  for (const m of menuSpores) {
+  for (const m of menuDots) {
     m.y -= m.s / 60; if (m.y < -0.05) { m.y = 1.05; m.x = Math.random(); }
     drawSprite(glowDot(m.r, `hsl(${m.h},90%,60%)`), m.x * W, m.y * H);
   }
@@ -1055,5 +1055,5 @@ show('menu');
 requestAnimationFrame(frame);
 
 // small hook for automated tests / balancing
-window.SporeStrike = { get G() { return G; }, get state() { return state; }, startRun, STAGES, UPGRADES, save };
+window.NeonSwarm = { get G() { return G; }, get state() { return state; }, startRun, STAGES, UPGRADES, save };
 })();

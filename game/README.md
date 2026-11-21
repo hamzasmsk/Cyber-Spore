@@ -1,8 +1,8 @@
-# Spore Strike
+# Neon Swarm
 
-Cyber-Spore evreninde geçen, mobil öncelikli bir "sürü nişancısı" (survivor shooter).
-Saf HTML5 Canvas + JavaScript, hiçbir bağımlılık yok. GitHub Pages üzerinden `/game/` adresinde çalışır,
-telefonda "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
+Mobil öncelikli bir hayatta kalma nişancısı (survivor shooter). Saf HTML5 Canvas + JavaScript, hiçbir bağımlılık yok.
+Tamamen bağımsız bir projedir: `game/` klasörü tek başına çalışır, ayrı bir depoya olduğu gibi taşınabilir.
+Telefonda "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
 
 ## Oynanış
 - Ekrana dokun ve sürükle: hareket (masaüstünde WASD / ok tuşları). Ateş otomatik, en yakın düşmana nişan alır.
@@ -22,8 +22,8 @@ Yeni düşman, boss, bölüm veya güç eklemek için `game.js` başındaki tabl
 
 ## Yol haritası
 1. **Denge ve his** – gerçek telefonda test, zorluk eğrisi, ses efektleri, titreşim ayarı.
-2. **İçerik** – daha fazla bölüm, silah türleri (lazer, roket, alev), güç evrimleri (iki güç birleşince süper güç), günlük görevler.
+2. **İçerik** – daha fazla bölüm, silah türleri (lazer, roket, alev), güç evrimleri, günlük görevler.
 3. **Görsel** – sprite çizimleri / animasyonlar, bölüme özel arka planlar, müzik.
 4. **Mağaza yayını** – Capacitor ile aynı kodu Android (Google Play) ve iOS (App Store) uygulamasına sarmak;
-   reklam (ödüllü video ile ikinci şans) ve uygulama içi satın alma eklemek.
-5. **Gerekirse motor değişikliği** – oyun çok büyürse Godot veya Unity'ye taşımak; tasarım ve denge tabloları aynen taşınabilir.
+   ödüllü reklam ve uygulama içi satın alma eklemek.
+5. **Gerekirse motor değişikliği** – oyun çok büyürse Godot veya Unity'ye taşımak.

@@ -1,7 +1,7 @@
 {
-  "name": "Spore Strike",
-  "short_name": "Spore Strike",
-  "description": "Cyber-Spore evreninde bir sürü nişancısı.",
+  "name": "Neon Swarm",
+  "short_name": "Neon Swarm",
+  "description": "Neon sürülere karşı hayatta kalma nişancısı.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
