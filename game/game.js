@@ -31,7 +31,8 @@ function fmt(n) {
 
 // ================================================================ canvas & field geometry
 const cv = $('c');
-const ctx = cv.getContext('2d', { alpha: false });
+const mainCtx = cv.getContext('2d', { alpha: false });
+let ctx = mainCtx;
 let W = 390, H = 844, DPR = 1, U = 1;
 let K = 4, L = 1, P = 2, BW = 0, BH = 0;   // K device px per canvas px, L = CSS px per canvas px, P = CSS px per art px
 const F = {};
@@ -138,15 +139,27 @@ const EDEF = {
   Flam: { ranged: 1, spd: 1.2 }, Spirit2: { fly: 1, hp: 0.8, ranged: 1 }, Cyclope: { hp: 1.3 }, Beast2: { hp: 2, spd: 0.7 }, LanternRed: { ranged: 1 },
 };
 // thrown weapons: ori = direction the art points; trail / hit choose the effects; sc = art scale (0.5 steps)
+// thrown weapons. Every tier has its own behaviour and look:
+//  ori = direction the art points; sc = art scale (0.5 steps); held = weapon drawn in the ninja's hand
+//  curve (curved homing throw), bounce (ricochets), pierce (passes through N), stick (misses stick in the ground),
+//  push (knock-back), boomer (boomerang), freeze (slows), burn (damage over time), boom (area blast), chain (lightning)
 const GUNS = [
-  { name: 'Shuriken',     mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 900,  trail: 'ghost', hit: 'spark' , snd: 'shoot', hsnd: 'hit' },
-  { name: 'Kunai',        mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1100, trail: 'ghost', hit: 'cut' , snd: 'throw2', hsnd: 'hit2' },
-  { name: 'Üçlü Ok',      mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, sp: 1100, trail: 'ghost', hit: 'cut', bits: 'q_Wood' , snd: 'throw2', hsnd: 'hit3' },
-  { name: 'Büyük Kunai',  mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, trail: 'ghost', hit: 'claw' , snd: 'shoot', hsnd: 'hit2' },
-  { name: 'Büyü Yıldızı', mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 2, sp: 950,  trail: 'spark', hit: 'star' , snd: 'throw_magic', hsnd: 'magic' },
-  { name: 'Buz Mızrağı',  mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, trail: 'snow',  hit: 'ice' , snd: 'throw_magic', hsnd: 'hit_ice' },
-  { name: 'Ateş Topu',    mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, trail: 'fire', hit: 'fire', boom: 1 , snd: 'throw_fire', hsnd: 'hit_fire' },
-  { name: 'Ruh Küresi',   mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, trail: 'aura', hit: 'thunder', boom: 1 , snd: 'throw_magic', hsnd: 'magic' },
+  { name: 'Shuriken',     mult: 1,   cost: 0,    spr: 'Shuriken',      spin: 1, sc: 1,   shots: 1, sp: 820,  curve: 0.55, bounce: 1, stick: 1,
+    trail: 'ghost', hit: 'spark', snd: 'shoot', hsnd: 'hit', tags: ['Kavisli', 'Seker'] },
+  { name: 'Kunai',        mult: 2.5, cost: 5,    spr: 'Kunai',         ori: 0,  sc: 1,   shots: 1, sp: 1150, pierce: 1, stick: 1,
+    trail: 'line', hit: 'cut', snd: 'throw2', hsnd: 'hit2', tags: ['Çok hızlı', 'Deler'] },
+  { name: 'Üçlü Ok',      mult: 6,   cost: 15,   spr: 'Arrow',         ori: 0,  sc: 1,   shots: 3, spread: 0.24, sp: 1100, stick: 1, held: 'wh_Bow',
+    trail: 'line', hit: 'cut', bits: 'q_Wood', snd: 'throw2', hsnd: 'hit3', tags: ['3 ok', 'Yay'] },
+  { name: 'Büyük Kunai',  mult: 15,  cost: 40,   spr: 'BigKunai',      ori: 0,  sc: 0.5, shots: 1, sp: 1000, pierce: 3, push: 1, stick: 1,
+    trail: 'line', hit: 'claw', snd: 'shoot', hsnd: 'hit2', tags: ['4 düşman deler', 'İter'] },
+  { name: 'Büyü Yıldızı', mult: 40,  cost: 100,  spr: 'ShurikenMagic', spin: 1, sc: 1,   shots: 1, sp: 760,  boomer: 1, held: 'wh_Wand',
+    trail: 'spark', hit: 'star', snd: 'throw_magic', hsnd: 'magic', tags: ['Bumerang', 'Gidiş-dönüş keser'] },
+  { name: 'Buz Mızrağı',  mult: 110, cost: 250,  spr: 'IceSpike',      ori: 0,  sc: 1,   shots: 1, sp: 1000, pierce: 1, freeze: 1, held: 'wh_Book',
+    trail: 'snow', hit: 'ice', snd: 'throw_magic', hsnd: 'hit_ice', tags: ['Deler', 'Yavaşlatır'] },
+  { name: 'Ateş Topu',    mult: 300, cost: 600,  spr: 'Fireball',      ori: -Math.PI / 4, sc: 1, shots: 1, sp: 760, wobble: 1, boom: 1, burn: 1, held: 'wh_Wand',
+    trail: 'fire', hit: 'fire', snd: 'throw_fire', hsnd: 'hit_fire', tags: ['Patlar', 'Yakar'] },
+  { name: 'Ruh Küresi',   mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
+    trail: 'aura', hit: 'thunder', snd: 'throw_magic', hsnd: 'magic', tags: ['Zincir şimşek x3', 'Patlar'] },
 ];
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
@@ -304,7 +317,7 @@ function musicTick(dt) {
 // ================================================================ runtime state
 const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
-  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: 0, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0 };
+  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [] };
 MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
 MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
 const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0);
@@ -320,7 +333,7 @@ function setupHeroes() {
     if (old[i]) { const o = old[i]; o.id = heroId(i); if (i === 0) { o.x = p.x; o.y = p.y; } return o; }
     const pos = clampBox(slotPos(i, R.sq), followBox());
     if (old.length) puff(pos.x, pos.y, 1);
-    return { id: heroId(i), x: pos.x, y: pos.y, fireT: rand(0, 0.6), atk: 0, ang: -Math.PI / 2, dir: 'u', ph: rand(0, 6), i, walk: 0, moving: false, spd: 0 };
+    return { id: heroId(i), x: pos.x, y: pos.y, fireT: rand(0, 0.6), atk: 0, wind: 0, recoil: 0, pt: null, ang: -Math.PI / 2, dir: 'u', ph: rand(0, 6), i, walk: 0, moving: false, spd: 0 };
   });
 }
 function followBox() { const b = heroBox(); return { x0: 22 * U, x1: W - 22 * U, y0: b.y0 - 24 * U, y1: b.y1 + 30 * U }; }
@@ -330,7 +343,7 @@ const dirOf = (dx, dy) => Math.abs(dy) > Math.abs(dx) * 0.8 ? (dy > 0 ? 'd' : 'u
 // World row r sits at screen y = r*T + R.cam; R.cam grows while the squad advances, so the ground slides down.
 const CH = 10;   // tile rows per chunk
 const chunks = new Map();
-const chunkBio = c => c < R.bioEdge ? (save.stage - 1) % BIOMES.length : R.oldBio;
+const chunkBio = c => (c < R.bioEdge || R.oldBio === null) ? (save.stage - 1) % BIOMES.length : R.oldBio;
 function makeChunk(c) {
   const bi = chunkBio(c), b = BIOMES[bi], gk = b.ground, T = 16 * P;
   const rnd = mulberry32(c * 7919 + bi * 104729 + 17), rr = (a, z) => a + rnd() * (z - a), rp = a => a[Math.floor(rnd() * a.length)];
@@ -436,7 +449,7 @@ function bossWin() {
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
-  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25);
+  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
   banner('ZAFER!', `+${gems} elmas · ${biome().name}`); sfx('win', 0);
@@ -454,6 +467,7 @@ function bossFail() {
   uiKey = '';
 }
 function damage(target, dmg, crit, isBoss) {
+  if (target.dead) return;
   target.hp -= dmg; target.flash = 0.08;
   if (!isBoss) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = 6 * U; }
   const top = isBoss ? bossH(target) : 18 * P * (target.sc || 1);
@@ -467,6 +481,7 @@ function kill(e) {
   addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul(), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 3);
   R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.3;
   sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
+  if (e.elite || e.treasure) R.stop = 0.07;
   if (e.treasure) { const g = 1 + (save.stage >= 10 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
   R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04));
   if (!R.boss && !save.bossReady) {
@@ -497,6 +512,7 @@ function bits(x, y, set, n) {
 }
 function confetti(x, y, col, n) { bits(x, y, biome().bits, Math.min(8, n)); }
 function boom(x, y, s = 1) {
+  if (s < 1) { if (R.t - (R.boomT || 0) < 0.07 || R.parts.length > 170) { fx('fx_circle', x, y, s, 0.25); return; } R.boomT = R.t; }
   fx('fx_circle', x, y, s, 0.32);
   part({ k: 'anim', a: 'fx_smoke', x, y: y + 6 * P * s, s, life: 0.5, max: 0.5, ay: 1, alpha: 0.85 });
   bits(x, y, 'q_Fire', 4);
@@ -507,7 +523,7 @@ function hitFx(q, t) {
   switch (g.hit) {
     case 'cut': fx('fx_cut', x, y); break;
     case 'claw': fx('fx_claw', x, y); break;
-    case 'star': fx('fx_spark', x, y, 1, 0.2); fx('fx_circlew', x, y, 0.5, 0.2); break;
+    case 'star': fx('fx_spark', x, y, 0.5, 0.2); fx('fx_circlew', x, y, 0.5, 0.2); break;
     case 'ice': fx('fx_ice', x, y, 0.5, 0.4); bits(x, y, 'q_Snow', 3); break;
     case 'fire': fx('fx_flam', x, y, 0.5, 0.3); break;
     case 'thunder': fx('fx_thunder', x, y, 0.5, 0.3); fx('fx_circlew', x, y, 1, 0.25); break;
@@ -521,23 +537,92 @@ function hitFx(q, t) {
     for (const e of R.en) if (e !== t && !e.dead && Math.hypot(e.x - x, e.y - 8 * P - y) < 60 * U) damage(e, q.dmg * 0.6, false, false);
   }
 }
+// spread the squad's fire: prefer the nearest enemy that is not already going to die from shots in the air
 function nearestTarget(h) {
   if (R.boss && R.boss.arrive >= 1) return R.boss;
-  let best = null, bd = 1e9;
-  for (const e of R.en) { if (e.dead || e.y < 140) continue; const d = Math.hypot(e.x - h.x, e.y - h.y); if (d < bd) { bd = d; best = e; } }
-  return best;
+  let best = null, bd = 1e9, any = null, ad = 1e9;
+  for (const e of R.en) {
+    if (e.dead || e.y < 140) continue;
+    const d = Math.hypot(e.x - h.x, e.y - h.y);
+    if (d < ad) { ad = d; any = e; }
+    if ((e.pend || 0) < e.hp && d < bd) { bd = d; best = e; }
+  }
+  return best || any;
 }
 const aimY = t => t === R.boss ? t.y - bossH(t) * 0.5 : t.y - 8 * P * (t.sc || 1) - (t.d && t.d.fly ? 5 * P : 0);
+// hand position (art-pixel offsets from the feet) for each facing
+const HAND = { u: [6, -9], d: [-4, -6], l: [-7, -8], r: [7, -8] };
+const handPos = h => { const o = HAND[h.dir] || HAND.u; return { x: h.x + o[0] * P, y: h.y + o[1] * P }; };
+// wind-up: the ninja turns, raises the weapon for a moment, then releases it
 function fire(h, tgt) {
-  const g = GUNS[save.gun];
+  h.pt = tgt;
   const hx = h.x, hy = h.y - 9 * P;
-  h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx); h.atk = 0.14; h.dir = dirOf(Math.cos(h.ang), Math.sin(h.ang));
-  const crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1);
+  h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx); h.dir = dirOf(Math.cos(h.ang), Math.sin(h.ang));
+  h.atk = 0.2; h.wind = 0.07;
+}
+function throwNow(h) {
+  let t = h.pt;
+  if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
+  const g = GUNS[save.gun], o = handPos(h);
+  h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
+  const crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1), dmg = total / g.shots;
+  let tg = [t];
+  if (g.shots > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, g.shots - 1));
   for (let k = 0; k < g.shots; k++) {
-    const a = h.ang + (g.shots > 1 ? (k - (g.shots - 1) / 2) * 0.12 : 0);
-    R.bul.push({ x: hx, y: hy, a, sp: g.sp * U, tgt, dmg: total / g.shots, crit, g, age: rand(0, 1), life: 1.2, trail: [], tt: 0 });
+    const tk = tg[k % tg.length];
+    let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (g.shots > 1 ? (k - (g.shots - 1) / 2) * (g.spread || 0.12) : 0);
+    if (g.curve) a += (Math.random() < 0.5 ? -1 : 1) * g.curve * rand(0.6, 1);
+    R.bul.push({ x: o.x, y: o.y, a, sp: g.sp * U, tgt: tk, dmg, crit, g, age: rand(0, 1), life: g.boomer ? 2.4 : 1.3, trail: [], tt: 0,
+      hits: new Set(), pierce: g.pierce || 0, bounce: g.bounce || 0, home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
+    if (tk !== R.boss) tk.pend = (tk.pend || 0) + dmg;
   }
-  sfx(g.snd || 'shoot', 0.12, hx);
+  if (g.held === 'wh_Wand' || g.held === 'wh_Book') fx('fx_spark', o.x, o.y, 0.5, 0.15);
+  sfx(g.snd || 'shoot', 0.12, o.x);
+}
+const turn = (a, want, k) => { let da = want - a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; return a + da * Math.min(1, k); };
+// a projectile touches something: effects, status, damage, then decide whether it keeps flying
+function onHit(q, c) {
+  q.hits.add(c);
+  const g = q.g, isB = c === R.boss;
+  if (c === q.tgt && !q.settled) { q.settled = true; c.pend = Math.max(0, (c.pend || 0) - q.dmg); }
+  hitFx(q, c);
+  const dmg = q.hits.size > 1 && !g.boomer ? q.dmg * 0.8 : q.dmg;
+  if (!isB) {
+    if (g.push) c.knock = 16 * U;
+    if (g.freeze) { c.slow = 2; fx('fx_ice', c.x, aimY(c), 0.5, 0.4); }
+    if (g.burn) { c.burn = 2.2; c.burnD = q.dmg * 0.12; c.burnT = 0.4; }
+  }
+  if (g.boom) for (const e of R.en) if (e !== c && !e.dead && Math.hypot(e.x - q.x, aimY(e) - q.y) < 58 * U) { damage(e, q.dmg * 0.5, false, false); if (g.burn) { e.burn = 1.5; e.burnD = q.dmg * 0.08; e.burnT = 0.4; } }
+  if (g.chain) chainBolt(c, q.dmg * 0.6, g.chain);
+  damage(c, dmg, q.crit, isB);
+  if (g.boomer) return;
+  if (q.bounce > 0) {
+    let best = null, bd = 190 * U;
+    for (const e of R.en) { if (e.dead || q.hits.has(e)) continue; const d = Math.hypot(e.x - c.x, e.y - c.y); if (d < bd) { bd = d; best = e; } }
+    if (best) { q.bounce--; q.tgt = best; q.home = true; q.settled = true; q.a = Math.atan2(aimY(best) - q.y, best.x - q.x); q.life = Math.max(q.life, 0.7); fx('fx_spark', q.x, q.y, 0.5, 0.12); sfx('tick', 0, q.x, 12); return; }
+  }
+  if (q.pierce > 0) { q.pierce--; q.home = false; return; }
+  q.dead = true;
+}
+function chainBolt(from, dmg, n) {
+  let cur = from; const hit = new Set([from]);
+  for (let i = 0; i < n; i++) {
+    let best = null, bd = 160 * U;
+    for (const e of R.en) { if (e.dead || hit.has(e)) continue; const d = Math.hypot(e.x - cur.x, e.y - cur.y); if (d < bd) { bd = d; best = e; } }
+    if (!best) break;
+    hit.add(best);
+    R.bolts.push({ x0: cur.x, y0: aimY(cur), x1: best.x, y1: aimY(best), life: 0.24 });
+    fx('fx_thunder', best.x, aimY(best), 0.5, 0.25);
+    damage(best, dmg, false, false); cur = best;
+  }
+  if (hit.size > 1) sfx('magic', 0.1, from.x, 7);
+}
+// a missed blade / arrow drops and sticks in the ground for a moment
+function stickDecal(q) {
+  const g = q.g, rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
+  if (R.decals.length > 24) R.decals.shift();
+  R.decals.push({ f: `p_${g.spr}_0`, x: q.x, y: q.y, rot, sc: g.sc || 1, life: 1.6 });
+  bits(q.x, q.y, 'q_Rock', 1);
 }
 
 // ================================================================ ultimate: Shuriken Storm (charges with kills)
@@ -775,6 +860,7 @@ function update(dt) {
     if (R.phase === 'advance' && !ko) {
       const d = R.advSpd * dt; R.cam += d; R.advLeft -= d;
       for (const m of R.amb) m.y += d;
+      for (const dc of R.decals) dc.y += d;
       for (const p of R.parts) if (p.k === 'bit' || p.k === 'anim') p.y += d;
       if (R.advLeft <= 0) {
         if (save.bossReady && save.auto && R.retryT <= 0) startBoss();
@@ -790,14 +876,20 @@ function update(dt) {
     if (e.dead) continue;
     e.age += dt; e.anim += dt; if (e.flash > 0) e.flash -= dt;
     if (e.treasure) {
-      e.x += e.vx * e.sp * dt; e.spark -= dt;
+      if (e.slow > 0) e.slow -= dt;
+      e.x += e.vx * e.sp * (e.slow > 0 ? 0.45 : 1) * dt; e.spark -= dt;
       if (e.spark <= 0) { e.spark = 0.25; fx('fx_spark', e.x + rand(-10, 10) * U, e.y - rand(4, 16) * P, 0.5, 0.2); }
       if (e.x < -40 || e.x > W + 40) { e.dead = true; toast('Hazine kaçtı!'); }
       continue;
     }
+    if (e.slow > 0) e.slow -= dt;
+    if (e.burn > 0) {
+      e.burn -= dt; e.burnT -= dt;
+      if (e.burnT <= 0) { e.burnT = 0.4; bits(e.x, e.y - 10 * P, 'q_Fire', 1); damage(e, e.burnD, false, false); if (e.dead) continue; }
+    }
     const goal = enemyGoal(e);
     const dx = goal.x - e.x, dy = goal.y - e.y, d = Math.hypot(dx, dy);
-    if (e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * dt); e.x += dx / d * m; e.y += dy / d * m; }
+    if (e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
     else e.stopped = true;
     if (L0) e.dir = e.stopped ? dirOf(L0.x - e.x, L0.y - e.y) : dirOf(dx, dy);
     if (e.knock > 0) { e.x += e.kx * e.knock; e.y += e.ky * e.knock; e.knock *= 0.5; if (e.knock < 0.3) e.knock = 0; }
@@ -824,26 +916,46 @@ function update(dt) {
   if (R.leavingBoss) { const lb = R.leavingBoss; lb.leaving += dt; lb.x += F.dir.x * 300 * U * dt; lb.y += F.dir.y * 300 * U * dt; if (lb.leaving > 2) R.leavingBoss = null; }
   const rate = fireRate();
   for (const h of R.heroes) {
-    h.fireT -= dt;
+    h.fireT -= dt; if (h.recoil > 0) h.recoil -= dt;
+    if (h.wind > 0) { h.wind -= dt; if (h.wind <= 0 && !ko) throwNow(h); }
     const tgt = ko ? null : nearestTarget(h);
-    if (tgt && h.fireT <= 0) { h.fireT = 1 / rate; fire(h, tgt); }
+    if (tgt && h.fireT <= 0 && !(h.wind > 0)) { h.fireT = 1 / rate; fire(h, tgt); }
   }
   for (const q of R.bul) {
     q.life -= dt; q.age += dt; q.tt -= dt;
-    if (q.tt <= 0) {   // trail: ghost copies + a few element motes
-      q.tt = 0.035; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > 3) q.trail.pop();
-      const tr = q.g.trail;
-      if (!save.eco && tr !== 'ghost' && Math.random() < 0.6) {
-        const set = tr === 'snow' ? 'q_Snow' : tr === 'fire' ? 'q_Fire' : 'q_Spark', m = AN[set] || 1;
+    const g = q.g;
+    if (q.tt <= 0) {   // trail: ghost copies + element motes
+      q.tt = 0.03; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > (g.trail === 'line' ? 5 : 3)) q.trail.pop();
+      if (!save.eco && g.trail !== 'ghost' && g.trail !== 'line' && Math.random() < (g.trail === 'spark' ? 0.25 : 0.5)) {
+        const set = g.trail === 'snow' ? 'q_Snow' : g.trail === 'fire' ? 'q_Fire' : 'q_Spark', m = AN[set] || 1;
         part({ k: 'float', f: `${set}_${Math.floor(Math.random() * m)}`, x: q.x + rand(-4, 4) * U, y: q.y + rand(-4, 4) * U, vx: rand(-20, 20) * U, vy: rand(-20, 20) * U, life: 0.35, max: 0.35 });
       }
     }
     const t = q.tgt, alive = t && !t.dead && (t === R.boss || R.en.includes(t));
-    if (alive) { const want = Math.atan2(aimY(t) - q.y, t.x - q.x); let da = want - q.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; q.a += da * Math.min(1, dt * 16); }
+    if (g.boomer) {
+      q.dist += q.sp * dt;
+      if (!q.back && (q.dist > 330 * U || (!alive && q.dist > 120 * U))) { q.back = true; q.hits.clear(); }
+      if (q.back) {
+        const h = q.from, dx = h.x - q.x, dy = h.y - 9 * P - q.y;
+        q.a = turn(q.a, Math.atan2(dy, dx), dt * 9); q.sp = Math.min(q.sp * (1 + dt * 1.5), 1100 * U);
+        if (Math.hypot(dx, dy) < 18 * U || h.i >= save.team) { q.dead = true; fx('fx_spark', q.x, q.y, 0.5, 0.15); }
+      } else if (alive) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * 5);
+    } else if (alive && q.home) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * (g.curve ? 7 : g.shots > 1 ? 7 : 16));
     q.x += Math.cos(q.a) * q.sp * dt; q.y += Math.sin(q.a) * q.sp * dt;
-    if (alive && Math.hypot(t.x - q.x, aimY(t) - q.y) < (t === R.boss ? 60 * U : 22 * U * (t.sc || 1))) { q.dead = true; hitFx(q, t); damage(t, q.dmg, q.crit, t === R.boss); }
+    if (g.wobble) { const w = Math.cos(q.age * 16 + q.wob) * 70 * U * dt; q.x -= Math.sin(q.a) * w; q.y += Math.cos(q.a) * w; }
+    if (!q.dead && R.boss && R.boss.arrive >= 1 && !q.hits.has(R.boss) && Math.hypot(R.boss.x - q.x, aimY(R.boss) - q.y) < 60 * U) onHit(q, R.boss);
+    if (!q.dead) for (const c of R.en) {
+      if (c.dead || q.hits.has(c)) continue;
+      if (Math.hypot(c.x - q.x, aimY(c) - q.y) < 20 * U * (c.sc || 1)) { onHit(q, c); if (q.dead) break; }
+    }
+    if (!q.dead && g.stick && !alive && !g.boomer) { q.fall = (q.fall || 0) + dt; if (q.fall > 0.2) { q.dead = true; stickDecal(q); } }
     if (q.life <= 0 || q.x > W + 100 || q.x < -100 || q.y < -100 || q.y > H + 100) q.dead = true;
+    if (q.dead && !q.settled && q.tgt && q.tgt !== R.boss) { q.settled = true; q.tgt.pend = Math.max(0, (q.tgt.pend || 0) - q.dmg); }
   }
+  for (const b of R.bolts) b.life -= dt;
+  R.bolts = R.bolts.filter(b => b.life > 0);
+  for (const d of R.decals) d.life -= dt;
+  R.decals = R.decals.filter(d => d.life > 0);
   updateEnemyShots(dt);
   for (const p of R.parts) {
     p.life -= dt;
@@ -877,6 +989,8 @@ function render() {
   const t = R.t;
   drawGroundTiles();
   drawGround(t);
+  for (const d of R.decals) { ctx.globalAlpha = Math.min(1, d.life * 2); spr(d.f, d.x, d.y, d.sc, 0.5, 0.5, false, d.rot); }
+  ctx.globalAlpha = 1;
   const list = [];
   for (const e of R.en) list.push({ y: e.y, k: 0, o: e });
   if (R.boss) list.push({ y: R.boss.y, k: 1, o: R.boss });
@@ -896,7 +1010,9 @@ function render() {
       spr(name, o.x, o.y - lift, es);
       if (o.flash > 0) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#ffffff');
       else if (o.wind > 0 && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#fce2ca');
+      if (o.slow > 0) { ctx.globalAlpha = 0.5; spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#b8dce5'); }
       ctx.globalAlpha = 1;
+      if (o.burn > 0) spr(`q_Fire_${Math.floor(t * 10 + o.id) % (AN.q_Fire || 1)}`, o.x + 3 * P, o.y - lift - 15 * P * es, 1, 0.5, 1);
       if (o.hp < o.maxHp || o.elite || o.treasure) drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, o.hp / o.maxHp, o.elite || o.treasure ? '#f1c471' : '#e0394c');
     } else if (it.k === 1) {
       const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * 7) % n}`;
@@ -909,19 +1025,36 @@ function render() {
       const sq = R.sq, ko = sq.ko > 0;
       const fr = o.atk > 0 ? 'a' : o.moving ? String(Math.floor(o.walk) % 4) : '0';
       const name = `h_${o.id}_${o.dir}${fr}`;
+      // recoil: one art pixel back, away from the throw
+      const rx = o.recoil > 0 ? -Math.round(Math.cos(o.ang)) * P : 0, ry = o.recoil > 0 ? -Math.round(Math.sin(o.ang)) * P : 0;
+      const hx = o.x + rx, hy = o.y + ry;
       ctx.globalAlpha = ko ? 0.4 : (sq.inv > 0 && Math.floor(t * 14) % 2 === 0) ? 0.5 : 1;
-      spr(name, o.x, o.y);
-      if (sq.hit > 0 && !ko) spr(name, o.x, o.y, 1, 0.5, 1, false, 0, '#ffffff');
+      spr(name, hx, hy);
+      if (sq.hit > 0 && !ko) spr(name, hx, hy, 1, 0.5, 1, false, 0, '#ffffff');
+      drawHeld(o, hx, hy);
       ctx.globalAlpha = 1;
     }
   }
   drawShots(t);
+  // chain lightning: pixel bolts (square dots along a jagged path, outer glow + white core)
+  for (const b of R.bolts) {
+    const seg = 6, pts = [[b.x0, b.y0]];
+    for (let i = 1; i < seg; i++) { const k = i / seg, nx = -(b.y1 - b.y0), ny = b.x1 - b.x0, nl = Math.hypot(nx, ny) || 1, j = rand(-7, 7) * P; pts.push([lerp(b.x0, b.x1, k) + nx / nl * j, lerp(b.y0, b.y1, k) + ny / nl * j]); }
+    pts.push([b.x1, b.y1]);
+    for (const [col, sz] of [['#79b8ce', 2], ['#f2eaf1', 1]]) for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, by - ay) / P);
+      for (let k = 0; k <= n; k++) prect(lerp(ax, bx, k / n) - sz * P / 2, lerp(ay, by, k / n) - sz * P / 2, sz * P, sz * P, col);
+    }
+  }
   // thrown weapons: fading ghost trail, then the weapon (never freely rotated: spin = frame flip, else 16 directions)
   for (const q of R.bul) {
     const g = q.g, n = AN['p_' + g.spr] || 1, sc = g.sc || 1;
     const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
     const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
-    for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = 0.4 - i * 0.12; spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' ? '#fce2ca' : null); }
+    if (g.trail === 'line') {
+      const e = q.trail[q.trail.length - 1];
+      if (e) { const n = Math.ceil(Math.hypot(q.x - e.x, q.y - e.y) / P); for (let k = 1; k <= n; k++) { ctx.globalAlpha = 0.55 * (1 - k / (n + 1)); prect(lerp(q.x, e.x, k / n) - P / 2, lerp(q.y, e.y, k / n) - P / 2, P, P, '#fce2ca'); } }
+    } else for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' ? '#fce2ca' : null); }
     ctx.globalAlpha = 1;
     spr(name, q.x, q.y, sc, 0.5, 0.5, false, rot);
   }
@@ -963,6 +1096,18 @@ function grade() {
   const b0 = H - 175;
   [[0, 0.06], [12, 0.14], [24, 0.24]].forEach(([o, a]) => prect(0, b0 + o, W, 12, `rgba(19,27,27,${a})`));
   prect(0, b0 + 36, W, H - b0 - 36, 'rgba(19,27,27,0.32)');
+}
+// weapon in hand: held weapons (bow / wand / book) always, thrown ones only during the wind-up
+const HELD_ROT = { d: 0, u: Math.PI, l: Math.PI / 2, r: -Math.PI / 2 };
+const FACE_ANG = { u: -Math.PI / 2, d: Math.PI / 2, l: Math.PI, r: 0 };
+function drawHeld(o, x, y) {
+  if (R.sq.ko > 0) return;
+  const g = GUNS[save.gun], o2 = HAND[o.dir] || HAND.u, push = o.atk > 0 ? 1 : 0;
+  const ux = o.dir === 'l' ? -1 : o.dir === 'r' ? 1 : 0, uy = o.dir === 'u' ? -1 : o.dir === 'd' ? 1 : 0;
+  let px = x + (o2[0] + ux * push) * P, py = y + (o2[1] + uy * push + (o.atk > 0 ? 0 : 2)) * P;
+  if (g.held === 'wh_Bow' && o.dir === 'u') { px = x; py = y - (17 + push) * P; }   // bow raised above the head when shooting up
+  if (g.held) spr(g.held, px, py, 1, 0.5, 0.5, false, HELD_ROT[o.dir] || 0);
+  else if (o.wind > 0) spr(`p_${g.spr}_0`, px, py, 0.5, 0.5, 0.5, false, g.spin ? 0 : (FACE_ANG[o.dir] || 0) - (g.ori || 0));
 }
 function drawBar(cx, y, w, f, col = '#e0394c', lag = 0) {
   const pw = w * P, x = cx - pw / 2;
@@ -1095,6 +1240,7 @@ function updateUI(dt) {
   const gi = document.querySelector('.gunico'); if (gi) gi.src = `assets/ui/wi_${GUNS[save.gun].spr}.png`;
   // ultimate meter
   const ub = $('ultBtn'); ub.querySelector('i').style.height = Math.round(R.ult * 100) + '%';
+  $('hint').style.visibility = R.boss ? 'hidden' : '';
   ub.classList.toggle('full', R.ult >= 1 && R.ultT <= 0); ub.classList.toggle('active', R.ultT > 0);
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
@@ -1141,15 +1287,79 @@ function openPanel(title, color, build) {
 function closePanel() { if (!$('panel').classList.contains('hidden')) sfx('close', 0); $('panel').classList.add('hidden'); }
 $('pClose').onclick = () => closePanel();
 $('panel').addEventListener('pointerdown', e => { if (e.target.id === 'panel') closePanel(); });
+// new weapon: a short celebration so the upgrade is felt, not just read
+function unlockMoment(g) {
+  banner(`<img class="bimg" src="assets/ui/wi_${g.spr}.png" alt="">YENİ SİLAH`, g.name + ' · ' + g.tags.join(' · '));
+  sfx('bonus', 0); setTimeout(() => sfx('skill', 0), 250);
+  R.flash = 0.3; R.stop = 0.1;
+  for (const h of R.heroes) { fx('fx_circlew', h.x, h.y - 8 * P, 1, 0.4); fx('fx_aura', h.x, h.y, 1, 0.5, 1); h.atk = 0.4; h.dir = 'd'; }
+}
+// live weapon preview in the Silahlar panel: a ninja throws the selected weapon at a training dummy
+let prevRun = 0;
+function startPreview(canvas, gi) {
+  const run = ++prevRun, g = GUNS[gi], CW = 300, CH = 116, GY = 104;
+  const pw = Math.round(CW / L), ph = Math.round(CH / L);
+  canvas.width = pw; canvas.height = ph; canvas.style.width = pw * L + 'px'; canvas.style.height = ph * L + 'px';
+  const pc = canvas.getContext('2d'); pc.imageSmoothingEnabled = false;
+  const mon = biome().pool[0], hero = { x: 46, y: GY, dir: 'r', atk: 0, wind: 0, recoil: 0, ang: 0, id: heroId(0), i: 0 };
+  let shots = [], parts = [], t = 0, next = 0.4, flash = 0, lastT = performance.now();
+  const step = now => {
+    if (run !== prevRun || !canvas.isConnected) return;
+    const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now; t += dt;
+    next -= dt; if (hero.atk > 0) hero.atk -= dt; if (hero.recoil > 0) hero.recoil -= dt; if (flash > 0) flash -= dt;
+    if (next <= 0) { hero.atk = 0.2; hero.wind = 0.07; next = 1.1; }
+    if (hero.wind > 0) { hero.wind -= dt; if (hero.wind <= 0) { hero.recoil = 0.09; for (let k = 0; k < g.shots; k++) shots.push({ x: hero.x + 7 * P, y: hero.y - 8 * P, a: (g.shots > 1 ? (k - (g.shots - 1) / 2) * 0.12 : 0) + (g.curve ? -0.5 : 0), age: 0, trail: [] }); } }
+    for (const q of shots) {
+      q.age += dt; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > 4) q.trail.pop();
+      q.a = turn(q.a, Math.atan2(GY - 8 * P - q.y, 250 - q.x), dt * (g.curve ? 6 : 12));
+      q.x += Math.cos(q.a) * g.sp * 0.5 * dt; q.y += Math.sin(q.a) * g.sp * 0.5 * dt;
+      if (g.wobble) q.y += Math.cos(q.age * 16) * 40 * dt;
+      if (q.x > 244) { q.dead = true; flash = 0.08; const fxn = { cut: 'fx_cut', claw: 'fx_claw', star: 'fx_spark', ice: 'fx_ice', fire: 'fx_flam', thunder: 'fx_thunder' }[g.hit] || 'fx_spark';
+        parts.push({ a: fxn, x: q.x, y: q.y, life: 0.3, max: 0.3, s: 0.5 }); if (g.boom) parts.push({ a: 'fx_circle', x: q.x, y: q.y, life: 0.3, max: 0.3, s: 1 }); }
+    }
+    shots = shots.filter(q => !q.dead);
+    for (const p of parts) p.life -= dt; parts = parts.filter(p => p.life > 0);
+    // draw with the shared sprite code on the preview canvas
+    const keep = ctx; ctx = pc;
+    try {
+      ctx.setTransform(1 / L, 0, 0, 1 / L, 0, 0); ctx.imageSmoothingEnabled = false;
+      const T = 16 * P, gk = biome().ground;
+      for (let x = 0; x < CW + T; x += T) for (let y = 0; y < CH + T; y += T) { const f = AF[`t_${gk}_fill`]; ctx.drawImage(atlasImg, f[0], f[1], 16, 16, x, y, T, T); }
+      ctx.globalAlpha = 0.8; spr('shadow', hero.x, hero.y + P); spr('shadow', 250, GY + P); ctx.globalAlpha = 1;
+      spr(`m_${mon}_l${Math.floor(t * 4) % 4}`, 250, GY);
+      if (flash > 0) spr(`m_${mon}_l0`, 250, GY, 1, 0.5, 1, false, 0, '#ffffff');
+      const hx = hero.x - (hero.recoil > 0 ? P : 0), fr = hero.atk > 0 ? 'a' : '0';
+      spr(`h_${hero.id}_r${fr}`, hx, hero.y);
+      if (g.held) spr(g.held, hx + 7 * P, hero.y - 8 * P, 1, 0.5, 0.5, false, -Math.PI / 2);
+      else if (hero.wind > 0) spr(`p_${g.spr}_0`, hx + 7 * P, hero.y - 8 * P, 0.5, 0.5, 0.5, false, g.spin ? 0 : -(g.ori || 0));
+      const n = AN['p_' + g.spr] || 1;
+      for (const q of shots) {
+        const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
+        const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
+        for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = 0.35 - i * 0.08; spr(name, q.trail[i].x, q.trail[i].y, g.sc || 1, 0.5, 0.5, false, rot, '#fce2ca'); }
+        ctx.globalAlpha = 1; spr(name, q.x, q.y, g.sc || 1, 0.5, 0.5, false, rot);
+      }
+      for (const p of parts) { const nn = AN[p.a] || 1, f = Math.min(nn - 1, Math.floor((1 - p.life / p.max) * nn)); spr(`${p.a}_${f}`, p.x, p.y, p.s, 0.5, 0.5); }
+    } finally { ctx = keep; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 const PANELS = {
-  guns: () => openPanel('Silahlar', 'blue', body => {
-    body.appendChild(el('<p class="big-note">Daha güçlü silahlar elmasla açılır. Elmaslar bosslardan düşer.</p>'));
+  guns: (sel) => openPanel('Silahlar', 'blue', body => {
+    const show = sel === undefined ? Math.min(save.gun + 1, GUNS.length - 1) : sel;
+    const pv = el(`<div class="wprev"><canvas></canvas><div class="wcap"><b>${GUNS[show].name}</b><span>${GUNS[show].tags.join(' · ')}</span></div></div>`);
+    body.appendChild(pv); startPreview(pv.querySelector('canvas'), show);
     GUNS.forEach((g, i) => {
       const owned = i <= save.gun, next = i === save.gun + 1;
-      const row = el(`<div class="row-card ${i === save.gun ? 'cur' : ''} ${owned || next ? '' : 'lock'}"><div class="ico tile"><img src="assets/ui/wi_${g.spr}.png" alt=""></div>
-        <div class="info"><h4>${g.name}</h4><p>Hasar x${fmt(g.mult)}${g.shots > 1 ? ` · ${g.shots} atış` : ''}${g.boom ? ' · patlar' : ''}</p></div>
+      const row = el(`<div class="row-card ${i === save.gun ? 'cur' : ''} ${owned || next ? '' : 'lock'} ${i === show ? 'sel' : ''}"><div class="ico tile"><img src="assets/ui/wi_${g.spr}.png" alt=""></div>
+        <div class="info"><h4>${g.name}</h4><p>Hasar x${fmt(g.mult)} · ${g.tags.join(' · ')}</p></div>
         ${i === save.gun ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn grey off">AÇILDI</button>' : next ? `<button class="btn yellow"><img src="assets/ui/gem.png" alt="">${g.cost}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
-      if (next) row.querySelector('.btn').onclick = () => { if (save.gems < g.cost) { sfx('no'); toast('Yeterli elmas yok'); return; } save.gems -= g.cost; save.gun = i; sfx('bonus', 0); persist(); uiKey = ''; PANELS.guns(); };
+      row.querySelector('.ico').onclick = row.querySelector('.info').onclick = () => { sfx('tick', 0); PANELS.guns(i); };
+      if (next) row.querySelector('.btn').onclick = () => {
+        if (save.gems < g.cost) { sfx('no'); toast('Yeterli elmas yok'); return; }
+        save.gems -= g.cost; save.gun = i; persist(); uiKey = ''; closePanel(); unlockMoment(g);
+      };
       body.appendChild(row);
     });
   }),
@@ -1175,7 +1385,7 @@ const PANELS = {
       if (gain <= 0) return;
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
       R.en.length = 0; R.eb.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
-      persist(); R.bioEdge = -1e9; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${(1 + save.rp * 0.3).toFixed(1)}`); sfx('win', 0); uiKey = '';
+      persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${(1 + save.rp * 0.3).toFixed(1)}`); sfx('win', 0); uiKey = '';
     };
     body.appendChild(btn);
   }),
@@ -1200,7 +1410,8 @@ function offlineReward() {
 // ================================================================ loop
 let last = performance.now(), saveT = 0, popOn = false;
 function frame(now) {
-  const dt = Math.min(1 / 20, (now - last) / 1000); last = now;
+  let dt = Math.min(1 / 20, (now - last) / 1000); last = now;
+  if (R.stop > 0) { R.stop -= dt; dt *= 0.12; }
   update(dt); render(); updateUI(dt);
   const pop = R.walletPop > 0; if (pop !== popOn) { popOn = pop; $('money').parentNode.classList.toggle('pop', pop); }
   saveT += dt; if (saveT > 5) { saveT = 0; persist(); }

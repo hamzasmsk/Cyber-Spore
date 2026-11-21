@@ -254,3 +254,13 @@ h2,h3,h4{margin:0;font-weight:700}
 .vol input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:26px;background:var(--wood);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--wood2)}
 .vol input::-moz-range-thumb{width:20px;height:26px;border:0;border-radius:0;background:var(--wood)}
 .vol em{width:34px;text-align:right;font-style:normal;font-size:13px;color:var(--muted)}
+
+/* weapon preview + selected row + unlock banner image */
+.wprev{position:relative;flex:none;align-self:center;padding:3px;background:var(--ink);clip-path:var(--notch)}
+.wprev canvas{display:block;image-rendering:pixelated}
+.wcap{position:absolute;left:9px;top:7px;display:flex;flex-direction:column;gap:1px;pointer-events:none}
+.wcap b{font-size:15px;color:var(--cream);text-shadow:var(--o-sm)}
+.wcap span{font-size:11px;color:var(--gold2);text-shadow:var(--o-sm)}
+.row-card.sel{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--blue)}
+.row-card .ico,.row-card .info{cursor:pointer}
+#banner .bimg{display:block;width:72px;height:72px;margin:0 auto 8px;image-rendering:pixelated;filter:drop-shadow(0 4px 0 var(--ink))}
