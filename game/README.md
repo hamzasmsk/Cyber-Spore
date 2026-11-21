@@ -4,17 +4,15 @@ Telefon için yandan görünümlü bir **koş-ve-vur** (run-and-gun) aksiyon oyu
 hiçbir kütüphane yok. `game/` klasörü tek başına çalışır, ayrı bir depoya olduğu gibi taşınabilir.
 Telefonda yatay oynanır; "Ana ekrana ekle" ile uygulama gibi tam ekran açılır (PWA).
 
-## Oynanış
-- Sağa doğru ilerle, düşmanları vur, **bitiş bayrağına** ulaş. Ekrandaki tuşlar: ◀ ▶ hareket, yeşil zıpla, kırmızı ateş,
-  el bombası, atılma (dash), silah değiştir. Masaüstü: A/D veya oklar, Boşluk zıpla, J ateş, G bomba, L/Shift dash, R silah.
-- Ateş, öndeki düşmana hafifçe kendiliğinden nişan alır (uçan düşmanlar için). Ayarlardan tam otomatik ateş açılabilir.
-- **Kafesteki esirleri** yanlarında durarak kurtar; takımına katılıp seninle birlikte ateş ederler (en fazla 3).
-- Kasaları kır: altın, can, el bombası, **özel silahlar** (pompalı, makineli, lazer, roketatar) ve **kaykay** (çift zıplama + hız) çıkar.
-- Düşmanların üstüne zıplayarak ezebilirsin. **"SAVAŞ!"** bölgelerinde kamera kilitlenir, dalgaları temizlemeden ilerleyemezsin.
-- Dikenler, çukurlar, yaylar ve kontrol noktaları var. Ölünce altınla bir kez dirilebilirsin.
-- **5 dünya × 5 bölüm = 25 bölüm**, her dünyanın sonunda farklı saldırı kalıplarına sahip bir boss var.
-  Dünya haritasında bölüm bölüm ilerlersin; her bölümden 3 yıldız alınır (bitir, tüm esirleri kurtar, canın yarısından fazlasıyla bitir).
-- Altınla 5 kahraman (her birinin özelliği farklı) ve 6 kalıcı geliştirme (Atölye) alınır.
+## Oynanış (dikey, tek dokunuş)
+- Telefon **dik** tutulur. Karakter kendiliğinden sağa koşar ve otomatik nişan alıp ateş eder.
+- Önüne düşman, kasa veya kafes çıkınca durur ve vurur; temizlenince koşmaya devam eder.
+- **Ekrana dokun = zıpla**, havada tekrar dokun = çift zıplama (basılı tutarsan daha yüksek). Dikenler, çukurlar ve boss'un şok dalgaları zıplanarak aşılır.
+- **Kafesleri vurup kır**: içindeki esir takımına katılır ve seninle ateş eder (en fazla 3).
+- Kasalardan altın, can, **özel silahlar** (pompalı, makineli, lazer, roketatar; otomatik takılır) ve **kaykay** (kalkan + hız + ekstra zıplama) çıkar. Düşmanların üstüne düşerek ezebilirsin.
+- **5 dünya × 5 bölüm**, her dünyanın sonunda boss. Dünya haritasında bölüm bölüm ilerlenir; her bölümden 3 yıldız.
+- Altınla 5 kahraman ve 5 kalıcı geliştirme (Atölye). Ölünce altınla bir kez dirilme.
+- Masaüstünde Boşluk / W / yukarı ok = zıpla.
 
 ## Görseller
 Kenney (CC0, ticari kullanım serbest): New Platformer Pack (karakterler, düşmanlar, zeminler, arka planlar, eşyalar),
