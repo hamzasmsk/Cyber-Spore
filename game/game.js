@@ -728,8 +728,8 @@ function nearestTarget(h) {
 }
 const aimY = t => t === R.boss ? t.y - bossH(t) * 0.5 : t.y - 8 * P * (t.sc || 1) - (t.d && t.d.fly ? 5 * P : 0);
 // hand position (art-pixel offsets from the feet) for each facing
-// heroes are drawn at 1.5x (still whole canvas pixels: 3 per art pixel) so the squad reads clearly on a phone
-const HS = 1.5;
+// heroes are drawn at 1.25x so the squad reads clearly on a phone without crowding the field
+const HS = 1.25;
 // hand anchors measured on the pack's ninja frames, in art pixels from the feet: idle (sleeve) and attack (arm out)
 const HAND = { u: [-3.5, -15], d: [5, -5], l: [-7, -4], r: [6.5, -4] };
 const HAND_IDLE = { u: [7, -7], d: [5, -5], l: [-4, -5], r: [4, -5] };
@@ -1578,7 +1578,7 @@ function drawHeld(o, x, y) {
   const px = x + a[0] * P * HS, py = y + a[1] * P * HS;
   if (g.held) {
     let rot = g.held === 'wh_Book' ? 0 : (HELD_ROT[o.dir] || 0);
-    if (g.held === 'wh_Bow' && o.dir === 'u' && atk) { spr(g.held, x, y - 27 * P, 1, 0.5, 0.5); return; }   // bow raised over the head to shoot
+    if (g.held === 'wh_Bow' && o.dir === 'u' && atk) { spr(g.held, x, y - 23 * P, 1, 0.5, 0.5); return; }   // bow raised over the head to shoot
     if (g.held === 'wh_Wand' && !atk) rot = o.dir === 'l' ? -0.4 : 0.4;   // wand rests tilted, tip up
     if (g.held === 'wh_Bow' && !atk) rot = o.dir === 'l' ? -Math.PI / 2 : Math.PI / 2;   // bow carried upright at the side
     spr(g.held, px, py, g.held === 'wh_Wand' ? 1.5 : 1, 0.5, g.held === 'wh_Wand' && !atk ? 0.9 : 0.5, false, rot);
@@ -1675,10 +1675,28 @@ function drawShots(t) {
 }
 function drawSquadHp() {
   const sq = R.sq, L0 = R.heroes[0]; if (!L0) return;
-  const w = 22, x = clamp(L0.x, 16 * P, W - 14 * P), y = L0.y - 29 * P;
-  const f = clamp(sq.hp / sq.maxHp, 0, 1);
-  drawBar(x + 3 * P, y, w, f, sq.ko > 0 ? '#8e7c73' : f > 0.5 ? '#74a334' : f > 0.25 ? '#f1c471' : '#e0394c', clamp(sq.lag / sq.maxHp, 0, 1));
-  spr('heart', x - w / 2 * P + P, y + 2 * P, 0.5, 0.5, 0.5);
+    // squad health: framed pixel bar drawn at half-art-pixel detail (Q = one canvas pixel), with a highlight and a
+  // shade row, quarter ticks, an orange damage trail, a passing shine, and a heart that beats faster when low
+  const Q = P / 2, w = 54, h = 9, f = clamp(sq.hp / sq.maxHp, 0, 1), lag = clamp(sq.lag / sq.maxHp, 0, 1), t = R.t;
+  const cx = clamp(L0.x, (w / 2 + 8) * Q, W - (w / 2 + 2) * Q), x = snap(cx - w / 2 * Q + 4 * Q), y = snap(L0.y - 24 * P);
+  const ko = sq.ko > 0, low = !ko && f <= 0.25;
+  const C = ko ? ['#8e7c73', '#b9ad9c', '#5f5a48'] : f > 0.5 ? ['#74a334', '#a9d16a', '#4c7a2a'] : f > 0.25 ? ['#f1c471', '#ffe18d', '#c98f2f'] : ['#e0394c', '#f07b7b', '#8f3e56'];
+  const r = (a, b, c, d, col) => prect(x + a * Q, y + b * Q, c * Q, d * Q, col);
+  ctx.globalAlpha = 0.35; r(-1, 1, w + 2, h, INK); ctx.globalAlpha = 1;            // soft drop shadow
+  r(1, -1, w - 2, h + 2, INK); r(0, 0, w, h, INK);                                    // outline with cut corners
+  if (low && Math.floor(t * 4) % 2) { r(1, -1, w - 2, 1, '#e0394c'); r(1, h, w - 2, 1, '#e0394c'); }
+  const iw = w - 4, fx = Math.round(iw * f), lx = Math.round(iw * lag);
+  r(2, 2, iw, h - 4, '#2b2620');                                                       // empty trough
+  if (lx > fx) r(2 + fx, 2, lx - fx, h - 4, '#ff9554');                                // recent damage
+  if (fx > 0) {
+    r(2, 2, fx, h - 4, C[0]); r(2, 2, fx, 1, C[1]); r(2, h - 3, fx, 1, C[2]);
+    const sp = (t * 0.6 % 2.5) / 1.5;                                                  // shine sweep every 2.5 s
+    if (sp < 1 && !ko) { const sx = Math.round(sp * (fx + 6)) - 3; ctx.globalAlpha = 0.55; for (let k = 0; k < 2; k++) { const xx = sx + k; if (xx >= 0 && xx < fx) r(2 + xx, 2, 1, h - 4, '#ffffff'); } ctx.globalAlpha = 1; }
+  }
+  for (let k = 1; k < 4; k++) r(2 + Math.round(iw * k / 4), 3, 1, h - 6, 'rgba(19,27,27,0.45)');   // quarter ticks
+  const beat = ko ? 0 : (t * (low ? 3.2 : 1.2)) % 1 < 0.15 ? 1 : 0;
+  spr('heart', x - 2 * Q, y + h / 2 * Q, beat ? 0.5 : 0.5, 0.5, 0.5);
+  if (beat) { ctx.globalAlpha = 0.5; spr('heart', x - 2 * Q, y + h / 2 * Q - Q, 0.5, 0.5, 0.5, false, 0, '#ffffff'); ctx.globalAlpha = 1; }
 }
 function drawJoystick() {
   const j = R.joy; if (!j) return;
