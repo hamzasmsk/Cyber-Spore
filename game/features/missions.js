@@ -151,6 +151,7 @@
     const s = state();
     const prevScroll = keep ? document.getElementById('pBody').scrollTop : 0;
     SS.openPanel('Görevler', 'purple', body => {
+      if (SS.hub) SS.hub.tabs(body, 'missions');
       const rows = {};
       const wrap = SS.el('<div class="fa-mwrap"></div>');
       const head = SS.el(`<div class="fa-mhead"><div><b>Günlük görevler</b><small>Tamamla, elmas kazan!</small></div>

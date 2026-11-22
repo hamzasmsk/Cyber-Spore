@@ -108,7 +108,7 @@
   function pick(p, el) {
     if (!ov || ov.dataset.done) return;
     ov.dataset.done = '1'; clearInterval(timer);
-    save.perks[p.id] = n(p.id) + 1; SS.persist(); SS.refreshUI();
+    save.perks[p.id] = n(p.id) + 1; SS.persist(); SS.refreshUI(); SS.HOOKS.perk.forEach(h => { try { h(p); } catch (e) { /* ignore */ } });
     if (el) el.classList.add('chosen');
     SS.sfx('accept', 0); SS.sfx('magic', 0);
     const L0 = SS.leader;

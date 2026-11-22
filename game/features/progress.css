@@ -85,3 +85,57 @@
 .lg-day.next{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 5px var(--sage2)}
 .lg-ok{position:absolute;right:5px;top:5px;width:14px;height:14px;background:var(--green);clip-path:polygon(0 55%,35% 90%,100% 15%,85% 0,35% 60%,15% 40%)}
 .big-note b{color:var(--purple)}
+
+/* Meydan sekmeleri */
+.hub-tabs .btn{position:relative;padding-inline:4px;font-size:14px}
+.hub-tabs .btn i{position:absolute;right:-2px;top:-4px;min-width:18px;height:18px;padding:0 3px;font-style:normal;font-size:12px;line-height:18px;color:var(--cream);background:var(--red);box-shadow:0 0 0 2px var(--ink)}
+
+/* Kule */
+.tw-head{display:flex;gap:6px}
+.tw-head>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px;background:var(--ink2);clip-path:var(--notch);color:var(--cream)}
+.tw-head small{font-size:11px;color:var(--sage2)}
+.tw-head b{font-size:22px;line-height:1;color:var(--gold2);text-shadow:var(--o-sm)}
+.tw-dots{display:flex;gap:5px;padding:3px 0}
+.tw-dots i{width:14px;height:14px;background:#5f5a48;box-shadow:inset 0 0 0 2px var(--ink)}
+.tw-dots i.on{background:var(--purple);box-shadow:inset 0 0 0 2px var(--ink),inset 0 -4px 0 #7d4568}
+.tw-next{position:relative;display:flex;align-items:center;gap:8px;padding:10px 10px 12px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--purple),inset 0 -10px 0 var(--purple)}
+.tw-next.guard{background:#fff3d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold),inset 0 -10px 0 var(--gold)}
+.tw-floor{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:50px;height:58px;background:var(--purple);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink);color:var(--cream)}
+.tw-next.guard .tw-floor{background:var(--gold);color:var(--ink)}
+.tw-floor small{font-size:10px;letter-spacing:.1em}
+.tw-floor b{font-size:24px;line-height:1;text-shadow:var(--o-sm)}
+.tw-boss{flex:none;width:64px;height:64px;display:grid;place-items:center;background:var(--ink2);clip-path:var(--notch)}
+.tw-boss img{width:54px;height:54px}
+.tw-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;color:var(--dark)}
+.tw-info h4{font-size:16px;color:var(--ink)}
+.tw-rule{margin:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;line-height:1.2}
+.tw-rule img{width:18px;height:18px}
+.tw-rule b{color:var(--purple)}
+.tw-hp{margin:0;font-size:11px;color:var(--muted)}
+.tw-rew{display:flex;gap:6px;flex-wrap:wrap}
+.tw-rew span{display:flex;align-items:center;gap:2px;font-size:13px;color:var(--ink)}
+.tw-rew img{width:16px;height:16px}
+.tw-list{display:flex;flex-direction:column;gap:3px}
+.tw-row{display:grid;grid-template-columns:30px 30px 1fr auto;align-items:center;gap:6px;padding:4px 8px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--ink2);font-size:12px;color:var(--dark)}
+.tw-row.guard{background:#fff3d6;box-shadow:inset 0 0 0 2px var(--ink),inset 0 0 0 4px var(--gold)}
+.tw-row>b{font-size:16px;color:var(--purple);text-align:center}
+.tw-row .tw-face{width:27px;height:27px}
+.tw-row span{display:flex;align-items:center;gap:4px}
+.tw-row span img{width:16px;height:16px}
+
+/* Başarımlar */
+.ac-head{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ink2);clip-path:var(--notch);color:var(--cream)}
+.ac-head img{width:27px;height:33px}
+.ac-head b{display:block;font-size:18px;color:var(--gold2);text-shadow:var(--o-sm)}
+.ac-head span{font-size:11px;color:var(--sage2)}
+.ac-row .info h4{display:flex;align-items:center;gap:6px}
+.ac-tier{display:flex;gap:2px}
+.ac-tier i{width:8px;height:8px;background:#d9c5ac;box-shadow:inset 0 0 0 2px var(--ink2)}
+.ac-tier i.on{background:var(--gold);box-shadow:inset 0 0 0 2px var(--ink)}
+.ac-row p{margin:1px 0 3px;font-size:12px}
+.ac-row.can{background:#eaf5d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--green)}
+.ac-row.done{opacity:.6}
+.ac-row .btn{min-width:64px;font-size:15px}
+.tw-hp em{font-style:normal;padding:0 4px;color:var(--cream)}
+.tw-hp em.ez{background:var(--green)}.tw-hp em.md{background:#c98f2f}.tw-hp em.hd{background:var(--red)}.tw-hp em.no{background:var(--ink2)}
+.hub-tabs .btn{font-size:13px}

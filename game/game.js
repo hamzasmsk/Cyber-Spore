@@ -455,21 +455,35 @@ function spawnTreasure() {
     flash: 0, anim: 0, knock: 0, kx: 0, ky: 0, kb: 0, age: 0, ranged: false, stopped: false, atk: 9, wind: 0, dir: fromL ? 'r' : 'l', sc: 1, gold: 10, treasure: true, spark: 0 });
   toast('Hazine canavarı! Kaçmadan yakala'); sfx('treasure', 0);
 }
-function startBoss() {
-  if (R.boss || !save.bossReady) return;
-  const key = bossKey(), bd = BOSSES[key];
+// ex: a special fight (Kule floor) {key, hp, time, sub, rage, spd, sig} — does not touch stage progress
+function startBoss(ex) {
+  if (R.boss || (!ex && !save.bossReady) || (R.sq && R.sq.ko > 0)) return false;
+  const key = ex ? ex.key : bossKey(), bd = BOSSES[key];
   for (const e of R.en) { e.dead = true; puff(e.x, e.y, 1); }
   R.eb.length = 0; R.phase = 'fight'; R.toSpawn = 0;
-  const p = along(F.A, 40 * U, 0), hp = bossHp();
-  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: bossTime(), flash: 0, anim: 0, key, name: bd.name, col: bd.col, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [] };
+  const p = along(F.A, 40 * U, 0), hp = ex ? ex.hp : bossHp();
+  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: ex ? ex.time : bossTime(), flash: 0, anim: 0, key, name: bd.name, col: bd.col, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [], ex: ex || null, spd: ex && ex.spd || 1 };
+  if (ex && ex.rage) R.boss.rage = true;
   $('bossImg').src = `assets/ui/boss_${key}.png`;
   $('bossHud').classList.remove('hidden');
-  const card = $('bossCard'); if (card) { card.querySelector('img').src = `assets/ui/boss_${key}.png`; card.querySelector('b').textContent = bd.name; card.querySelector('span').textContent = `${biome().name} · ${Math.round(bossTime())} saniye`; card.classList.remove('show'); void card.offsetWidth; card.classList.add('show'); }
+  const card = $('bossCard'); if (card) { card.querySelector('img').src = `assets/ui/boss_${key}.png`; card.querySelector('b').textContent = bd.name; card.querySelector('span').textContent = ex ? ex.sub : `${biome().name} · ${Math.round(bossTime())} saniye`; card.classList.remove('show'); void card.offsetWidth; card.classList.add('show'); }
   sfx('boss', 0); R.shake = 5; uiKey = '';
   runHooks('bossStart', R.boss);
+  return true;
+}
+// shared clean-up when a special fight ends (win or lose): back to the normal march
+function endSpecial(b, won) {
+  R.boss = null; R.eb.length = 0; $('bossHud').classList.add('hidden');
+  for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
+  if (won) { for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110); R.stop = 0.15; R.cheerT = 2; sfx('win', 0); }
+  else { b.dash = b.leap = null; b.z = 0; b.leaving = 0.01; R.leavingBoss = b; sfx('fail', 0); }
+  R.phase = 'wait'; uiKey = '';
+  try { b.ex.done(won, b); } catch (e) { console.error(e); }
+  setTimeout(() => { if (!R.boss) startAdvance(160 * U, 110 * U); }, won ? 1100 : 600);
 }
 const bossH = b => frameH(`b_${b.key}_0`);
 function bossWin() {
+  if (R.boss && R.boss.ex) return endSpecial(R.boss, true);
   const b = R.boss; R.boss = null; R.eb.length = 0;
   for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
   runHooks('bossWin', b);
@@ -488,6 +502,7 @@ function bossWin() {
 }
 function bossFail() {
   const b = R.boss; if (!b) return;
+  if (b.ex) return endSpecial(b, false);
   for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
   b.dash = b.leap = null; b.z = 0;
   b.leaving = 0.01; R.boss = null; R.leavingBoss = b; R.eb.length = 0;
@@ -997,7 +1012,7 @@ function lob(e) {
 function orb(x, y, a, sp, dmg, r = 5) { R.eb.push({ k: 'orb', x, y, a, vx: Math.cos(a) * sp * U, vy: Math.sin(a) * sp * U, r: r * P, dmg, life: 7, age: rand(0, 1), spr: biome().orb }); }
 function bossAttack(b, kind) {
   const L0 = R.heroes[0]; if (!L0) return;
-  const cx = b.x, cy = b.y - bossH(b) * 0.5, dmg = hpBase() * 0.1, rage = b.hp < b.maxHp * 0.5;
+  const cx = b.x, cy = b.y - bossH(b) * 0.5, dmg = hpBase() * 0.1, rage = b.rage || b.hp < b.maxHp * 0.5;
   if (kind === 'fan') {
     const a0 = Math.atan2(L0.y - 8 * P - cy, L0.x - cx), n = rage ? 7 : 5;
     for (let i = 0; i < n; i++) orb(cx, cy, a0 + (i - (n - 1) / 2) * 0.2, 230, dmg);
@@ -1071,13 +1086,13 @@ function updateBossAI(b, dt) {
   if (b.tele > 0) { b.tele -= dt; if (b.tele <= 0) bossAttack(b, b.teleK); return; }
   b.atkT -= dt;
   if (b.atkT <= 0) {
-    const rage = b.hp < b.maxHp * 0.5, sig = BOSS_SIG[b.key] || ['slam', 'ring'];
+    const rage = b.rage || b.hp < b.maxHp * 0.5, sig = (b.ex && b.ex.sig) || BOSS_SIG[b.key] || ['slam', 'ring'];
     const seq = ['fan', sig[0], 'ring', sig[1], 'slam', sig[0]];
     const k = seq[b.seq++ % seq.length];
     b.teleK = k; b.tele = { slam: 0.9, beam: 0.95, charge: 0.85, leap: 0.6, rain: 0.5, summon: 0.6 }[k] || 0.45;
     const L0 = R.heroes[0]; if (L0) b.lineX = clamp(L0.x, 40 * U, W - 40 * U);
     if (k === 'slam') { const L0 = R.heroes[0], a = L0 ? Math.atan2((L0.y - b.y) / 0.6, L0.x - b.x) : 2.4; b.gaps = [a + rand(0.6, 1.0) * (Math.random() < 0.5 ? -1 : 1), a + Math.PI * rand(0.8, 1.2)]; }
-    b.atkT = (rage ? 1.7 : 2.3) + b.tele;
+    b.atkT = ((rage ? 1.7 : 2.3) + b.tele) / (b.spd || 1);
   }
 }
 function updateEnemyShots(dt) {
@@ -1109,7 +1124,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [], shot: [], hit: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [], shot: [], hit: [], tower: [], perk: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1128,7 +1143,7 @@ function update(dt) {
       for (const dc of R.decals) dc.y += d;
       for (const p of R.parts) if (p.k === 'bit' || p.k === 'anim') p.y += d;
       if (R.advLeft <= 0) {
-        if (save.bossReady && save.auto && R.retryT <= 0) startBoss();
+        if (save.bossReady && save.auto && R.retryT <= 0 && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
@@ -1180,7 +1195,7 @@ function update(dt) {
       b.t -= dt;
       if (b.t <= 0) {
         const mon = window.SS && window.SS.mon;
-        if (!b.cont && mon && mon.canContinue() && b.hp < b.maxHp * 0.6) {   // only offered when the win is in reach
+        if (!b.cont && !b.ex && mon && mon.canContinue() && b.hp < b.maxHp * 0.6) {   // only offered when the win is in reach
           b.cont = true; b.t = 0; R.paused = true;
           mon.offerContinue(ok => { R.paused = false; last = performance.now(); if (ok && R.boss === b) { b.t = 15; banner('+15 SN!', 'Bitir şunu!'); sfx('skill', 0); uiKey = ''; } else if (R.boss === b) bossFail(); });
         } else bossFail();
@@ -1815,7 +1830,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, BIOMES, BOSSES, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  save, R, F, GUNS, TEAM, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
