@@ -96,6 +96,13 @@ function spr(name, x, y, sc = 1, ax = 0.5, ay = 1, flip = false, rot = 0, tint =
   ctx.drawImage(src, sx, sy, f[2], f[3], -w * ax, -h * ay, w, h); ctx.restore();
 }
 const sprT = (name, color, x, y, sc, ax, ay, flip, rot) => spr(name, x, y, sc, ax, ay, flip, rot, color);
+// one-art-pixel coloured rim around a sprite (drawn underneath it): leader, evolved weapon, Fırtına, elites
+function outline(name, x, y, col, sc = 1, a = 1) {
+  const k = P * Math.max(1, Math.round(sc)), ga = ctx.globalAlpha; ctx.globalAlpha = ga * a;
+  spr(name, x - k, y, sc, 0.5, 1, false, 0, col); spr(name, x + k, y, sc, 0.5, 1, false, 0, col);
+  spr(name, x, y - k, sc, 0.5, 1, false, 0, col); spr(name, x, y + k, sc, 0.5, 1, false, 0, col);
+  ctx.globalAlpha = ga;
+}
 const frameH = name => (AF[name] ? AF[name][3] : 16) * P;
 function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function prect(x, y, w, h, col) { ctx.fillStyle = col; const X = snap(x), Y = snap(y); ctx.fillRect(X, Y, snap(x + w) - X, snap(y + h) - Y); }
@@ -340,7 +347,7 @@ function musicTick(dt) {
 // ================================================================ runtime state
 const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
-  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0 };
+  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0, corpses: [], swish: [], ghosts: [], ghostT: 0 };
 MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
 MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
 const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0) + modAdd('crit');
@@ -523,6 +530,7 @@ function damage(target, dmg, crit, isBoss) {
 }
 function kill(e) {
   e.dead = true;
+  if (R.corpses.length < 14) { const fly = e.d && e.d.fly; R.corpses.push({ n: `m_${e.type}_${e.dir}${Math.floor(e.anim * 8) % 4}`, x: e.x, y: e.y - (fly ? 5 * P : 0), sc: e.sc || 1, t: 0, flip: e.x < (R.sq ? R.sq.x : W / 2) }); }
   runHooks('kill', e);
   puff(e.x, e.y, e.elite ? 3 : 2); bits(e.x, e.y - 8 * P, biome().bits, e.elite ? 7 : 4);
   addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul(), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 3);
@@ -548,9 +556,12 @@ function addMoney(v, x, y, n) {
   }
   sfx('coin');
 }
-function addText(x, y, s, kind) { if (kind === 'dmg' && R.txt.length > 18) return; if (R.txt.length > 50) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.0 : 0.7, max: kind === 'money' ? 1.0 : 0.7 }); }
+function addText(x, y, s, kind) { if (kind === 'dmg' && R.txt.length > 14) return; if (kind === 'crit' && R.txt.filter(t => t.kind === 'crit').length > 4) return; if (R.txt.length > 50) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.0 : 0.7, max: kind === 'money' ? 1.0 : 0.7 }); }
 // particles: anim = pack fx sheet played once; bit = physical chip with gravity; float = drifting trail mote
-function part(p) { if (save.eco && p.k !== 'anim' && Math.random() < 0.6) return; if (R.parts.length < 260) R.parts.push(p); }
+const busy = () => Math.min(1, 12 / Math.max(1, R.bul.length)) * Math.min(1, 110 / Math.max(1, R.parts.length));
+function part(p) { if (save.eco && p.k !== 'anim' && Math.random() < 0.6) return; if (p.k !== 'anim' && Math.random() > busy()) return; if (R.parts.length < 200) R.parts.push(p); }
+let fxGate = 0;
+const gate = (gap) => { if (R.t - fxGate < gap) return false; fxGate = R.t; return true; };
 function puff(x, y, s = 1) { part({ k: 'anim', a: 'fx_smoke', x, y: y + 2 * P, s: s * 0.5, life: 0.4, max: 0.4, ay: 1, alpha: 0.85 }); }
 function fx(a, x, y, s = 0.5, life = 0.25, ay = 0.5) { part({ k: 'anim', a, x, y, s, life, max: life, ay }); }
 function bits(x, y, set, n) {
@@ -571,15 +582,15 @@ function hitFx(q, t) {
   switch (g.hit) {
     case 'cut': fx('fx_cut', x, y); break;
     case 'claw': fx('fx_claw', x, y); break;
-    case 'star': fx('fx_spark', x, y, 0.5, 0.2); fx('fx_circlew', x, y, 0.5, 0.2); break;
+    case 'star': fx('fx_spark', x, y, 0.5, 0.2); if (Math.random() < busy()) fx('fx_circlew', x, y, 0.5, 0.2); break;
     case 'ice': fx('fx_ice', x, y, 0.5, 0.4); bits(x, y, 'q_Snow', 3); break;
     case 'fire': fx('fx_flam', x, y, 0.5, 0.3); break;
     case 'thunder': fx('fx_thunder', x, y, 0.5, 0.3); fx('fx_circlew', x, y, 1, 0.25); break;
     default: fx('fx_spark', x, y);
   }
   if (g.bits) bits(x, y, g.bits, 2);
-  if (q.crit) { fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22); vfx('burst', g.glow || 'gold', x, y, 0.5, 0.22); }
-  else if (evolved()) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.2);
+  if (q.crit) { fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22); if (gate(0.06)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.22); }
+  else if (evolved() && gate(0.12)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.2);
   if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx(g.hsnd || 'hit', 0, x);
   if (save.team >= 4 && t !== R.boss && Math.random() < 0.2) {   // Bombacı perk: splash
     boom(x, y, 0.5);
@@ -622,11 +633,12 @@ function throwNow(h) {
     let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (ns > 1 ? (k - (ns - 1) / 2) * (g.spread || 0.14) : 0);
     if (g.curve) a += (Math.random() < 0.5 ? -1 : 1) * g.curve * rand(0.6, 1);
     R.bul.push({ x: o.x, y: o.y, a, sp: g.sp * U, tgt: tk, dmg, crit, g, age: rand(0, 1), life: g.boomer ? 2.4 : 1.3, trail: [], tt: 0,
-      hits: new Set(), pierce: (g.pierce || 0) + (evolved() && g.pierce ? 1 : 0) + modAdd('pierce'), bounce: (g.bounce || 0) + (evolved() && g.bounce ? 1 : 0) + modAdd('bounce'), sc: (g.sc || 1) * (evolved() && (g.sc || 1) >= 1 && (AF[`p_${g.spr}_0`] || [0, 0, 99])[2] <= 18 ? 1.5 : 1), home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
+      hits: new Set(), pierce: (g.pierce || 0) + (evolved() && g.pierce ? 1 : 0) + modAdd('pierce'), bounce: (g.bounce || 0) + (evolved() && g.bounce ? 1 : 0) + modAdd('bounce'), sc: (g.sc || 1) * (evolved() && h.i === 0 && (g.sc || 1) >= 1 && (AF[`p_${g.spr}_0`] || [0, 0, 99])[2] <= 18 ? 1.5 : 1), home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
     if (tk !== R.boss) tk.pend = (tk.pend || 0) + dmg;
     runHooks('shot', R.bul[R.bul.length - 1]);
   }
   if (g.held === 'wh_Wand' || g.held === 'wh_Book') fx('fx_spark', o.x, o.y, 0.5, 0.15);
+  if (!save.eco && R.swish.length < 10) R.swish.push({ x: o.x, y: o.y, a: h.ang, life: 0.14, col: TRAIL_COL[(save.cos && save.cos.trail) || g.glow] || '#fce2ca' });
   sfx(g.snd || 'shoot', 0.12, o.x);
 }
 const turn = (a, want, k) => { let da = want - a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; return a + da * Math.min(1, k); };
@@ -1226,8 +1238,10 @@ function update(dt) {
       if (!q.back && (q.dist > 330 * U || (!alive && q.dist > 120 * U))) { q.back = true; q.hits.clear(); }
       if (q.back) {
         const h = q.from, dx = h.x - q.x, dy = h.y - 9 * P - q.y;
-        q.a = turn(q.a, Math.atan2(dy, dx), dt * 9); q.sp = Math.min(q.sp * (1 + dt * 1.5), 1100 * U);
-        if (Math.hypot(dx, dy) < 18 * U || h.i >= save.team) { q.dead = true; fx('fx_spark', q.x, q.y, 0.5, 0.15); }
+        // turn harder the closer it gets, so a returning blade lands in the hand instead of orbiting the squad
+        const dd = Math.hypot(dx, dy);
+        q.a = turn(q.a, Math.atan2(dy, dx), dt * (9 + 40 * Math.max(0, 1 - dd / (160 * U)))); q.sp = Math.min(q.sp * (1 + dt * 1.5), 1100 * U);
+        if (dd < 30 * U || h.i >= save.team || (q.back && q.life < 0.6)) { q.dead = true; fx('fx_spark', q.x, q.y, 0.5, 0.15); }
       } else if (alive) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * 5);
     } else if (alive && q.home) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * (g.curve ? 7 : g.shots > 1 ? 7 : 16));
     q.x += Math.cos(q.a) * q.sp * dt; q.y += Math.sin(q.a) * q.sp * dt;
@@ -1241,6 +1255,11 @@ function update(dt) {
     if (q.life <= 0 || q.x > W + 100 || q.x < -100 || q.y < -100 || q.y > H + 100) q.dead = true;
     if (q.dead && !q.settled && q.tgt && q.tgt !== R.boss) { q.settled = true; q.tgt.pend = Math.max(0, (q.tgt.pend || 0) - q.dmg); }
   }
+  for (const c of R.corpses) c.t += dt; R.corpses = R.corpses.filter(c => c.t < 0.28);
+  for (const w of R.swish) w.life -= dt; R.swish = R.swish.filter(w => w.life > 0);
+  for (const g of R.ghosts) g.life -= dt; R.ghosts = R.ghosts.filter(g => g.life > 0);
+  { const L0 = R.heroes[0]; R.ghostT -= dt;   // afterimages while you steer the squad fast
+    if (L0 && R.manual && !save.eco && Math.hypot(R.sq.vx, R.sq.vy) > 150 * U && R.ghostT <= 0) { R.ghostT = 0.045; for (const h of R.heroes) R.ghosts.push({ n: `h_${h.id}_${h.dir}${Math.floor(h.walk) % 4}`, x: h.x, y: h.y, life: 0.18 }); } }
   for (const b of R.bolts) b.life -= dt;
   R.bolts = R.bolts.filter(b => b.life > 0);
   for (const d of R.decals) d.life -= dt;
@@ -1283,6 +1302,12 @@ function render() {
   drawGround(t);
   for (const d of R.decals) { ctx.globalAlpha = Math.min(1, d.life * 2); spr(d.f, d.x, d.y, d.sc, 0.5, 0.5, false, d.rot); }
   ctx.globalAlpha = 1;
+  for (const g of R.ghosts) { ctx.globalAlpha = g.life / 0.18 * 0.35; spr(g.n, g.x, g.y, 1, 0.5, 1, false, 0, '#fce2ca'); }
+  for (const c of R.corpses) {   // white pop, then a rising fade
+    const k = c.t / 0.28; ctx.globalAlpha = c.t < 0.06 ? 1 : 1 - k;
+    spr(c.n, c.x, c.y - k * 10 * P, c.sc, 0.5, 1, false, 0, c.t < 0.06 ? '#ffffff' : '#fce2ca');
+  }
+  ctx.globalAlpha = 1;
   const list = [];
   for (const e of R.en) list.push({ y: e.y, k: 0, o: e });
   if (R.boss) list.push({ y: R.boss.y, k: 1, o: R.boss });
@@ -1305,6 +1330,8 @@ function render() {
       const name = `m_${o.type}_${o.dir}${n}`, lift = fly ? (5 + (Math.floor(t * 3 + o.id) % 2)) * P : 0;
       if (o.age < 0.2) ctx.globalAlpha = o.age / 0.2;
       const es = o.sc || 1;
+      if (o.treasure) outline(name, o.x, o.y - lift, Math.floor(t * 8) % 2 ? '#ffe18d' : '#f1c471', es);
+      else if (o.elite) outline(name, o.x, o.y - lift, '#e0394c', es, 0.9);
       spr(name, o.x, o.y - lift, es);
       if (o.flash > 0) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#ffffff');
       else if (o.wind > 0 && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#fce2ca');
@@ -1315,6 +1342,7 @@ function render() {
     } else if (it.k === 1) {
       const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * (o.rage ? 11 : 7)) % n}`, by = o.y - (o.z || 0);
       ctx.globalAlpha = o.leaving ? Math.max(0, 1 - o.leaving / 2) : 1;
+      if (o.rage && !o.leaving) outline(name, o.x, by, Math.floor(t * 6) % 2 ? '#e0394c' : '#8f3e56', 1, 0.85);
       spr(name, o.x, by);
       if (o.flash > 0) { ctx.globalAlpha *= 0.7; spr(name, o.x, by, 1, 0.5, 1, false, 0, '#ffffff'); }
       else if (o.rage && Math.floor(t * 3) % 2) { ctx.globalAlpha = 0.22; spr(name, o.x, by, 1, 0.5, 1, false, 0, '#e0394c'); }
@@ -1325,11 +1353,14 @@ function render() {
       const hop = (R.ultT > 0 || R.cheerT > 0) && sq.ko <= 0;
       const fr = o.atk > 0 ? 'a' : hop ? 'j' : o.moving ? String(Math.floor(o.walk) % 4) : '0';
       const name = `h_${o.id}_${R.cheerT > 0 && o.atk <= 0 ? 'd' : o.dir}${fr}`;
-      const lift = hop ? Math.round(Math.abs(Math.sin(t * 7 + o.ph)) * 6) * P : 0;
+      const idle = fr === '0' && R.cheerT <= 0;
+      const lift = hop ? Math.round(Math.abs(Math.sin(t * 7 + o.ph)) * 6) * P : idle && Math.floor(t * 1.6 + o.ph) % 2 ? P : 0;
       // recoil: one art pixel back, away from the throw
       const rx = o.recoil > 0 ? -Math.round(Math.cos(o.ang)) * P : 0, ry = o.recoil > 0 ? -Math.round(Math.sin(o.ang)) * P : 0;
       const hx = o.x + rx, hy = o.y + ry - lift;
       ctx.globalAlpha = ko ? 0.4 : (sq.inv > 0 && Math.floor(t * 14) % 2 === 0) ? 0.5 : 1;
+      const g0 = GUNS[save.gun], rim = ko ? null : R.ultT > 0 ? (Math.floor(t * 10 + o.i) % 2 ? '#ffe18d' : '#ff9554') : evolved() ? TRAIL_COL[g0.glow] : (o.i === 0 && R.manual) ? '#fce2ca' : null;
+      if (rim) outline(name, hx, hy, rim, 1, R.ultT > 0 ? 1 : 0.8);
       spr(name, hx, hy);
       if (sq.hit > 0 && !ko) spr(name, hx, hy, 1, 0.5, 1, false, 0, '#ffffff');
       drawHeld(o, hx, hy);
@@ -1337,6 +1368,11 @@ function render() {
     }
   }
   drawShots(t);
+  for (const w of R.swish) {   // throw smear: a short bent line of pixels from the hand
+    const k = w.life / 0.14; ctx.globalAlpha = k;
+    for (let i = 0; i < 5; i++) { const a = w.a + (i - 2) * 0.32, r = (9 + (1 - k) * 6) * P; prect(w.x + Math.cos(a) * r - P / 2, w.y + Math.sin(a) * r - P / 2, P, P, i === 2 ? '#ffffff' : w.col); }
+  }
+  ctx.globalAlpha = 1;
   drawSpecs(t);
   // chain lightning: pixel bolts (square dots along a jagged path, outer glow + white core)
   for (const b of R.bolts) {
@@ -1352,8 +1388,9 @@ function render() {
   for (const q of R.bul) {
     const g = q.g, n = AN['p_' + g.spr] || 1, sc = q.sc || g.sc || 1;
     const cosT = save.cos && save.cos.trail, trailCol = cosT ? TRAIL_COL[cosT] : '#fce2ca', glowName = q.pg || cosT || g.glow;
-    if (glowName && (q.pg || cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + 0.1 * Math.sin(q.age * 20);
+    const lead = q.special || !q.from || q.from.i === 0 || R.bul.length < 10;   // visual hierarchy: the leader's throws are the loud ones
+    if (lead && glowName && (q.pg || cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.3 + 0.1 * Math.sin(q.age * 20)) * Math.max(0.35, Math.min(1, 9 / R.bul.length));
       spr(`vx_glow${q.special || evolved() ? 40 : 24}_${glowName}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     }
@@ -1362,7 +1399,7 @@ function render() {
     if (g.trail === 'line') {
       const e = q.trail[q.trail.length - 1];
       if (e) { const n = Math.ceil(Math.hypot(q.x - e.x, q.y - e.y) / P); for (let k = 1; k <= n; k++) { ctx.globalAlpha = 0.55 * (1 - k / (n + 1)); prect(lerp(q.x, e.x, k / n) - P / 2, lerp(q.y, e.y, k / n) - P / 2, P, P, trailCol); } }
-    } else for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' || cosT ? trailCol : null); }
+    } else if (lead) for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' || cosT ? trailCol : null); }
     ctx.globalAlpha = 1;
     spr(name, q.x, q.y, sc, 0.5, 0.5, false, rot);
   }
@@ -1588,7 +1625,8 @@ function buy(k) {
   const lv = save.lv[k], cost = COST[k](lv);
   if (k === 'speed' && stat.speed(save.lv.speed) >= SPEED_CAP) return false;
   if (save.money < cost) { sfx('no'); return false; }
-  save.money -= cost; save.lv[k]++; R.buyT = 0.6; sfx('buy', 0, undefined, PENTA[Math.min(R.buyN++, 6)]); runHooks('buy', k); uiKey = '';
+  save.money -= cost; save.lv[k]++; R.buyT = 0.6;
+  if (R.t - (R.buyFx || 0) > 0.25 && R.heroes.length) { R.buyFx = R.t; const h = pick(R.heroes); vfx('burst', k === 'money' ? 'gold' : k === 'speed' ? 'ice' : 'fire', h.x, h.y - 10 * P, 0.5, 0.25); } sfx('buy', 0, undefined, PENTA[Math.min(R.buyN++, 6)]); runHooks('buy', k); uiKey = '';
   if (save.tut && !save.tut.power && save.lv.power >= 3) save.tut.power = true;
   return true;
 }
