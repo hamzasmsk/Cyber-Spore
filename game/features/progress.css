@@ -70,3 +70,18 @@
 .pk-have span.r{background:var(--blue)}.pk-have span.e{background:var(--purple)}
 .pk-have img{width:24px;height:24px}
 .pk-have i{position:absolute;right:1px;bottom:0;font-style:normal;font-size:11px;line-height:12px;padding:0 2px;color:var(--cream);background:var(--ink)}
+
+/* Günlük giriş takvimi */
+.lg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lg-day{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 3px 7px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink2),inset 0 -5px 0 var(--paper2);text-align:center}
+.lg-day small{font-size:11px;color:var(--muted)}
+.lg-ico{width:40px;height:40px;display:grid;place-items:center}
+.lg-ico img{width:32px;height:32px}
+.lg-day span{font-size:10px;line-height:1.15;color:var(--dark)}
+.lg-day.big{grid-column:span 2;background:#fff3d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold),inset 0 -8px 0 var(--gold)}
+.lg-day.big .lg-ico img{width:44px;height:44px}
+.lg-day.done{opacity:.55}
+.lg-day.now{background:#eaf5d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--green);animation:psReady 1s steps(2) infinite}
+.lg-day.next{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 5px var(--sage2)}
+.lg-ok{position:absolute;right:5px;top:5px;width:14px;height:14px;background:var(--green);clip-path:polygon(0 55%,35% 90%,100% 15%,85% 0,35% 60%,15% 40%)}
+.big-note b{color:var(--purple)}

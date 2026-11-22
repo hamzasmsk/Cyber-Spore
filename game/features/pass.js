@@ -245,5 +245,5 @@
     });
   }
   paintDot();
-  SS.pass = { open, unlockPremium, level, claimAll, addXp, TRAILS, SKINS, theme };
+  SS.pass = { endsAt: seasonEnd, open, unlockPremium, level, claimAll, addXp, TRAILS, SKINS, theme };
 })();

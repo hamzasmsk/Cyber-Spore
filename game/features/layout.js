@@ -3,7 +3,7 @@
    - Side columns are put in a fixed order: combat on the left, economy on the right (4 + 5 tiles). */
 (function () {
   const LEFT = ['guns', 'team', 'skinBtn', 'passBtn', 'dexBtn', 'rebirth'];
-  const RIGHT = ['missionsBtn', 'shopBtn', 'mineBtn', 'piggyBtn', 'boostBtn'];
+  const RIGHT = ['dailyBtn', 'missionsBtn', 'shopBtn', 'mineBtn', 'piggyBtn', 'boostBtn'];
   function key(b) {
     if (b.dataset.open) return b.dataset.open;
     if (b.id) return b.id;
