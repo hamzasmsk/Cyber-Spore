@@ -174,8 +174,10 @@
       return ok;
     },
   };
+  // in the app, purchases stay hidden until a real RevenueCat key is configured (a first release can ship ads-only)
+  const rcKey = (C.revenuecat || {})[platform] || '';
   const IAP = {
-    enabled: mode !== 'off',
+    enabled: mode !== 'off' && !(mode === 'native' && (!rcKey || /REPLACE_ME/.test(rcKey))),
     product: id => P[id],
     price: id => prices[id] || (P[id] && P[id].price) || '',
     owns: id => !!M.owned[id],

@@ -1,8 +1,22 @@
 {
-  "appId": "com.example.shurikensquad",
+  "appId": "com.shurikensquad.game",
   "appName": "Shuriken Squad",
   "webDir": "www",
   "backgroundColor": "#131b1b",
-  "ios": { "contentInset": "never" },
-  "android": { "allowMixedContent": false }
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#131b1b"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notify",
+      "iconColor": "#F1C471"
+    }
+  }
 }

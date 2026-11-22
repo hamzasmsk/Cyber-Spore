@@ -1,7 +1,7 @@
 // Copies the playable game into www/ for Capacitor (skips tooling, docs and native projects).
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), out = path.join(root, 'www');
-const SKIP = new Set(['www', 'node_modules', 'ios', 'android', 'tools', '.git', 'package.json', 'package-lock.json', 'capacitor.config.json', 'README.md', 'MONETIZATION.md']);
+const SKIP = new Set(['www', 'node_modules', 'ios', 'android', 'tools', '.git', 'package.json', 'package-lock.json', 'capacitor.config.json', 'README.md', 'MONETIZATION.md', 'store', 'sw.js.bak']);
 fs.rmSync(out, { recursive: true, force: true });
 (function copy(src, dst) {
   fs.mkdirSync(dst, { recursive: true });
