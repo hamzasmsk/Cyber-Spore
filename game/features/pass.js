@@ -47,7 +47,7 @@
   if (!save.inv || typeof save.inv !== 'object') save.inv = {};
   for (const k of ['star', 'storm', 'ticket']) if (!(save.inv[k] >= 0)) save.inv[k] = 0;
 
-  // ---------------- reward tables (premium uses the season's two costumes [A at 15, B at 30] and trails [10, 20])
+  // ---------------- reward tables (premium uses the season's two costumes [A at 15, B at 30] and trails [5, 20])
   const C = (o, chest) => Object.assign({ chest: !!chest }, o);
   const FREE = [null,
     { goldMin: 10 }, { gems: 5 }, { storm: 1 }, { goldMin: 15 }, C({ gems: 15, ticket: 1 }, 1),

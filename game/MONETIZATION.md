@@ -28,7 +28,8 @@ Tüm ayarlar `monetize.config.js` dosyasındadır; kodu değiştirmeden fiyat, s
 | `ss_starter` | kalıcı, tek sefer | 400 elmas + Altın Şövalye kostümü + 2 saat x2 güç | ₺49,99 | ~x4 |
 | `ss_noads` | kalıcı | Tüm reklam ödülleri izlemeden anında + kalıcı +%10 altın | ₺149,99 | — |
 | `ss_monthly` | tüketilebilir (30 gün) | Hemen 300 + 30 gün her gün 60 elmas (toplam 2.100) | ₺99,99 | ~x5 |
-| `ss_pass` | tüketilebilir (sezonluk) | Ninja Yolu premium: ~850 elmas, 3 saat x2 güç, Usta kostümü | ₺149,99 | ~x2+ |
+| `ss_pass` | tüketilebilir (sezonluk) | Ninja Yolu premium: 2 sezon kostümü, 2 atış izi, 630 elmas, 9 Yıldız Taşı, 9 Fırtına Tılsımı, 5 Boss Bileti, 4,5 sa x2 güç ve takviyeler | ₺149,99 | ~x3 |
+| `ss_pass_plus` | tüketilebilir (sezonluk) | Premium yol + anında 10 seviye | ₺249,99 | — |
 | `ss_piggy` | tüketilebilir | Kumbarayı kır (100–500 elmas) | ₺49,99 | x0,5–x2,5 |
 | `ss_offer_power` | tüketilebilir | 500 elmas + 1 saat x2 güç (süreli teklif) | ₺79,99 | ~x1,6 |
 
@@ -57,9 +58,33 @@ satın aldığı üründür.
 
 ### Ninja Yolu (28 günlük sezon bileti)
 
-30 seviye; XP: düşman +1, elit +4, hazine +10, boss +40, günün ilk girişi +60. Her seviyede ücretsiz ödül (elmas
-veya altın), premium yolda daha büyük ödüller ve 30. seviyede yalnızca bilette olan **Usta** kostümü. Premium'u
-sezonun ortasında alan oyuncu ulaştığı seviyelerin ödüllerini hemen alır (geç almak cezalandırılmaz).
+30 seviye, seviye başına 150 XP. **XP kaynakları:** düşman +1, elit +4, hazine +10, boss +40, günün ilk girişi +60,
+günlük görevler (her gün 5 görevden 3'ü, 60–120 XP) ve haftalık görevler (5 görev, 300–500 XP). Seviye 25 elmasla
+atlanabilir; 30. seviyeden sonra her 300 XP bir bonus sandık.
+
+**Sezon temaları** (4 sezonda bir döner; her temanın kendi kostümleri ve atış izleri vardır, o sezon dışında
+alınamaz — "Sezonu bekle"):
+
+| Tema | Kostümler (15. / 30. seviye) | Atış izleri (5. / 20. seviye) |
+|---|---|---|
+| Kızıl Ay | Kara Büyücü · Usta | Alev · Büyü |
+| Buz Fırtınası | Kar Ninjası · Tengu | Buz · Altın |
+| Bambu Ruhu | Rakun Maske · Kızıl Samuray | Yaprak · Altın |
+| Gölge Dansı | Gölge Ninja · Vampir | Gölge · Büyü |
+
+**Ödüller** (her 5 seviyede bir sandık):
+
+| | Ücretsiz yol | Premium yol |
+|---|---|---|
+| Elmas | 221 | 630 |
+| Yıldız Taşı (elmas yerine silah yıldızı) | 3 | 9 |
+| Fırtına Tılsımı (dolmadan Fırtına) | 5 | 9 |
+| Boss Bileti (reklamsız +15 sn) | 5 | 5 |
+| Takviye | 15 dk x2 güç, 20 dk hazine avcısı, 8 sa maden, altın | 4,5 sa x2 güç, 30 dk hızlı ateş, 30 dk hazine avcısı, 8 sa maden, altın |
+| Kozmetik | — | 2 kostüm, 2 atış izi |
+
+Premium'u sezonun ortasında alan oyuncu ulaştığı seviyelerin ödüllerini hemen alır (geç almak cezalandırılmaz).
+Premium+ ayrıca anında 10 seviye verir — sezonun son haftalarında alan oyuncu için.
 
 ### Kumbara
 
