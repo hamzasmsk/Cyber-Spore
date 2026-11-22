@@ -195,8 +195,11 @@ const rebirthMul = () => 1 + save.rp * 0.3;
 const SPEED_CAP = 10;
 const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(SPEED_CAP, 1.2 + 0.06 * l), money: l => 1 + 0.15 * l };
 const COST = { power: l => 8 * Math.pow(1.25, l), speed: l => 12 * Math.pow(1.28, l), money: l => 15 * Math.pow(1.2, l) };
-const MODS = { dmg: [], rate: [], money: [] };
+// multiplicative mods (dmg, rate, money, ehp = enemy HP, boss = damage to bosses, hp = squad HP, ult = Fırtına charge, rgems = rebirth gems)
+// and additive ones (crit chance, critDmg, bossTime seconds, treasure chance, offH offline hours), fed by features (Ruh Ağacı, perks ...)
+const MODS = { dmg: [], rate: [], money: [], ehp: [], boss: [], hp: [], ult: [], rgems: [], crit: [], critDmg: [], bossTime: [], treasure: [], offH: [] };
 const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
+const modAdd = k => MODS[k].reduce((m, f) => m + (f() || 0), 0);
 // weapon stars (1-5, bought with gems): +30% damage per star, +1 projectile at 3 stars, evolution at 5 stars
 if (!Array.isArray(save.wstar)) save.wstar = [];
 if (typeof save.wbest !== 'number') save.wbest = save.gun;
@@ -208,16 +211,17 @@ const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * (1 + 
 const fireRate = () => stat.speed(save.lv.speed) * modMul('rate') * (R.ultT > 0 ? 3 : 1);
 const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
-const enemyHp = () => 10 * Math.pow(1.3, stageIdx());
+const enemyHp = () => 10 * Math.pow(1.3, stageIdx()) * modMul('ehp');
 const reward = () => 10 * Math.pow(1.28, stageIdx());
-const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 22;
+const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 22 * modMul('ehp');
+const bossTime = () => BOSS_TIME + modAdd('bossTime');
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
 // rebirth points grow x1.18 per stage (from stage 8): each rebirth then pushes the wall ~10-15 stages further
 // instead of stalling (a linear formula flattened out after 3-4 rebirths in the economy simulation)
 const REBIRTH_MIN = 8;
 const rebirthGain = () => save.stage >= REBIRTH_MIN ? Math.floor(2 * Math.pow(1.18, save.stage - REBIRTH_MIN)) : 0;
-const rebirthGems = g => g > 0 ? 5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4)) : 0;
+const rebirthGems = g => g > 0 ? Math.round((5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4))) * modMul('rgems')) : 0;
 const heroId = i => (i === 0 && save.skin) ? save.skin : TEAM[i].id;
 
 // ================================================================ audio
@@ -339,8 +343,8 @@ const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, 
   cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0 };
 MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
 MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
-const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0);
-const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)));
+const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0) + modAdd('crit');
+const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)) * modMul('hp'));
 const hpBase = () => 100 + 12 * (save.stage - 1);
 function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 70 * U, s[0] * F.pathW * 0.4); }
 function setupHeroes() {
@@ -412,7 +416,7 @@ function startWave() {
   R.phase = 'fight';
   R.toSpawn = 3 + Math.floor(Math.random() * 3) + (save.stage > 3 ? 1 : 0);
   R.spawnT = 0.1;
-  if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05)) setTimeout(spawnTreasure, 1200);
+  if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
   const CHT = CH * 16 * P;
@@ -457,10 +461,10 @@ function startBoss() {
   for (const e of R.en) { e.dead = true; puff(e.x, e.y, 1); }
   R.eb.length = 0; R.phase = 'fight'; R.toSpawn = 0;
   const p = along(F.A, 40 * U, 0), hp = bossHp();
-  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: BOSS_TIME, flash: 0, anim: 0, key, name: bd.name, col: bd.col, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [] };
+  R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: bossTime(), flash: 0, anim: 0, key, name: bd.name, col: bd.col, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [] };
   $('bossImg').src = `assets/ui/boss_${key}.png`;
   $('bossHud').classList.remove('hidden');
-  const card = $('bossCard'); if (card) { card.querySelector('img').src = `assets/ui/boss_${key}.png`; card.querySelector('b').textContent = bd.name; card.querySelector('span').textContent = `${biome().name} · ${BOSS_TIME} saniye`; card.classList.remove('show'); void card.offsetWidth; card.classList.add('show'); }
+  const card = $('bossCard'); if (card) { card.querySelector('img').src = `assets/ui/boss_${key}.png`; card.querySelector('b').textContent = bd.name; card.querySelector('span').textContent = `${biome().name} · ${Math.round(bossTime())} saniye`; card.classList.remove('show'); void card.offsetWidth; card.classList.add('show'); }
   sfx('boss', 0); R.shake = 5; uiKey = '';
   runHooks('bossStart', R.boss);
 }
@@ -495,6 +499,7 @@ function bossFail() {
 }
 function damage(target, dmg, crit, isBoss) {
   if (target.dead) return;
+  if (isBoss) dmg *= modMul('boss');
   target.hp -= dmg; target.flash = 0.08;
   if (!isBoss && target.y > enemyBox().y0 + 50 * U) { const dx = target.x - R.sq.x, dy = target.y - R.sq.y, d = Math.hypot(dx, dy) || 1; target.kx = dx / d; target.ky = dy / d; target.knock = Math.max(target.knock || 0, (crit ? 7 : 2) * U); }
   const top = isBoss ? bossH(target) : 18 * P * (target.sc || 1);
@@ -510,7 +515,7 @@ function kill(e) {
   sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
   if (e.elite || e.treasure) R.stop = 0.07;
   if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
-  R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04));
+  R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04) * modMul('ult'));
   if (!R.boss && !save.bossReady) {
     save.kills++;
     if (save.kills >= KILLS_PER_SUB) {
@@ -594,7 +599,7 @@ function throwNow(h) {
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
-  const ns = shotsOf(g), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 : 1), dmg = total / ns;
+  const ns = shotsOf(g), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / ns;
   let tg = [t];
   if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
   for (let k = 0; k < ns; k++) {
@@ -1552,7 +1557,7 @@ function updateUI(dt) {
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
   note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
   note('[data-open="team"]', save.team < TEAM.length && save.money >= TEAM[save.team].cost);
-  note('[data-open="rebirth"]', rebirthGain() > 0 && R.bossFails >= 2);
+  note('[data-open="rebirth"]', (rebirthGain() > 0 && R.bossFails >= 2) || !!(window.SS && window.SS.tree && window.SS.tree.canBuy()));
   // first steps
   if (!save.tut) save.tut = {};
   const tp = $('tut');
@@ -1704,19 +1709,27 @@ const PANELS = {
       body.appendChild(row);
     });
   }),
-  rebirth: () => openPanel('Yeniden Doğuş', 'purple', body => {
-    const gain = rebirthGain();
+  rebirth: (tab) => openPanel('Yeniden Doğuş', 'purple', body => {
+    const T = window.SS && window.SS.tree;
+    if (T) {
+      tab = tab || 'r';
+      const tb = el(`<div class="dex-tabs"><button class="btn ${tab === 'r' ? 'purple' : 'grey'}" data-t="r">Doğuş</button><button class="btn ${tab === 't' ? 'purple' : 'grey'}" data-t="t">Ruh Ağacı${T.points() ? ` (${T.points()})` : ''}</button></div>`);
+      tb.querySelectorAll('button').forEach(x => x.onclick = () => { sfx('tick', 0); PANELS.rebirth(x.dataset.t); });
+      body.appendChild(tb);
+      if (tab === 't') { T.build(body); return; }
+    }
+    const gain = rebirthGain(), souls = T ? T.soulGain() : 0;
     body.appendChild(el(`<div class="big-num">x${fmt(1 + save.rp * 0.3)}</div>`));
     body.appendChild(el('<p class="big-note">Kalıcı hasar ve para bonusun. Her doğuş puanı +%30 ekler.</p>'));
-    body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${fmt(gain)} doğuş puanı</h4>
-      <p>${gain > 0 ? `Bonus x${fmt(1 + save.rp * 0.3)} → x${fmt(1 + (save.rp + gain) * 0.3)} · +${rebirthGems(gain)} elmas. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar ve takım kalır.` : `${REBIRTH_MIN}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.`}</p></div></div>`));
+    body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${fmt(gain)} doğuş puanı${souls ? ` · +${souls} ruh` : ''}</h4>
+      <p>${gain > 0 ? `Bonus x${fmt(1 + save.rp * 0.3)} → x${fmt(1 + (save.rp + gain) * 0.3)} · +${rebirthGems(gain)} elmas${souls ? ` · Ruh Ağacı için ${souls} ruh` : ''}. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.` : `${REBIRTH_MIN}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.`}</p></div></div>`));
     const btn = el(`<button class="btn purple wide ${gain > 0 ? '' : 'off'}">YENİDEN DOĞ</button>`);
     btn.onclick = () => {
       if (gain <= 0) return;
-      const rg = rebirthGems(gain); save.gems += rg; runHooks('rebirth');
+      const rg = rebirthGems(gain); save.gems += rg; runHooks('rebirth', gain);
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
-      R.en.length = 0; R.eb.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
-      persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${fmt(1 + save.rp * 0.3)} · +${rg} elmas`); sfx('win', 0); uiKey = '';
+      R.en.length = 0; R.eb.length = 0; R.bul.length = 0; R.boss = null; $('bossHud').classList.add('hidden'); setupHeroes(); if (R.sq) R.sq.hp = R.sq.maxHp = sqMaxHp();
+      persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${fmt(1 + save.rp * 0.3)} · +${rg} elmas${souls ? ` · +${souls} ruh` : ''}`); sfx('win', 0); uiKey = '';
     };
     body.appendChild(btn);
   }),
@@ -1726,7 +1739,7 @@ function offlineReward() {
   if (!save.t) return;
   const away = (Date.now() - save.t) / 1000;
   if (away < 60 || !save.rate) return;
-  const gain = Math.min(away, 8 * 3600) * save.rate * 0.4;
+  const gain = Math.min(away, (8 + modAdd('offH')) * 3600) * save.rate * 0.4;
   if (gain < 1) return;
   const h = Math.floor(away / 3600), m = Math.floor(away % 3600 / 60);
   openPanel('Hoş geldin!', 'green', body => {
@@ -1798,7 +1811,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, BIOMES, BOSSES, EDEF, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  save, R, F, GUNS, TEAM, BIOMES, BOSSES, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
