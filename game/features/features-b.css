@@ -6,15 +6,9 @@
    so on short screens the tiles shrink to stay clear of the top HUD (incl. the boss bar) and the cards. */
 /* the tile <img> has a clip-path (its own stacking layer), so lift the label above it */
 .side .sbtn span{position:relative;z-index:1}
-@media (max-height:760px){
+@media (max-height:700px){
   .side{gap:3px}
-  .side .sbtn img{width:42px;height:42px}
-  .side .sbtn span{margin-top:-6px;font-size:11px}
-}
-@media (max-height:600px){
-  .side{gap:2px}
-  .side .sbtn img{width:36px;height:36px}
-  .side .sbtn span{font-size:10px}
+  .side .sbtn img{width:32px;height:32px}
 }
 
 /* small count badge on a side tile (mine) */

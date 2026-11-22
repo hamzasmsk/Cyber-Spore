@@ -155,18 +155,18 @@ h2,h3,h4{margin:0;font-weight:700}
 @keyframes blink2{50%{background:#8f3e56}}
 
 /* side columns: the pack's coloured icon tiles in an ink frame */
-.side{position:absolute;bottom:calc(150px + var(--safe-b));display:flex;flex-direction:column;gap:4px}
+.side{position:absolute;bottom:calc(150px + var(--safe-b));display:flex;flex-direction:column;gap:6px}
 .side.left{left:max(6px,var(--safe-l))}
 .side.right{right:max(6px,var(--safe-r))}
-.sbtn{position:relative;width:56px;display:flex;flex-direction:column;align-items:center}
-.sbtn img{width:48px;height:48px;display:block;padding:3px;box-sizing:content-box;background:var(--ink);clip-path:var(--notch)}
-.sbtn span{position:relative;z-index:1;margin-top:-7px;font-size:12px;line-height:1;color:var(--cream);text-shadow:var(--o-sm);white-space:nowrap}
+.sbtn{position:relative;width:46px;display:flex;flex-direction:column;align-items:center}
+.sbtn img{width:36px;height:36px;display:block;padding:3px;box-sizing:content-box;background:var(--ink);clip-path:var(--notch)}
+.sbtn span{position:relative;z-index:1;margin-top:-6px;font-size:10px;line-height:1;color:var(--cream);text-shadow:var(--o-sm);white-space:nowrap}
 .sbtn:active{transform:translateY(3px)}
 .sbtn.on img{background:var(--gold)}
 .sbtn.ready{animation:pulse .8s steps(2) infinite}
 .sbtn.ready img{background:var(--gold2)}
 .sbtn.locked img{filter:grayscale(1) brightness(.75)}
-.sbtn .dot{position:absolute;top:-3px;right:0;width:14px;height:14px;background:var(--red);box-shadow:inset 0 0 0 3px var(--ink);animation:blink2 1s steps(2) infinite}
+.sbtn .dot{position:absolute;top:-3px;right:0;width:11px;height:11px;background:var(--red);box-shadow:inset 0 0 0 2px var(--ink);animation:blink2 1s steps(2) infinite}
 
 /* upgrade tray: three wood-framed parchment cards */
 .cards{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
@@ -247,7 +247,7 @@ h2,h3,h4{margin:0;font-weight:700}
 #tut b{width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid var(--ink);margin-top:-1px}
 @keyframes bob{50%{margin-top:-6px}}
 /* red "something to do" marker on side tiles */
-.sbtn.notify::after{content:"";position:absolute;top:-3px;right:1px;width:14px;height:14px;background:var(--red);box-shadow:inset 0 0 0 3px var(--ink);animation:blink2 1s steps(2) infinite;z-index:3}
+.sbtn.notify::after{content:"";position:absolute;top:-3px;right:1px;width:11px;height:11px;background:var(--red);box-shadow:inset 0 0 0 2px var(--ink);animation:blink2 1s steps(2) infinite;z-index:3}
 /* volume sliders (settings) */
 .vol{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);color:var(--dark);font-size:15px}
 .vol img{width:28px;height:28px}

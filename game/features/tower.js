@@ -25,9 +25,9 @@
   const rule = f => f % 10 === 0 ? GUARD : RULES[(f - 1) % RULES.length];
   const keyOf = f => KEYS[(f * 7 + Math.floor(f / 10) * 3) % KEYS.length];
   const hpOf = f => 10 * Math.pow(1.3, 3 * (f - 1)) * 22 * (rule(f).hp || 1);
-  const rewardOf = f => ({ gems: 2 + Math.floor(f / 5) + (f % 10 === 0 ? 10 : 0), star: f % 5 === 0 ? 1 : 0, storm: f % 10 === 0 ? 1 : 0, ticket: f % 20 === 0 ? 1 : 0 });
+  const rewardOf = f => ({ gems: 2 + Math.floor(f / 5) + (f % 10 === 0 ? 10 : 0), star: f % 10 === 0 ? 2 : f % 5 === 0 ? 1 : 0, ticket: f % 20 === 0 ? 1 : 0 });
   const rewTxt = r => [r.gems && `<span><img src="assets/ui/gem.png" alt="">${r.gems}</span>`, r.star && `<span><img src="assets/ui/ic_luck.png" alt="">${r.star}</span>`,
-    r.storm && `<span><img src="assets/ui/ic_explosion.png" alt="">${r.storm}</span>`, r.ticket && `<span><img src="assets/ui/ic_shield.png" alt="">${r.ticket}</span>`].filter(Boolean).join('');
+r.ticket && `<span><img src="assets/ui/ic_shield.png" alt="">${r.ticket}</span>`].filter(Boolean).join('');
   // rough difficulty from the squad's damage per second against the floor's HP and time limit
   const diff = f => { const dps = SS.dmgPerShot() * SS.fireRate() * Math.max(1, save.team) * SS.modMul('boss'), k = hpOf(f) / dps / (rule(f).time || 30);
     return k < 0.35 ? { t: 'Kolay', c: 'ez' } : k < 0.8 ? { t: 'Zorlu', c: 'md' } : k < 1.4 ? { t: 'Çok zor', c: 'hd' } : { t: 'İmkânsız gibi', c: 'no' }; };
@@ -55,9 +55,9 @@
     if (won) {
       T.best = Math.max(T.best, f);
       const r = rewardOf(f), inv = save.inv = save.inv || {};
-      save.gems += r.gems; for (const k of ['star', 'storm', 'ticket']) if (r[k]) inv[k] = (inv[k] || 0) + r[k];
+      save.gems += r.gems; for (const k of ['star', 'ticket']) if (r[k]) inv[k] = (inv[k] || 0) + r[k];
       SS.addMoney(SS.reward() * 12 * SS.moneyMul(), SS.W / 2, SS.H * 0.4, 10); setTimeout(() => SS.giveScroll(2), 1800);
-      SS.banner(`${f}. KAT GEÇİLDİ!`, `+${r.gems} elmas${r.star ? ' · Yıldız Taşı' : ''}${r.storm ? ' · Tılsım' : ''}`);
+      SS.banner(`${f}. KAT GEÇİLDİ!`, `+${r.gems} elmas${r.star ? ' · Yıldız Taşı' : ''}`);
       SS.HOOKS.tower && SS.HOOKS.tower.forEach(h => { try { h(f); } catch (e) { /* ignore */ } });
       setTimeout(() => { if (!SS.R.boss && document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov')) open(); }, 2600);
     } else {

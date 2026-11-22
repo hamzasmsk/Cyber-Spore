@@ -51,7 +51,7 @@ window.MONETIZE = {
     { id: 'ss_monthly', kind: 'consumable', title: 'Aylık Kart', gems: 300, monthly: { days: 30, daily: 60 }, price: '₺99,99',
       desc: 'Hemen 300 elmas + 30 gün boyunca her gün 60 elmas (toplam 2100)' },
     { id: 'ss_pass', kind: 'consumable', title: 'Ninja Yolu Premium', pass: true, price: '₺149,99',
-      desc: 'Bu sezonun premium yolu: 2 özel kostüm, 2 atış izi, 600+ elmas, Yıldız Taşları, Tılsımlar, Boss Biletleri, takviyeler' },
+      desc: 'Bu sezonun premium yolu: 2 özel kostüm, 2 atış izi, 600+ elmas, Yıldız Taşları, Boss Biletleri, hızlı ateş, takviyeler' },
     { id: 'ss_pass_plus', kind: 'consumable', title: 'Ninja Yolu Premium+', pass: true, passLevels: 10, price: '₺249,99',
       desc: 'Premium yol + anında 10 seviye' },
     { id: 'ss_piggy', kind: 'consumable', title: 'Kumbarayı Kır', piggy: true, price: '₺49,99' },

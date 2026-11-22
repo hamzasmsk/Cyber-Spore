@@ -25,7 +25,7 @@
     { id: 'skin', name: 'Fener Prensesi', txt: 'Festivale özel kostüm · +%6 hasar · +%6 altın', img: 'face_Princess', cost: 400, stock: 1, give: () => { const K = save.skins; K.owned.Princess = true; SS.banner('YENİ KOSTÜM!', 'Fener Prensesi'); } },
     { id: 'star', name: 'Yıldız Taşı', txt: 'Silah yıldızı için', img: 'ic_luck', cost: 60, stock: 3, give: () => { save.inv.star = (save.inv.star || 0) + 1; } },
     { id: 'scroll', name: '2 Parşömen', txt: 'Rastgele bir ninjaya', img: 'ic_book', cost: 40, stock: 5, give: () => SS.giveScroll(2) },
-    { id: 'storm', name: 'Fırtına Tılsımı', txt: 'Fırtınayı hemen doldurur', img: 'ic_explosion', cost: 30, stock: 5, give: () => { save.inv.storm = (save.inv.storm || 0) + 1; } },
+    { id: 'rapid', name: '30 dk Hızlı Ateş', txt: 'Takım daha hızlı atar', img: 'ic_rate', cost: 30, stock: 5, give: () => { const b = save.boost = save.boost || {}; b.rateEnd = Math.max(Date.now(), b.rateEnd || 0) + 30 * 60000; } },
     { id: 'ticket', name: 'Boss Bileti', txt: '+15 sn ya da +1 Kule hakkı', img: 'ic_shield', cost: 30, stock: 5, give: () => { save.inv.ticket = (save.inv.ticket || 0) + 1; } },
     { id: 'gems', name: '40 Elmas', txt: '', img: 'gem_big', cost: 80, stock: 3, give: () => { save.gems += 40; } },
   ];
@@ -37,7 +37,7 @@
   }
   SS.HOOKS.kill.push(e => {
     if (!active() || !e) return;
-    const n = e.treasure ? 5 : e.elite ? 1 : Math.random() < 0.05 ? 1 : 0;
+    const n = e.treasure ? 5 : e.elite ? 1 : Math.random() < 0.03 ? 1 : 0;
     if (n) drop(n, e.x, e.y - 30 * SS.P);
   });
   SS.HOOKS.bossWin.push(b => { if (b) drop(5, b.x, b.y - 60 * SS.P); });
@@ -74,6 +74,6 @@
   // lantern badge on the Ödül button + one banner when a festival starts
   function paint() { const b = document.getElementById('dailyBtn'); if (b) b.classList.toggle('ev-on', active()); }
   setInterval(paint, 30000); setTimeout(paint, 0);
-  setTimeout(() => { if (active()) { sync(); if (E.seen !== E.key) { E.seen = E.key; SS.persist(); SS.banner('FENER FESTİVALİ!', 'Hafta sonu boyunca fener topla · Ödül → Festival'); } } }, 4000);
+  setTimeout(() => { if (active() && (!SS.unlocked || SS.unlocked('dailyBtn'))) { sync(); if (E.seen !== E.key) { E.seen = E.key; SS.persist(); SS.banner('FESTİVAL!', 'Fener Festivali: hafta sonu fener topla'); } } }, 4000);
   SS.events = { open, active, tabs, ITEMS };
 })();

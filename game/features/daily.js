@@ -14,24 +14,25 @@
   // day rewards; gem amounts grow +20% per finished week (capped at x2)
   const DAYS = [
     { gems: 20 },
-    { storm: 1, goldMin: 20 },
+    { rapidMin: 20, goldMin: 20 },
     { gems: 30 },
     { star: 1 },
     { ticket: 2, gems: 30 },
     { boostMin: 60 },
-    { gems: 80, star: 2, storm: 1, chest: true },
+    { gems: 80, star: 2, ticket: 1, chest: true },
   ];
   const wk = () => Math.min(2, 1 + 0.2 * L.week);
   const scaled = r => Object.assign({}, r, r.gems ? { gems: Math.round(r.gems * wk()) } : {});
   const ready = () => L.last !== today();
   const parts = r => [
-    r.gems && [`${r.gems} elmas`, 'gem'], r.star && [`${r.star} Yıldız Taşı`, 'ic_luck'], r.storm && [`${r.storm} Fırtına Tılsımı`, 'ic_explosion'],
+    r.gems && [`${r.gems} elmas`, 'gem'], r.star && [`${r.star} Yıldız Taşı`, 'ic_luck'], r.rapidMin && [`${r.rapidMin} dk hızlı ateş`, 'ic_rate'],
     r.ticket && [`${r.ticket} Boss Bileti`, 'ic_shield'], r.boostMin && [`${r.boostMin / 60} sa x2 güç`, 'ic_boost'], r.goldMin && [`${r.goldMin} dk altın`, 'coin'],
   ].filter(Boolean);
   function give(r) {
     const inv = save.inv = save.inv || {}, b = save.boost = save.boost || {}, now = Date.now();
     if (r.gems) save.gems += r.gems;
-    for (const k of ['star', 'storm', 'ticket']) if (r[k]) inv[k] = (inv[k] || 0) + r[k];
+    for (const k of ['star', 'ticket']) if (r[k]) inv[k] = (inv[k] || 0) + r[k];
+    if (r.rapidMin) b.rateEnd = Math.max(now, b.rateEnd || 0) + r.rapidMin * 60000;
     if (r.boostMin) { b.adEnd = Math.max(now, b.adEnd || 0) + r.boostMin * 60000; b.adCd = Math.max(b.adCd || 0, b.adEnd); }
     if (r.goldMin) { const inc = SS.shop ? SS.shop.income() : 1; SS.addMoney(inc * r.goldMin * 60, SS.W / 2, SS.H / 2, 12); }
   }
@@ -72,7 +73,7 @@
   paint(); setInterval(paint, 30000);
   // show the calendar once per day on start (after the welcome-back panel, never on top of another panel)
   if (ready()) {
-    const tryOpen = (n) => { if (!ready()) return; if (!document.getElementById('panel').classList.contains('hidden') || document.querySelector('.pk-ov,.mz-ov')) { if (n < 40) setTimeout(() => tryOpen(n + 1), 1500); return; } open(); };
+    const tryOpen = (n) => { if (!ready() || (SS.unlocked && !SS.unlocked('dailyBtn'))) return; if (!document.getElementById('panel').classList.contains('hidden') || document.querySelector('.pk-ov,.mz-ov')) { if (n < 40) setTimeout(() => tryOpen(n + 1), 1500); return; } open(); };
     setTimeout(() => tryOpen(0), 2500);
   }
 

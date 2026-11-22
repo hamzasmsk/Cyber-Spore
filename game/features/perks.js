@@ -16,7 +16,7 @@
     { id: 'crit', r: 'c', max: 4, name: 'Zayıf Nokta', icon: 'ic_vision', txt: '+%5 kritik şansı' },
     { id: 'leech', r: 'c', max: 3, name: 'Can Çalma', icon: 'ic_heal', txt: 'Her düşman takıma %2 can verir' },
     { id: 'slayer', r: 'c', max: 3, name: 'Boss Kırıcı', icon: 'ic_weapon', txt: '+%20 boss hasarı' },
-    { id: 'storm', r: 'c', max: 3, name: 'Fırtına Çağrısı', icon: 'ic_amulet', txt: 'Fırtına %25 hızlı dolar' },
+    { id: 'guard', r: 'c', max: 3, name: 'Kalkan', icon: 'ic_shield', txt: '-%12 alınan hasar' },
     { id: 'pierce', r: 'r', max: 2, name: 'Delici', icon: 'ic_book', txt: 'Atışlar +1 düşmanı deler' },
     { id: 'bounce', r: 'r', max: 2, name: 'Sekme', icon: 'ic_ring', txt: 'Atışlar +1 kez seker' },
     { id: 'frost', r: 'r', max: 3, name: 'Buz Dokunuşu', icon: 'wi_IceSpike', txt: '%20 şansla dondurur', glow: 'ice' },
@@ -38,7 +38,7 @@
   M.money.push(() => 1 + 0.25 * n('greed'));
   M.crit.push(() => 0.05 * n('crit'));
   M.boss.push(() => 1 + 0.2 * n('slayer'));
-  M.ult.push(() => 1 + 0.25 * n('storm'));
+  M.taken.push(() => 1 - 0.12 * n('guard'));
   M.pierce.push(() => n('pierce'));
   M.bounce.push(() => n('bounce'));
   M.shots.push(() => n('multi'));

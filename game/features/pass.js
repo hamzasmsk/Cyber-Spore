@@ -1,6 +1,6 @@
 /* Shuriken Squad feature: "Ninja Yolu" — 28-day season pass.
    - 30 levels, each with a free and a premium reward drawn from every reward type in the game: gems, gold,
-     x2 power, rapid fire, treasure hunter, Yıldız Taşı (weapon star), Fırtına Tılsımı (instant ultimate),
+     x2 power, rapid fire, treasure hunter, Yıldız Taşı (weapon star), 
      Boss Bileti (+15 s without an ad), mine chests, and the season's exclusive costumes and shot trails.
    - Milestone chests every 5 levels; after level 30 a bonus chest every 300 XP.
    - Daily and weekly pass tasks give XP; levels can be skipped with gems.
@@ -45,24 +45,25 @@
   if (!save.cos || typeof save.cos !== 'object') save.cos = {};
   if (!save.cos.trails || typeof save.cos.trails !== 'object') save.cos.trails = {};
   if (!save.inv || typeof save.inv !== 'object') save.inv = {};
-  for (const k of ['star', 'storm', 'ticket']) if (!(save.inv[k] >= 0)) save.inv[k] = 0;
+  for (const k of ['star', 'ticket']) if (!(save.inv[k] >= 0)) save.inv[k] = 0;
+  if (save.inv.storm > 0) { save.gems += save.inv.storm * 5; } delete save.inv.storm;   // Fırtına was removed: charms become gems
 
   // ---------------- reward tables (premium uses the season's two costumes [A at 15, B at 30] and trails [5, 20])
   const C = (o, chest) => Object.assign({ chest: !!chest }, o);
   const FREE = [null,
-    { goldMin: 10 }, { gems: 5 }, { storm: 1 }, { goldMin: 15 }, C({ gems: 15, ticket: 1 }, 1),
+    { goldMin: 10 }, { gems: 5 }, { rapidMin: 15 }, { goldMin: 15 }, C({ gems: 15, ticket: 1 }, 1),
     { ticket: 1 }, { goldMin: 20 }, { gems: 5 }, { boostMin: 15 }, C({ gems: 20, star: 1 }, 1),
-    { goldMin: 25 }, { gems: 8 }, { storm: 1 }, { goldMin: 30 }, C({ gems: 25, ticket: 1 }, 1),
+    { goldMin: 25 }, { gems: 8 }, { rapidMin: 15 }, { goldMin: 30 }, C({ gems: 25, ticket: 1 }, 1),
     { ticket: 1 }, { gems: 8 }, { goldMin: 40 }, { treasureMin: 20 }, C({ gems: 30, star: 1 }, 1),
-    { goldMin: 45 }, { gems: 10 }, { storm: 1 }, { goldMin: 60 }, C({ gems: 35, storm: 2 }, 1),
+    { goldMin: 45 }, { gems: 10 }, { rapidMin: 15 }, { goldMin: 60 }, C({ gems: 35, ticket: 2 }, 1),
     { ticket: 1 }, { gems: 10 }, { goldMin: 90 }, { mineH: 8 }, C({ gems: 50, star: 1 }, 1)];
   const PREM = [null,
-    { gems: 20 }, { storm: 1 }, { goldMin: 30 }, { ticket: 1 }, C({ trail: 0, gems: 20 }, 1),
-    { gems: 30 }, { boostMin: 30 }, { star: 1 }, { storm: 2 }, C({ gems: 60, rapidMin: 30 }, 1),
+    { gems: 20 }, { rapidMin: 15 }, { goldMin: 30 }, { ticket: 1 }, C({ trail: 0, gems: 20 }, 1),
+    { gems: 30 }, { boostMin: 30 }, { star: 1 }, { rapidMin: 30 }, C({ gems: 60, rapidMin: 30 }, 1),
     { treasureMin: 30 }, { ticket: 2 }, { goldMin: 60 }, { star: 1 }, C({ skin: 0, gems: 40 }, 1),
-    { gems: 40 }, { boostMin: 60 }, { storm: 3 }, { star: 1 }, C({ trail: 1, gems: 50 }, 1),
+    { gems: 40 }, { boostMin: 60 }, { rapidMin: 45 }, { star: 1 }, C({ trail: 1, gems: 50 }, 1),
     { gems: 40 }, { ticket: 2 }, { mineH: 8 }, { star: 2 }, C({ gems: 80, boostMin: 60 }, 1),
-    { boostMin: 120 }, { storm: 3 }, { star: 2 }, { gems: 100 }, C({ skin: 1, gems: 150, star: 2 }, 1)];
+    { boostMin: 120 }, { rapidMin: 45 }, { star: 2 }, { gems: 100 }, C({ skin: 1, gems: 150, star: 2 }, 1)];
   const resolve = r => { const t = theme(), o = Object.assign({}, r); if ('skin' in r) o.skin = t.skins[r.skin]; if ('trail' in r) o.trail = t.trails[r.trail]; return o; };
 
   // label, icon and rarity of a reward
@@ -70,7 +71,6 @@
     ['skin', r => SKINS[r.skin] ? SKINS[r.skin].name : 'Kostüm', r => `face_${r.skin}.png`, 'epic'],
     ['trail', r => TRAILS[r.trail].name, () => 'ic_magic.png', 'rare'],
     ['star', r => `${r.star} Yıldız Taşı`, () => 'ic_luck.png', 'rare'],
-    ['storm', r => `${r.storm} Fırtına Tılsımı`, () => 'ic_explosion.png', ''],
     ['ticket', r => `${r.ticket} Boss Bileti`, () => 'ic_shield.png', ''],
     ['gems', r => `${r.gems} elmas`, () => 'gem.png', ''],
     ['boostMin', r => `${r.boostMin >= 60 ? r.boostMin / 60 + ' sa' : r.boostMin + ' dk'} x2 güç`, () => 'ic_boost.png', ''],
@@ -93,7 +93,6 @@
     if (r.treasureMin) b.treasureEnd = Math.max(now, b.treasureEnd || 0) + r.treasureMin * 60000;
     if (r.mineH && SS.mine) save.gems += Math.floor(SS.mine.perHour((save.mine && save.mine.lv) || 1) * r.mineH);
     if (r.star) save.inv.star += r.star;
-    if (r.storm) save.inv.storm += r.storm;
     if (r.ticket) save.inv.ticket += r.ticket;
     if (r.skin) { save.skins = save.skins || {}; save.skins.owned = save.skins.owned || {}; save.skins.owned[r.skin] = true; SS.banner('YENİ KOSTÜM!', (SKINS[r.skin] || {}).name || r.skin); }
     if (r.trail) { save.cos.trails[r.trail] = true; if (!save.cos.trail) save.cos.trail = r.trail; SS.toast(`${TRAILS[r.trail].name} açıldı · Kostüm panelinden tak`); }
@@ -103,12 +102,12 @@
   const weekKey = () => { const d = new Date(), day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); };
   const today = () => new Date().toISOString().slice(0, 10);
   const DAILY = [
-    { id: 'd_kill', text: 'Düşman yen', goal: 150, xp: 100, ev: 'kill' }, { id: 'd_boss', text: 'Boss yen', goal: 1, xp: 120, ev: 'boss' },
-    { id: 'd_elite', text: 'Elit düşman yen', goal: 3, xp: 80, ev: 'elite' }, { id: 'd_ult', text: 'Fırtına kullan', goal: 2, xp: 80, ev: 'ult' },
+    { id: 'd_kill', text: 'Düşman yen', goal: 250, xp: 100, ev: 'kill' }, { id: 'd_boss', text: 'Boss yen', goal: 1, xp: 120, ev: 'boss' },
+    { id: 'd_elite', text: 'Elit düşman yen', goal: 3, xp: 80, ev: 'elite' }, { id: 'd_tre', text: 'Hazine canavarı yakala', goal: 1, xp: 80, ev: 'treasure' },
     { id: 'd_buy', text: 'Geliştirme al', goal: 25, xp: 60, ev: 'buy' },
   ];
   const WEEKLY = [
-    { id: 'w_kill', text: 'Düşman yen', goal: 2000, xp: 400, ev: 'kill' }, { id: 'w_boss', text: 'Boss yen', goal: 15, xp: 500, ev: 'boss' },
+    { id: 'w_kill', text: 'Düşman yen', goal: 3500, xp: 400, ev: 'kill' }, { id: 'w_boss', text: 'Boss yen', goal: 15, xp: 500, ev: 'boss' },
     { id: 'w_tre', text: 'Hazine canavarı yakala', goal: 3, xp: 300, ev: 'treasure' }, { id: 'w_star', text: 'Silah yıldızı yükselt', goal: 2, xp: 300, ev: 'star' },
     { id: 'w_reb', text: 'Yeniden doğ', goal: 1, xp: 400, ev: 'rebirth' },
   ];
@@ -134,7 +133,7 @@
     for (const t of s.tasks.list.concat(s.week.list)) { const d = def(t.id); if (d && d.ev === ev && !t.done && t.n < d.goal) { t.n = Math.min(d.goal, t.n + k); changed = true; } }
     if (changed) paintDot();
   }
-  SS.HOOKS.kill.push(e => { addXp(e && e.treasure ? 10 : e && e.elite ? 4 : 1); progress('kill'); if (e && e.elite) progress('elite'); if (e && e.treasure) progress('treasure'); });
+  SS.HOOKS.kill.push(e => { addXp(e && e.treasure ? 10 : e && e.elite ? 4 : Math.random() < 0.57 ? 1 : 0); progress('kill'); if (e && e.elite) progress('elite'); if (e && e.treasure) progress('treasure'); });
   SS.HOOKS.bossWin.push(() => { addXp(40); progress('boss'); });
   SS.HOOKS.buy.push(() => progress('buy'));
   for (const ev of ['ult', 'star', 'rebirth']) { SS.HOOKS[ev] = SS.HOOKS[ev] || []; SS.HOOKS[ev].push(() => progress(ev)); }
@@ -155,7 +154,7 @@
   function claimAll() {
     const s = st(); let n = 0;
     for (let l = 1; l <= level(); l++) { if (claimLevel(l, false)) n++; if (s.premium && claimLevel(l, true)) n++; }
-    for (let k = bonusChests(); k > 0; k--) { s.bonus = (s.bonus || 0) + 1; give(s.premium ? { gems: 35, storm: 1 } : { gems: 10 }); n++; }
+    for (let k = bonusChests(); k > 0; k--) { s.bonus = (s.bonus || 0) + 1; give(s.premium ? { gems: 35, rapidMin: 15 } : { gems: 10 }); n++; }
     if (n) { SS.sfx('gem', 0); SS.toast(`${n} ödül alındı`); SS.persist(); SS.refreshUI(); }
     paintDot(); return n;
   }
@@ -169,7 +168,7 @@
   // ---------------- panel
   const premSummary = () => {
     const sum = k => PREM.reduce((a, r) => a + ((r && r[k]) || 0), 0);
-    return `2 özel kostüm · 2 atış izi · ${sum('gems')} elmas · ${sum('star')} Yıldız Taşı · ${sum('storm')} Tılsım · ${sum('ticket')} Boss Bileti · ${Math.round(sum('boostMin') / 60 * 10) / 10} sa x2 güç`;
+    return `2 özel kostüm · 2 atış izi · ${sum('gems')} elmas · ${sum('star')} Yıldız Taşı · ${Math.round(sum('rapidMin'))} dk hızlı ateş · ${sum('ticket')} Boss Bileti · ${Math.round(sum('boostMin') / 60 * 10) / 10} sa x2 güç`;
   };
   let tab = 'r';
   const timeLeft = () => { const ms = seasonEnd() - Date.now(), d = Math.floor(ms / DAY), h = Math.floor(ms % DAY / 3600e3); return d > 0 ? `${d} gün ${h} sa` : `${h} sa`; };
@@ -187,7 +186,7 @@
         <div class="ps-info"><b>Sezon ${s.season} · ${th.name}</b><span>Bitiş: <em>${timeLeft()}</em>${s.premium ? ' · <i class="ps-prem">PREMIUM</i>' : ''}</span>
         <div class="pbar"><i style="width:${pct}%"></i><span>${L >= LEVELS ? `Bonus sandık: ${(s.xp - LEVELS * XP_PER) % BONUS_XP} / ${BONUS_XP} XP` : `${into} / ${XP_PER} XP`}</span></div></div></div>`));
       // inventory strip
-      body.appendChild(SS.el(`<div class="ps-inv"><span><img src="assets/ui/ic_luck.png" alt="">Yıldız Taşı <b>${save.inv.star}</b></span><span><img src="assets/ui/ic_explosion.png" alt="">Tılsım <b>${save.inv.storm}</b></span><span><img src="assets/ui/ic_shield.png" alt="">Bilet <b>${save.inv.ticket}</b></span></div>`));
+      body.appendChild(SS.el(`<div class="ps-inv"><span><img src="assets/ui/ic_luck.png" alt="">Yıldız Taşı <b>${save.inv.star}</b></span><span><img src="assets/ui/ic_shield.png" alt="">Bilet <b>${save.inv.ticket}</b></span></div>`));
       // season showcase
       const sh = SS.el(`<div class="ps-show"><b>Bu sezona özel</b><div class="ps-show-row">
         ${th.skins.map((id, i) => `<div class="ps-sk"><img src="assets/ui/face_${id}.png" alt=""><span>${SKINS[id].name}</span><small>Premium ${i ? 30 : 15}. seviye</small></div>`).join('')}
@@ -221,7 +220,7 @@
           cells[1].onclick = () => { if (claimLevel(l, true)) { SS.sfx('gem', 0); SS.persist(); SS.refreshUI(); open(); } else if (!s.premium) SS.toast('Premium yol gerekli'); };
           list.appendChild(r);
         }
-        list.appendChild(SS.el(`<div class="ps-row on mile"><div class="ps-num">+</div>${rewardCell({ gems: 10, chest: 1 }, false, false, bonusChests() > 0)}${rewardCell({ gems: 35, storm: 1, chest: 1 }, false, !s.premium, s.premium && bonusChests() > 0)}</div>`));
+        list.appendChild(SS.el(`<div class="ps-row on mile"><div class="ps-num">+</div>${rewardCell({ gems: 10, chest: 1 }, false, false, bonusChests() > 0)}${rewardCell({ gems: 35, rapidMin: 15, chest: 1 }, false, !s.premium, s.premium && bonusChests() > 0)}</div>`));
         body.appendChild(list);
         body.appendChild(SS.el(`<p class="big-note">30. seviyeden sonra her ${BONUS_XP} XP bir bonus sandık.</p>`));
         requestAnimationFrame(() => { const nx = list.querySelector('.next') || list.querySelector('.ps-row:last-child'); if (nx) list.scrollTop = Math.max(0, nx.offsetTop - list.offsetTop - 70); });

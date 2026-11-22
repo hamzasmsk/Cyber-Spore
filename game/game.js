@@ -96,7 +96,7 @@ function spr(name, x, y, sc = 1, ax = 0.5, ay = 1, flip = false, rot = 0, tint =
   ctx.drawImage(src, sx, sy, f[2], f[3], -w * ax, -h * ay, w, h); ctx.restore();
 }
 const sprT = (name, color, x, y, sc, ax, ay, flip, rot) => spr(name, x, y, sc, ax, ay, flip, rot, color);
-// one-art-pixel coloured rim around a sprite (drawn underneath it): leader, evolved weapon, Fırtına, elites
+// one-art-pixel coloured rim around a sprite (drawn underneath it): leader, evolved weapon, elites
 function outline(name, x, y, col, sc = 1, a = 1) {
   const k = P * Math.max(1, Math.round(sc)), ga = ctx.globalAlpha; ctx.globalAlpha = ga * a;
   spr(name, x - k, y, sc, 0.5, 1, false, 0, col); spr(name, x + k, y, sc, 0.5, 1, false, 0, col);
@@ -185,7 +185,9 @@ const TEAM = [
   { id: 'NinjaMasked', name: 'Maske',   cost: 5e17, perk: '+%6 kritik şansı' },
 ];
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
-const SUBS = 5, KILLS_PER_SUB = 8, BOSS_TIME = 30;
+// more, weaker enemies (x0.55 HP, x0.6 gold each, 14 kills per step) keep the time and gold per step about the
+// same as the old 8-kill waves but make every wave a crowd to mow down
+const SUBS = 5, KILLS_PER_SUB = 14, BOSS_TIME = 30, EHP = 0.55, EGOLD = 0.6;
 
 // ================================================================ save
 const SAVE_KEY = 'swarmsquad_idle_v1';
@@ -202,9 +204,9 @@ const rebirthMul = () => 1 + save.rp * 0.3;
 const SPEED_CAP = 10;
 const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(SPEED_CAP, 1.2 + 0.06 * l), money: l => 1 + 0.15 * l };
 const COST = { power: l => 8 * Math.pow(1.25, l), speed: l => 12 * Math.pow(1.28, l), money: l => 15 * Math.pow(1.2, l) };
-// multiplicative mods (dmg, rate, money, ehp = enemy HP, boss = damage to bosses, hp = squad HP, ult = Fırtına charge, rgems = rebirth gems)
+// multiplicative mods (dmg, rate, money, ehp = enemy HP, boss = damage to bosses, hp = squad HP, taken = damage the squad takes, rgems = rebirth gems)
 // and additive ones (crit chance, critDmg, bossTime seconds, treasure chance, offH offline hours), fed by features (Ruh Ağacı, perks ...)
-const MODS = { dmg: [], rate: [], money: [], ehp: [], boss: [], hp: [], ult: [], rgems: [], crit: [], critDmg: [], bossTime: [], treasure: [], offH: [], shots: [], pierce: [], bounce: [] };
+const MODS = { dmg: [], rate: [], money: [], ehp: [], boss: [], hp: [], ult: [], taken: [], rgems: [], crit: [], critDmg: [], bossTime: [], treasure: [], offH: [], shots: [], pierce: [], bounce: [] };
 const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
 const modAdd = k => MODS[k].reduce((m, f) => m + (f() || 0), 0);
 // weapon stars (1-5, bought with gems): +30% damage per star, +1 projectile at 3 stars, evolution at 5 stars
@@ -441,8 +443,11 @@ function drawGroundTiles() {
 function startAdvance(dist, spd) { R.phase = 'advance'; R.advLeft = dist; R.advSpd = spd; }
 function startWave() {
   R.phase = 'fight';
-  R.toSpawn = 3 + Math.floor(Math.random() * 3) + (save.stage > 3 ? 1 : 0);
+  // every so often a horde: twice the crowd, each one frailer, pouring in fast
+  R.horde = save.stage >= 2 && Math.random() < 0.18;
+  R.toSpawn = R.horde ? 13 + Math.floor(Math.random() * 5) : 5 + Math.floor(Math.random() * 3) + Math.min(3, Math.floor(save.stage / 4));
   R.spawnT = 0.1;
+  if (R.horde) { banner2('SÜRÜ!'); sfx('elite', 0); R.shake = 3; }
   if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
@@ -467,11 +472,11 @@ function enemyGoal(e) {
 }
 function spawnEnemy() {
   const b = biome(), type = pick(b.pool), d = EDEF[type];
-  const lane = rand(-0.4, 0.4);
+  const lane = R.horde ? rand(-0.55, 0.55) : rand(-0.45, 0.45);
   const x = clamp(W / 2 + lane * F.pathW * 1.1, 60 * U, W - 60 * U), y = 120 + rand(-20, 20) * U;
-  const elite = save.stage >= 2 && Math.random() < 0.12, hp = enemyHp() * (d.hp || 1) * (elite ? 4 : 1);
+  const elite = !R.horde && save.stage >= 2 && Math.random() < 0.1, hm = R.horde ? 0.6 : 1, hp = enemyHp() * EHP * hm * (d.hp || 1) * (elite ? 4 : 1);
   R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 80 * U * (d.spd || 1) * (elite ? 0.8 : 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
-    ranged: !!d.ranged, stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd', elite, sc: elite ? 1.5 : 1, gold: (d.hp || 1) * (elite ? 4 : 1) });
+    ranged: !!d.ranged, stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd', elite, sc: elite ? 1.5 : 1, gold: EGOLD * hm * (d.hp || 1) * (elite ? 4 : 1) });
   if (elite) sfx('elite', 0, x);
 }
 // golden racoon: runs across the field, never attacks; catch it for gems and a shower of gold
@@ -520,7 +525,7 @@ function bossWin() {
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
   setTimeout(() => giveScroll(first ? 2 : 1), 2200);
   setTimeout(() => { const mon = window.SS && window.SS.mon; if (mon) mon.bossReward(gems); }, 1400);
-  R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15; R.cheerT = 2;
+  R.bossFails = 0; R.stop = 0.15; R.cheerT = 2;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
   banner('ZAFER!', gems ? `+${gems} elmas · ${biome().name}` : `Bölüm ${save.stage} · ${biome().name}`); sfx('win', 0);
@@ -554,13 +559,13 @@ function kill(e) {
   if (R.corpses.length < 14) { const fly = e.d && e.d.fly; R.corpses.push({ n: `m_${e.type}_${e.dir}${Math.floor(e.anim * 8) % 4}`, x: e.x, y: e.y - (fly ? 5 * P : 0), sc: e.sc || 1, t: 0, flip: e.x < (R.sq ? R.sq.x : W / 2) }); }
   runHooks('kill', e);
   puff(e.x, e.y, e.elite ? 3 : 2); bits(e.x, e.y - 8 * P, biome().bits, e.elite ? 7 : 4);
-  addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul(), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 3);
-  R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.3;
+  R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.5; R.comboPop = 0.18;
+  addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul() * (1 + Math.min(R.combo, 50) * 0.01), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 2);
+  if (R.combo === 10 || R.combo === 25 || R.combo === 50 || (R.combo > 50 && R.combo % 50 === 0)) { banner2(`KOMBO x${R.combo}!`); sfx('bonus', 0); R.shake = Math.max(R.shake, 3); for (const h of R.heroes) vfx('burst', 'gold', h.x, h.y - 10 * P, 0.5, 0.3); }
   sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
   if (e.elite || e.treasure) R.stop = 0.07;
   if (e.elite && Math.random() < 0.04) giveScroll(1, e.x, e.y - 24 * P);
   if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
-  R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04) * modMul('ult'));
   if (!R.boss && !save.bossReady) {
     save.kills++;
     if (save.kills >= KILLS_PER_SUB) {
@@ -624,7 +629,7 @@ function nearestTarget(h) {
   if (R.boss && R.boss.arrive >= 1) return R.boss;
   let best = null, bd = 1e9, any = null, ad = 1e9;
   for (const e of R.en) {
-    if (e.dead || e.y < 140) continue;
+    if (e.dead || e.y < enemyBox().y0 - 10 * U) continue;
     const d = Math.hypot(e.x - h.x, e.y - h.y);
     if (d < ad) { ad = d; any = e; }
     if ((e.pend || 0) < e.hp && d < bd) { bd = d; best = e; }
@@ -649,7 +654,7 @@ function throwNow(h) {
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
   const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * heroMul(h.i) * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
   let tg = [t];
-  if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
+  if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > enemyBox().y0 - 10 * U).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
   for (let k = 0; k < ns; k++) {
     const tk = tg[k % tg.length];
     let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (ns > 1 ? (k - (ns - 1) / 2) * (g.spread || 0.14) : 0);
@@ -716,10 +721,10 @@ function stickDecal(q) {
 const specDmg = k => dmgPerShot() * Math.max(1, save.team) * k;
 function densest(radius) {   // enemy with the most neighbours
   let best = null, bn = -1;
-  for (const e of R.en) { if (e.dead || e.y < 150) continue; let n = 0; for (const o of R.en) if (!o.dead && Math.hypot(o.x - e.x, o.y - e.y) < radius) n++; if (n > bn) { bn = n; best = e; } }
+  for (const e of R.en) { if (e.dead || e.y < enemyBox().y0 - 10 * U) continue; let n = 0; for (const o of R.en) if (!o.dead && Math.hypot(o.x - e.x, o.y - e.y) < radius) n++; if (n > bn) { bn = n; best = e; } }
   return best || (R.boss && R.boss.arrive >= 1 ? R.boss : null);
 }
-const liveTargets = () => R.en.filter(e => !e.dead && e.y > 150).concat(R.boss && R.boss.arrive >= 1 ? [R.boss] : []);
+const liveTargets = () => R.en.filter(e => !e.dead && e.y > enemyBox().y0 - 10 * U).concat(R.boss && R.boss.arrive >= 1 ? [R.boss] : []);
 function areaHit(x, y, r, dmg, onEach) {
   for (const e of R.en) if (!e.dead && Math.hypot(e.x - x, (aimY(e) - y) * 1.2) < r) { if (onEach) onEach(e); damage(e, dmg, false, false); }
   const b = R.boss; if (b && b.arrive >= 1 && Math.hypot(b.x - x, (aimY(b) - y) * 0.8) < r + 50 * U) damage(b, dmg, false, true);
@@ -882,12 +887,6 @@ function useUlt() {
   banner('FIRTINA!', '5 saniye x3 atış'); sfx('skill', 0); uiKey = ''; runHooks('ult');
   if (save.tut) save.tut.ult = true;
 }
-$('ultBtn').addEventListener('click', () => {
-  audioInit();
-  const inv = save.inv || {};
-  if (R.ult < 1 && R.ultT <= 0 && inv.storm > 0 && R.sq && R.sq.ko <= 0) { inv.storm--; R.ult = 1; toast(`Fırtına Tılsımı kullanıldı · ${inv.storm} kaldı`); persist(); }
-  useUlt();
-});
 
 // ================================================================ squad: input, AI steering, health
 const keys = {};
@@ -958,7 +957,7 @@ function aiSteer() {
 function hurtSquad(dmg, x, y) {
   const sq = R.sq;
   if (!sq || sq.ko > 0 || sq.inv > 0) return false;
-  dmg = Math.max(1, Math.round(dmg));
+  dmg = Math.max(1, Math.round(dmg * modMul('taken')));
   sq.hp -= dmg; sq.inv = 0.7; sq.hit = 0.25; sq.calm = 0;
   R.shake = Math.max(R.shake, 4); R.hurt = 0.35;
   const L0 = R.heroes[0];
@@ -1166,9 +1165,8 @@ function update(dt) {
   const ko = R.sq.ko > 0;
   if (R.lobGap > 0) R.lobGap -= dt;
   if (R.retryT > 0) R.retryT -= dt;
-  if (R.comboT > 0) R.comboT -= dt; if (R.coinT > 0) R.coinT -= dt; else R.coinN = 0; if (R.buyT > 0) R.buyT -= dt; else R.buyN = 0;
+  if (R.comboT > 0) R.comboT -= dt; if (R.comboPop > 0) R.comboPop -= dt; if (R.coinT > 0) R.coinT -= dt; else R.coinN = 0; if (R.buyT > 0) R.buyT -= dt; else R.buyN = 0;
   if (R.ultT > 0) { R.ultT -= dt; if (Math.random() < 0.5) for (const h of R.heroes) if (Math.random() < 0.3) fx('fx_aura', h.x, h.y, 0.5, 0.3, 1); if (R.ultT <= 0) uiKey = ''; }
-  if (R.ult >= 1 && R.ultT <= 0) { R.ultFull += dt; if (save.auto && R.ultFull > 8 && (R.en.length || R.boss)) useUlt(); } else R.ultFull = 0;
   // the march: scroll the world while advancing, then hold for the wave
   if (!R.boss) {
     if (R.phase === 'advance' && !ko) {
@@ -1181,7 +1179,7 @@ function update(dt) {
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
-      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { spawnEnemy(); R.toSpawn--; R.spawnT = rand(0.25, 0.5); } }
+      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { spawnEnemy(); R.toSpawn--; R.spawnT = R.horde ? rand(0.05, 0.12) : rand(0.12, 0.3); } }
       else if (!R.en.length && !R.eb.length) startAdvance(rand(170, 250) * U, 110 * U);
     }
   }
@@ -1444,6 +1442,12 @@ function render() {
     btext(big ? tx.s + '!' : tx.kind === 'money' ? '+' + tx.s : tx.s, tx.x, tx.y, tx.kind === 'money' ? 'y' : big ? 'o' : tx.kind === 'hurt' ? 'r' : tx.kind === 'gem' || tx.kind === 'fen' ? 'w' : 'w', big ? (age < 0.08 ? 1.5 : 1) : tx.kind === 'gem' || tx.kind === 'fen' ? 1 : 0.5);
   }
   ctx.globalAlpha = 1;
+  if (R.combo >= 4 && R.comboT > 0) {
+    ctx.globalAlpha = Math.min(1, R.comboT * 2);
+    const big = R.comboPop > 0 ? 1.5 : 1, c = R.combo >= 50 ? 'o' : R.combo >= 25 ? 'r' : 'y';
+    btext('x' + (R.combo + 1), W - 52, 152, c, big);
+    ctx.globalAlpha = 1;
+  }
   runHooks('render', ctx);
   drawAmbient(t);
   ctx.setTransform(1 / L, 0, 0, 1 / L, 0, 0);
@@ -1593,7 +1597,7 @@ function ctrlBadge() {
 }
 function updateUI(dt) {
   uiT -= dt; if (uiT > 0 && uiKey) return; uiT = 0.12;
-  const key = [Math.floor(save.money), save.gems, save.inv ? save.inv.storm : 0, Math.round(R.ult * 20), R.ultT > 0, R.bossFails, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
+  const key = [Math.floor(save.money), save.gems, R.bossFails, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
   if (key === uiKey) return; uiKey = key;
   $('money').textContent = fmt(save.money);
   $('gems').textContent = fmt(save.gems);
@@ -1625,11 +1629,8 @@ function updateUI(dt) {
   }
   const gi = document.querySelector('.gunico'); if (gi) gi.src = `assets/ui/wi_${GUNS[save.gun].spr}.png`;
   // ultimate meter
-  const ub = $('ultBtn'); ub.querySelector('i').style.height = Math.round(R.ult * 100) + '%';
-  const sc2 = (save.inv && save.inv.storm) || 0; ub.dataset.charm = sc2 > 0 && R.ult < 1 ? sc2 : '';
   $('hint').style.visibility = R.boss ? 'hidden' : '';
   if (R.t > 20 && !$('hint').classList.contains('gone')) { $('hint').classList.add('gone'); try { localStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }
-  ub.classList.toggle('full', R.ult >= 1 && R.ultT <= 0); ub.classList.toggle('active', R.ultT > 0);
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
   note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
@@ -1640,7 +1641,6 @@ function updateUI(dt) {
   const tp = $('tut');
   let tgt = null, txt = '';
   if (!save.tut.power && save.money >= COST.power(save.lv.power)) { tgt = document.querySelector('.ucard[data-up="power"]'); txt = 'Dokun: Güç al'; }
-  else if (!save.tut.ult && R.ult >= 1) { tgt = ub; txt = 'Fırtınayı başlat!'; }
   if (tgt) { const r = tgt.getBoundingClientRect(); tp.style.left = (r.left + r.width / 2) + 'px'; tp.style.top = (r.top - 8) + 'px'; tp.querySelector('span').textContent = txt; tp.classList.remove('hidden'); }
   else tp.classList.add('hidden');
 }

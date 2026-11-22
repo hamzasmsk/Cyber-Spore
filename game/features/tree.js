@@ -18,9 +18,9 @@
     { id: 'hunt', b: 1, r: 1, name: 'Hazine Avcısı', icon: 'ic_luck', max: 3, fx: l => `+${pct(0.02 * l)} hazine canavarı şansı` },
     { id: 'sleep', b: 1, r: 2, name: 'Derin Uyku', icon: 'ic_moon', max: 4, fx: l => `Çevrimdışı kazanç sınırı +${2 * l} saat` },
     { id: 'gemsoul', b: 1, r: 3, name: 'Elmas Ruhu', icon: 'gem', max: 5, fx: l => `+${pct(0.2 * l)} Doğuş elması` },
-    { id: 'body', b: 2, r: 0, name: 'Demir Beden', icon: 'ic_shield', max: 5, fx: l => `+${pct(0.15 * l)} takım canı` },
+    { id: 'body', b: 2, r: 0, name: 'Demir Beden', icon: 'ic_heal', max: 5, fx: l => `+${pct(0.15 * l)} takım canı` },
     { id: 'time', b: 2, r: 1, name: 'Zaman Ustası', icon: 'ic_sun', max: 5, fx: l => `Boss süresi +${3 * l} saniye` },
-    { id: 'storm', b: 2, r: 2, name: 'Fırtına Ruhu', icon: 'ic_explosion', max: 4, fx: l => `Fırtına +${pct(0.15 * l)} hızlı dolar` },
+    { id: 'armor', b: 2, r: 2, name: 'Çelik Zırh', icon: 'ic_shield', max: 4, fx: l => `Takım -${pct(0.08 * l)} hasar alır` },
     { id: 'slayer', b: 2, r: 3, name: 'Boss Avcısı', icon: 'ic_weapon', max: 5, fx: l => `Bosslara +${pct(0.1 * l)} hasar` },
     { id: 'shadow', b: 1, r: 4, name: 'Gölge Yolu', icon: 'ic_boot', max: 4, cap: true, fx: l => `Doğuş sonrası ilk ${5 * l} bölüm: düşman canı yarı` },
   ];
@@ -28,6 +28,7 @@
 
   if (!save.tree || typeof save.tree !== 'object') save.tree = { souls: (save.rebirths || 0) * 4, lv: {} };   // earlier rebirths count
   if (!save.tree.lv) save.tree.lv = {};
+  if (save.tree.lv.storm) { save.tree.lv.armor = save.tree.lv.storm; delete save.tree.lv.storm; }   // Fırtına was removed
   const lv = id => save.tree.lv[id] || 0;
   const cost = n => n.r + 1 + lv(n.id);
   const open = n => n.cap ? NODES.filter(o => o.r === 3).every(o => lv(o.id) > 0) : n.r === 0 || lv(NODES.find(o => o.b === n.b && o.r === n.r - 1).id) > 0;
@@ -48,7 +49,7 @@
   M.rgems.push(() => 1 + 0.2 * lv('gemsoul'));
   M.hp.push(() => 1 + 0.15 * lv('body'));
   M.bossTime.push(() => 3 * lv('time'));
-  M.ult.push(() => 1 + 0.15 * lv('storm'));
+  M.taken.push(() => 1 - 0.08 * lv('armor'));
   M.boss.push(() => 1 + 0.1 * lv('slayer'));
   M.ehp.push(() => lv('shadow') && save.stage <= 5 * lv('shadow') ? 0.5 : 1);
   SS.HOOKS.rebirth.push(() => { save.tree.souls = points() + soulGain(); });

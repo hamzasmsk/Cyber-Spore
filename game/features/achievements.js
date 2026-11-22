@@ -21,7 +21,6 @@
     { id: 'treasure', name: 'Hazine Peşinde', icon: 'ic_luck', val: () => S.treasure, tiers: [3, 15, 50, 150, 400, 1000], txt: n => `${n} hazine canavarı yakala` },
     { id: 'evo', name: 'Silah Ustası', icon: 'ic_magic', val: evolvedN, tiers: [1, 2, 3, 5, 7, 8], txt: n => `${n} silahı evrimleştir` },
     { id: 'stars', name: 'Yıldız Toplayıcı', icon: 'ic_rate', val: () => S.stars, tiers: [3, 10, 20, 32], txt: n => `${n} silah yıldızı yükselt` },
-    { id: 'ults', name: 'Fırtına Çağıran', icon: 'ic_explosion', val: () => S.ults, tiers: [5, 50, 200, 800, 2500], txt: n => `${n} kez Fırtına kullan` },
     { id: 'perks', name: 'Yetenekli', icon: 'ic_book', val: () => S.perks, tiers: [5, 30, 100, 300, 800], txt: n => `${n} yetenek kartı seç` },
     { id: 'team', name: 'Tam Kadro', icon: 'ic_team', val: () => save.team, tiers: [2, 3, 4, 5], txt: n => `Takımda ${n} ninja` },
     { id: 'login', name: 'Sadık Ninja', icon: 'ic_daily', val: () => save.login ? save.login.week * 7 + save.login.day : 0, tiers: [3, 7, 14, 30, 60, 100], txt: n => `${n} gün ödül al` },
@@ -35,7 +34,6 @@
   const H = SS.HOOKS;
   H.kill.push(e => { S.kills++; if (e && e.elite) S.elites++; if (e && e.treasure) S.treasure++; });
   H.bossWin.push(() => { S.bosses++; });
-  H.ult.push(() => { S.ults++; });
   H.star.push(() => { S.stars++; });
   H.perk.push(() => { S.perks++; });
 
