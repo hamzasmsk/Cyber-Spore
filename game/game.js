@@ -197,7 +197,7 @@ const stat = { power: l => 6 * Math.pow(1.18, l), speed: l => Math.min(SPEED_CAP
 const COST = { power: l => 8 * Math.pow(1.25, l), speed: l => 12 * Math.pow(1.28, l), money: l => 15 * Math.pow(1.2, l) };
 // multiplicative mods (dmg, rate, money, ehp = enemy HP, boss = damage to bosses, hp = squad HP, ult = Fırtına charge, rgems = rebirth gems)
 // and additive ones (crit chance, critDmg, bossTime seconds, treasure chance, offH offline hours), fed by features (Ruh Ağacı, perks ...)
-const MODS = { dmg: [], rate: [], money: [], ehp: [], boss: [], hp: [], ult: [], rgems: [], crit: [], critDmg: [], bossTime: [], treasure: [], offH: [] };
+const MODS = { dmg: [], rate: [], money: [], ehp: [], boss: [], hp: [], ult: [], rgems: [], crit: [], critDmg: [], bossTime: [], treasure: [], offH: [], shots: [], pierce: [], bounce: [] };
 const modMul = k => MODS[k].reduce((m, f) => m * (f() || 1), 1);
 const modAdd = k => MODS[k].reduce((m, f) => m + (f() || 0), 0);
 // weapon stars (1-5, bought with gems): +30% damage per star, +1 projectile at 3 stars, evolution at 5 stars
@@ -599,7 +599,7 @@ function throwNow(h) {
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
-  const ns = shotsOf(g), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / ns;
+  const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
   let tg = [t];
   if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
   for (let k = 0; k < ns; k++) {
@@ -607,8 +607,9 @@ function throwNow(h) {
     let a = (k < tg.length ? Math.atan2(aimY(tk) - o.y, tk.x - o.x) : h.ang) + (ns > 1 ? (k - (ns - 1) / 2) * (g.spread || 0.14) : 0);
     if (g.curve) a += (Math.random() < 0.5 ? -1 : 1) * g.curve * rand(0.6, 1);
     R.bul.push({ x: o.x, y: o.y, a, sp: g.sp * U, tgt: tk, dmg, crit, g, age: rand(0, 1), life: g.boomer ? 2.4 : 1.3, trail: [], tt: 0,
-      hits: new Set(), pierce: (g.pierce || 0) + (evolved() && g.pierce ? 1 : 0), bounce: (g.bounce || 0) + (evolved() && g.bounce ? 1 : 0), sc: (g.sc || 1) * (evolved() && (g.sc || 1) >= 1 && (AF[`p_${g.spr}_0`] || [0, 0, 99])[2] <= 18 ? 1.5 : 1), home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
+      hits: new Set(), pierce: (g.pierce || 0) + (evolved() && g.pierce ? 1 : 0) + modAdd('pierce'), bounce: (g.bounce || 0) + (evolved() && g.bounce ? 1 : 0) + modAdd('bounce'), sc: (g.sc || 1) * (evolved() && (g.sc || 1) >= 1 && (AF[`p_${g.spr}_0`] || [0, 0, 99])[2] <= 18 ? 1.5 : 1), home: true, from: h, dist: 0, back: false, wob: rand(0, 6), settled: false });
     if (tk !== R.boss) tk.pend = (tk.pend || 0) + dmg;
+    runHooks('shot', R.bul[R.bul.length - 1]);
   }
   if (g.held === 'wh_Wand' || g.held === 'wh_Book') fx('fx_spark', o.x, o.y, 0.5, 0.15);
   sfx(g.snd || 'shoot', 0.12, o.x);
@@ -628,6 +629,7 @@ function onHit(q, c) {
   }
   if (g.boom) for (const e of R.en) if (e !== c && !e.dead && Math.hypot(e.x - q.x, aimY(e) - q.y) < 58 * U) { damage(e, q.dmg * 0.5, false, false); if (g.burn) { e.burn = 1.5; e.burnD = q.dmg * 0.08; e.burnT = 0.4; } }
   if (g.chain) chainBolt(c, q.dmg * 0.6, g.chain);
+  runHooks('hit', q, c, isB);
   damage(c, dmg, q.crit, isB);
   if (g.boomer) return;
   if (q.bounce > 0) {
@@ -1107,7 +1109,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [], shot: [], hit: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1334,8 +1336,8 @@ function render() {
   // thrown weapons: fading ghost trail, then the weapon (never freely rotated: spin = frame flip, else 16 directions)
   for (const q of R.bul) {
     const g = q.g, n = AN['p_' + g.spr] || 1, sc = q.sc || g.sc || 1;
-    const cosT = save.cos && save.cos.trail, trailCol = cosT ? TRAIL_COL[cosT] : '#fce2ca', glowName = cosT || g.glow;
-    if (glowName && (cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
+    const cosT = save.cos && save.cos.trail, trailCol = cosT ? TRAIL_COL[cosT] : '#fce2ca', glowName = q.pg || cosT || g.glow;
+    if (glowName && (q.pg || cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
       ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + 0.1 * Math.sin(q.age * 20);
       spr(`vx_glow${q.special || evolved() ? 40 : 24}_${glowName}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
@@ -1723,6 +1725,8 @@ const PANELS = {
     body.appendChild(el('<p class="big-note">Kalıcı hasar ve para bonusun. Her doğuş puanı +%30 ekler.</p>'));
     body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${fmt(gain)} doğuş puanı${souls ? ` · +${souls} ruh` : ''}</h4>
       <p>${gain > 0 ? `Bonus x${fmt(1 + save.rp * 0.3)} → x${fmt(1 + (save.rp + gain) * 0.3)} · +${rebirthGems(gain)} elmas${souls ? ` · Ruh Ağacı için ${souls} ruh` : ''}. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.` : `${REBIRTH_MIN}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.`}</p></div></div>`));
+    const pk = window.SS && window.SS.perks ? window.SS.perks.list() : [];
+    if (pk.length) body.appendChild(el(`<div class="pk-have"><b>Bu turun kartları (Doğuşta sıfırlanır)</b><div>${pk.map(p => `<span class="${p.r}" title="${p.name}"><img src="assets/ui/${p.icon}.png" alt="">${p.n > 1 ? `<i>${p.n}</i>` : ''}</span>`).join('')}</div></div>`));
     const btn = el(`<button class="btn purple wide ${gain > 0 ? '' : 'off'}">YENİDEN DOĞ</button>`);
     btn.onclick = () => {
       if (gain <= 0) return;
