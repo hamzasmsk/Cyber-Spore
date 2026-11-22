@@ -514,7 +514,7 @@ opts = subset.Options()
 opts.flavor = 'woff2'
 fnt = subset.load_font(A('Ui', 'Font', 'NormalFont.ttf'), opts)
 sub = subset.Subsetter(opts)
-sub.populate(text='0123456789.,%/+-:x')
+sub.populate(text='0123456789.,/+-:')
 sub.subset(fnt)
 subset.save_font(fnt, os.path.join(OUT, 'fonts', 'squadnum.woff2'), opts)
 

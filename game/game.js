@@ -131,6 +131,13 @@ const BOSSES = {
   GiantSpirit: { name: 'Buz Ruhu', col: '#79b8ce' }, TenguBlue: { name: 'Mavi Tengu', col: '#548789' },
   GiantFlam: { name: 'Alev Devi', col: '#ef914f' }, TenguRed: { name: 'Kızıl Tengu', col: '#e0394c' },
 };
+// every boss mixes the shared patterns (fan, ring, slam) with two signature moves of its own
+const BOSS_SIG = {
+  GiantSlime2: ['summon', 'leap'], GiantFrog: ['leap', 'rain'], GiantBamboo: ['rain', 'summon'], GiantRacoon: ['charge', 'leap'],
+  DemonCyclop: ['beam', 'charge'], GiantRacoonGold: ['rain', 'charge'], GiantSpirit: ['beam', 'summon'], TenguBlue: ['charge', 'rain'],
+  GiantFlam: ['rain', 'beam'], TenguRed: ['charge', 'beam'],
+};
+const RAIN_SPR = { GiantFrog: 'EnergyBall', GiantBamboo: 'PlantSpike', GiantRacoonGold: 'CanonBall', TenguBlue: 'EnergyBall', GiantFlam: 'Fireball' };
 const EDEF = {
   Slime3: { spd: 0.9 }, Mushroom: {}, Snake2: { spd: 1.2, ranged: 1 }, Butterfly: { fly: 1, spd: 1.3, hp: 0.8, ranged: 1 },
   Bamboo: { ranged: 1 }, KappaGreen: { hp: 1.3 }, Racoon: { spd: 1.3, hp: 0.8 }, SpiderRed: { spd: 1.4, hp: 0.7, ranged: 1 }, BlueBat: { fly: 1, spd: 1.4, hp: 0.7 },
@@ -448,11 +455,14 @@ function startBoss() {
   R.boss = { x: p.x, y: p.y, hp, maxHp: hp, t: BOSS_TIME, flash: 0, anim: 0, key, name: bd.name, col: bd.col, arrive: 0, leaving: 0, atkT: 1.6, seq: 0, tele: 0, teleK: '', burst: [] };
   $('bossImg').src = `assets/ui/boss_${key}.png`;
   $('bossHud').classList.remove('hidden');
-  banner('BOSS!', bd.name); sfx('boss', 0); R.shake = 5; uiKey = '';
+  const card = $('bossCard'); if (card) { card.querySelector('img').src = `assets/ui/boss_${key}.png`; card.querySelector('b').textContent = bd.name; card.querySelector('span').textContent = `${biome().name} · ${BOSS_TIME} saniye`; card.classList.remove('show'); void card.offsetWidth; card.classList.add('show'); }
+  sfx('boss', 0); R.shake = 5; uiKey = '';
+  runHooks('bossStart', R.boss);
 }
 const bossH = b => frameH(`b_${b.key}_0`);
 function bossWin() {
   const b = R.boss; R.boss = null; R.eb.length = 0;
+  for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
   runHooks('bossWin', b);
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
@@ -467,6 +477,8 @@ function bossWin() {
 }
 function bossFail() {
   const b = R.boss; if (!b) return;
+  for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
+  b.dash = b.leap = null; b.z = 0;
   b.leaving = 0.01; R.boss = null; R.leavingBoss = b; R.eb.length = 0;
   $('bossHud').classList.add('hidden');
   banner('BOSS KAÇTI!', 'Güçlen ve tekrar dene'); sfx('fail', 0);
@@ -865,6 +877,13 @@ function aiSteer() {
     }
   }
   if (b && b.arrive >= 1) { const dx = sq.x - b.x, dy = (sq.y - b.y) / 0.6, d = Math.hypot(dx, dy) || 1; if (d < 150 * U) { vx += dx / d * 1.5; vy += dy / d * 1.5; } }
+  // columns (beam / charge): step sideways out of the marked lane, toward the roomier side
+  const lane = b && ((b.tele > 0 && (b.teleK === 'beam' || b.teleK === 'charge')) || b.dash) ? b.lineX : null;
+  const beam = R.eb.find(p => p.k === 'beam');
+  for (const lx of [lane, beam ? beam.x : null]) {
+    if (lx === null || lx === undefined) continue;
+    const dx = sq.x - lx; if (Math.abs(dx) < 75 * U) { const dir = Math.abs(dx) > 4 * U ? Math.sign(dx) : (lx < W / 2 ? 1 : -1); vx += dir * 3.5 * (1 - Math.abs(dx) / (75 * U)) + dir * 0.6; }
+  }
   const m = Math.hypot(vx, vy); if (m > 1) { vx /= m; vy /= m; }
   return { x: vx * 0.85, y: vy * 0.85 };
 }
@@ -973,21 +992,71 @@ function bossAttack(b, kind) {
     sfx('magic', 0);
   } else if (kind === 'ring2') {
     const n = 18; for (let i = 0; i < n; i++) orb(cx, cy, b.burstOff + i / n * TAU, 150, dmg);
+  } else if (kind === 'summon') {
+    const n = rage ? 4 : 3, pool = biome().pool;
+    for (let i = 0; i < n; i++) {
+      const type = pick(pool), d = EDEF[type], x = clamp(b.x + (i - (n - 1) / 2) * 50 * U, 70 * U, W - 70 * U), y = b.y + rand(10, 40) * U, hp = enemyHp() * 1.5;
+      R.en.push({ id: R.nextId++, type, d, x, y, lane: (x - W / 2) / F.pathW, hp, maxHp: hp, sp: 90 * U, flash: 0, anim: 0, knock: 0, kx: 0, ky: 0, kb: 0, age: 0, ranged: !!d.ranged, stopped: false, atk: rand(1.5, 2.5), wind: 0, dir: 'd', sc: 1, gold: 0.5, summoned: true });
+      puff(x, y, 2); vfx('ring', 'magic', x, y - 6 * P, 0.5, 0.3);
+    }
+    sfx('elite', 0);
+  } else if (kind === 'rain') {
+    const n = rage ? 8 : 6, spr = RAIN_SPR[b.key] || 'SpriteSheetRock';
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, TAU), r = i === 0 ? 0 : rand(30, 95) * U;
+      R.eb.push({ k: 'lob', sx: b.x + rand(-20, 20) * U, sy: b.y - bossH(b) * 0.6, tx: clamp(L0.x + Math.cos(a) * r, 30 * U, W - 30 * U), ty: L0.y + Math.sin(a) * r * 0.6, t: -i * 0.14, T: 1.05, r: 6 * P, dmg: dmg * 0.9, spr });
+    }
+    sfx('lob', 0);
+  } else if (kind === 'beam') {
+    R.eb.push({ k: 'beam', x: b.lineX, y0: b.y - bossH(b) * 0.45, t: 0, T: 0.55, w: 12 * P, col: b.col, dmg: dmg * 1.6, hit: false });
+    R.shake = 5; R.flash = 0.12; sfx('hit_fire', 0, b.lineX); sfx('magic', 0, b.lineX, -7);
+  } else if (kind === 'charge') {
+    b.dash = { x0: b.x, y0: b.y, x1: b.lineX, y1: Math.min(L0.y - 40 * U, H - 230), t: 0 };
+    sfx('elite', 0); R.shake = 4;
+  } else if (kind === 'leap') {
+    b.leap = { x0: b.x, x1: clamp(b.lineX, 90 * U, W - 90 * U), t: 0, T: 0.6 };
+    sfx('throw2', 0); sfx('voice', 0, b.x, -12);
   } else if (kind === 'slam') {
     R.eb.push({ k: 'wave', x: b.x, y: b.y, r: 40 * U, sp: 290 * U, max: 560 * U, w: 4 * P, col: b.col, dmg: hpBase() * 0.16, gaps: b.gaps, hit: false });
     R.shake = 6; sfx('boom', 0); puff(b.x - 40 * U, b.y, 2); puff(b.x + 40 * U, b.y, 2);
   }
 }
 const angIn = (a, c, w) => { let d = a - c; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return Math.abs(d) < w; };
+function updateBossMoves(b, dt) {
+  if (b.dash) {   // charge: rush down the marked column and back
+    const d = b.dash; d.t += dt;
+    const k = d.t < 0.35 ? d.t / 0.35 : d.t < 0.55 ? 1 : Math.max(0, 1 - (d.t - 0.55) / 0.45);
+    b.x = lerp(d.x0, d.x1, k); b.y = lerp(d.y0, d.y1, k);
+    if (d.t < 0.35 && Math.random() < 0.6) puff(b.x + rand(-20, 20) * U, b.y, 1);
+    if (d.t >= 1) { b.x = d.x0; b.y = d.y0; b.dash = null; }
+    return true;
+  }
+  if (b.leap) {   // leap: arc to the marked spot, land with a shockwave
+    const l = b.leap; l.t += dt; const k = Math.min(1, l.t / l.T);
+    b.x = lerp(l.x0, l.x1, k); b.z = Math.sin(Math.PI * k) * 90 * U;
+    if (k >= 1) {
+      b.leap = null; b.z = 0; b.homeX = b.x;
+      const L0 = R.heroes[0], a = L0 ? Math.atan2((L0.y - b.y) / 0.6, L0.x - b.x) : 2.4;
+      b.gaps = [a + rand(0.7, 1.0) * (Math.random() < 0.5 ? -1 : 1), a + Math.PI * rand(0.8, 1.2)];
+      bossAttack(b, 'slam'); vfx('ring', 'ink', b.x, b.y - 4 * P, 2, 0.45);
+    }
+    return true;
+  }
+  return false;
+}
 function updateBossAI(b, dt) {
+  if (!b.rage && b.hp < b.maxHp * 0.5) { b.rage = true; banner('ÖFKE!', b.name + ' hızlandı'); sfx('elite', 0); R.shake = 7; R.flash = 0.2; vfx('ring', 'fire', b.x, b.y - bossH(b) * 0.5, 2, 0.5); }
+  if (updateBossMoves(b, dt)) return;
   for (const q of b.burst) { q.t -= dt; if (q.t <= 0) { if (q.k === 'ring2') b.burstOff = q.off; bossAttack(b, q.k); } }
   b.burst = b.burst.filter(q => q.t > 0);
   if (b.tele > 0) { b.tele -= dt; if (b.tele <= 0) bossAttack(b, b.teleK); return; }
   b.atkT -= dt;
   if (b.atkT <= 0) {
-    const rage = b.hp < b.maxHp * 0.5, seq = ['fan', 'ring', 'slam', 'fan', 'ring', 'slam'];
+    const rage = b.hp < b.maxHp * 0.5, sig = BOSS_SIG[b.key] || ['slam', 'ring'];
+    const seq = ['fan', sig[0], 'ring', sig[1], 'slam', sig[0]];
     const k = seq[b.seq++ % seq.length];
-    b.teleK = k; b.tele = k === 'slam' ? 0.9 : 0.45;
+    b.teleK = k; b.tele = { slam: 0.9, beam: 0.95, charge: 0.85, leap: 0.6, rain: 0.5, summon: 0.6 }[k] || 0.45;
+    const L0 = R.heroes[0]; if (L0) b.lineX = clamp(L0.x, 40 * U, W - 40 * U);
     if (k === 'slam') { const L0 = R.heroes[0], a = L0 ? Math.atan2((L0.y - b.y) / 0.6, L0.x - b.x) : 2.4; b.gaps = [a + rand(0.6, 1.0) * (Math.random() < 0.5 ? -1 : 1), a + Math.PI * rand(0.8, 1.2)]; }
     b.atkT = (rage ? 1.7 : 2.3) + b.tele;
   }
@@ -998,13 +1067,16 @@ function updateEnemyShots(dt) {
     if (p.k === 'lob') {
       p.t += dt;
       if (p.t >= p.T) {
-        p.dead = true; puff(p.tx, p.ty, 1); bits(p.tx, p.ty - 2 * P, 'q_Rock', 3);
+        p.dead = true; puff(p.tx, p.ty, 1); bits(p.tx, p.ty - 2 * P, p.spr === 'Fireball' ? 'q_Fire' : 'q_Rock', 3); if (p.spr) { vfx('burst', p.spr === 'Fireball' ? 'fire' : p.spr === 'PlantSpike' ? 'leaf' : p.spr === 'EnergyBall' ? 'ice' : 'ink', p.tx, p.ty - 3 * P, 0.5, 0.25); sfx('hit', 0.05, p.tx); }
         for (const h of hs) { const dx = h.x - p.tx, dy = (h.y - p.ty) / 0.6; if (Math.hypot(dx, dy) < 36 * U) { hurtSquad(p.dmg, p.tx, p.ty - 8 * P); break; } }
       }
     } else if (p.k === 'orb') {
       p.life -= dt; p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt;
       if (p.life <= 0 || p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) p.dead = true;
       else for (const h of hs) if (Math.hypot(h.x - p.x, h.y - 8 * P - p.y) < p.r + 5 * P) { if (hurtSquad(p.dmg, p.x, p.y)) p.dead = true; break; }
+    } else if (p.k === 'beam') {
+      p.t += dt; if (p.t >= p.T) p.dead = true;
+      if (!p.hit) for (const h of hs) if (Math.abs(h.x - p.x) < p.w / 2 + 6 * U && h.y > p.y0) { p.hit = true; hurtSquad(p.dmg, h.x, h.y - 8 * P); break; }
     } else if (p.k === 'wave') {
       p.r += p.sp * dt; if (p.r > p.max) p.dead = true;
       if (!p.hit) for (const h of hs) {
@@ -1018,7 +1090,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], buy: [], stage: [], hurt: [], ko: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], buy: [], stage: [], hurt: [], ko: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1175,7 +1247,13 @@ function render() {
   for (const h of R.heroes) list.push({ y: h.y, k: 2, o: h });
   list.sort((a, b) => a.y - b.y);
   ctx.globalAlpha = 0.8;
-  for (const it of list) spr('shadow', it.o.x, it.o.y + P, it.k === 1 ? 4 : (it.o.sc || 1), 0.5, 0.5);
+  for (const it of list) {
+    if (it.k === 1) {   // boss: soft two-step pixel ellipse sized to the sprite, shrinking while it is airborne
+      const o = it.o, f = AF[`b_${o.key}_0`], w = (f ? f[2] : 50) * P * 0.36 * (1 - Math.min(0.5, (o.z || 0) / (180 * U)));
+      ctx.fillStyle = 'rgba(19,27,27,0.22)'; ellipse(snap(o.x), snap(o.y + P), w, w * 0.32); ctx.fill();
+      ctx.fillStyle = 'rgba(19,27,27,0.25)'; ellipse(snap(o.x), snap(o.y + P), w * 0.72, w * 0.22); ctx.fill();
+    } else spr('shadow', it.o.x, it.o.y + P, it.o.sc || 1, 0.5, 0.5);
+  }
   ctx.globalAlpha = 1;
   for (const it of list) {
     const o = it.o;
@@ -1192,11 +1270,12 @@ function render() {
       if (o.burn > 0) spr(`q_Fire_${Math.floor(t * 10 + o.id) % (AN.q_Fire || 1)}`, o.x + 3 * P, o.y - lift - 15 * P * es, 1, 0.5, 1);
       if (o.hp < o.maxHp || o.elite || o.treasure) drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, o.hp / o.maxHp, o.elite || o.treasure ? '#f1c471' : '#e0394c');
     } else if (it.k === 1) {
-      const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * 7) % n}`;
+      const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * (o.rage ? 11 : 7)) % n}`, by = o.y - (o.z || 0);
       ctx.globalAlpha = o.leaving ? Math.max(0, 1 - o.leaving / 2) : 1;
-      spr(name, o.x, o.y);
-      if (o.flash > 0) { ctx.globalAlpha *= 0.7; spr(name, o.x, o.y, 1, 0.5, 1, false, 0, '#ffffff'); }
-      if (o.tele > 0 && Math.floor(t * 12) % 2) { ctx.globalAlpha = 0.45; spr(name, o.x, o.y, 1, 0.5, 1, false, 0, '#e0394c'); }
+      spr(name, o.x, by);
+      if (o.flash > 0) { ctx.globalAlpha *= 0.7; spr(name, o.x, by, 1, 0.5, 1, false, 0, '#ffffff'); }
+      else if (o.rage && Math.floor(t * 3) % 2) { ctx.globalAlpha = 0.22; spr(name, o.x, by, 1, 0.5, 1, false, 0, '#e0394c'); }
+      if (o.tele > 0 && Math.floor(t * 12) % 2) { ctx.globalAlpha = 0.45; spr(name, o.x, by, 1, 0.5, 1, false, 0, '#e0394c'); }
       ctx.globalAlpha = 1;
     } else {
       const sq = R.sq, ko = sq.ko > 0;
@@ -1322,7 +1401,7 @@ function drawGround(t) {
   }
   for (const p of R.eb) {
     if (p.k === 'lob') {
-      const u = p.t / p.T;
+      const u = Math.max(0, p.t / p.T);
       ctx.fillStyle = `rgba(224,57,76,${0.1 + 0.18 * u})`; ellipse(p.tx, p.ty, 13 * P, 6 * P); ctx.fill();
       ctx.lineWidth = P; ctx.strokeStyle = `rgba(224,57,76,${0.6 + 0.4 * (Math.floor(t * 10) % 2)})`; ellipse(p.tx, p.ty, 13 * P * (0.5 + 0.5 * u), 6 * P * (0.5 + 0.5 * u)); ctx.stroke();
     } else if (p.k === 'wave') {
@@ -1332,7 +1411,23 @@ function drawGround(t) {
       ctx.restore(); ctx.globalAlpha = 1;
     }
   }
+  for (const p of R.eb) if (p.k === 'beam') {   // the beam: a pixel column from the boss down the screen
+    const a = 1 - p.t / p.T, w = p.w * (0.6 + 0.4 * a);
+    ctx.globalAlpha = 0.5 * a + 0.3; prect(p.x - w / 2 - P, p.y0, w + 2 * P, H - p.y0, INK);
+    ctx.globalAlpha = 1; prect(p.x - w / 2, p.y0, w, H - p.y0, p.col); prect(p.x - w / 6, p.y0, w / 3, H - p.y0, '#ffffff');
+    if (Math.random() < 0.5) bits(p.x + rand(-w / 2, w / 2), rand(p.y0, H - 180), 'q_Spark', 1);
+  }
   const b = R.boss;
+  if (b && b.tele > 0 && (b.teleK === 'beam' || b.teleK === 'charge')) {   // telegraph: blinking danger column
+    const on = Math.floor(t * 12) % 2, w = (b.teleK === 'beam' ? 12 : 30) * P / (b.teleK === 'beam' ? 1 : 2.5);
+    ctx.globalAlpha = 0.18; prect(b.lineX - w / 2, b.y, w, H - b.y, '#e0394c'); ctx.globalAlpha = 1;
+    if (on) for (let y = b.y; y < H - 170; y += 5 * P) { prect(b.lineX - w / 2, y, P, 3 * P, '#e0394c'); prect(b.lineX + w / 2 - P, y, P, 3 * P, '#e0394c'); }
+  }
+  if (b && ((b.tele > 0 && b.teleK === 'leap') || b.leap)) {   // landing marker
+    const x = b.leap ? b.leap.x1 : clamp(b.lineX, 90 * U, W - 90 * U), on = Math.floor(t * 12) % 2;
+    ctx.fillStyle = 'rgba(19,27,27,0.3)'; ellipse(x, b.y, 50 * U, 16 * U); ctx.fill();
+    ctx.lineWidth = P; ctx.strokeStyle = on ? '#e0394c' : '#ffe18d'; ellipse(x, b.y, 50 * U, 16 * U); ctx.stroke();
+  }
   if (b && b.tele > 0 && b.teleK === 'slam') {
     ctx.save(); ctx.translate(b.x, b.y); ctx.scale(1, 0.6);
     ctx.lineWidth = 2 * P; ctx.strokeStyle = `rgba(224,57,76,${0.35 + 0.35 * (Math.floor(t * 10) % 2)})`; ctx.setLineDash([5 * P, 3 * P]);
@@ -1352,8 +1447,10 @@ function arcsWithGaps(r, gaps, gw) {
 function drawShots(t) {
   for (const p of R.eb) {
     if (p.k === 'lob') {
-      const u = p.t / p.T, x = lerp(p.sx, p.tx, u), y = lerp(p.sy, p.ty - 4 * P, u) - Math.sin(Math.PI * u) * 110 * U;
-      spr(`p_SpriteSheetRock_${Math.floor(p.t * 10) % 4}`, x, y, 1, 0.5, 0.5);
+      if (p.t < 0) continue;
+      const u = p.t / p.T, x = lerp(p.sx, p.tx, u), y = lerp(p.sy, p.ty - 4 * P, u) - Math.sin(Math.PI * u) * 110 * U, sp = p.spr || 'SpriteSheetRock';
+      if (p.spr === 'Fireball' || p.spr === 'EnergyBall') { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35; spr(`vx_glow24_${p.spr === 'Fireball' ? 'fire' : 'ice'}`, x, y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+      spr(`p_${sp}_${Math.floor(p.t * 10) % (AN['p_' + sp] || 1)}`, x, y, 1, 0.5, 0.5, false, ORI[sp] !== undefined && p.t > 0 ? Math.round((Math.atan2(p.ty - y, p.tx - x) - ORI[sp]) / (Math.PI / 8)) * (Math.PI / 8) : 0);
     } else if (p.k === 'orb') {
       const n = AN['p_' + p.spr] || 1, o = ORI[p.spr];
       spr(`p_${p.spr}_${Math.floor(p.age * 10) % n}`, p.x, p.y, 1, 0.5, 0.5, false, o === undefined ? 0 : Math.round((p.a - o) / (Math.PI / 8)) * (Math.PI / 8));
@@ -1662,7 +1759,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, BIOMES, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  save, R, F, GUNS, TEAM, BIOMES, BOSSES, EDEF, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },

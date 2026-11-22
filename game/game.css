@@ -1,4 +1,4 @@
-@font-face{font-family:"SquadNum";font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/squadnum.woff2) format("woff2");unicode-range:U+0030-0039,U+002E,U+002C,U+0025,U+002F,U+002B,U+002D,U+003A}
+@font-face{font-family:"SquadNum";font-style:normal;font-weight:700;font-display:swap;src:url(assets/fonts/squadnum.woff2) format("woff2");unicode-range:U+0030-0039,U+002E,U+002C,U+002F,U+002B,U+002D,U+003A}
 @font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:700;font-display:swap;
   src:url(assets/fonts/pixelify-sans-latin-ext-700-normal.woff2) format("woff2");
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -276,3 +276,14 @@ h2,h3,h4{margin:0;font-weight:700}
   text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink),0 4px 0 var(--ink)}
 #evoTag.show{animation:evoTag 1.4s steps(1,end) forwards,bannerIn .2s steps(3) both}
 @keyframes evoTag{0%{opacity:1}80%{opacity:1}100%{opacity:0}}
+
+/* boss intro card: portrait in an ink frame + name plate, slides in and out */
+#bossCard{position:absolute;left:50%;top:calc(30% + var(--safe-t));display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;transform:translateX(-150vw);
+  background:var(--paper);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -8px 0 var(--paper2);pointer-events:none;z-index:4}
+#bossCard img{width:72px;height:72px;padding:3px;background:var(--red);clip-path:var(--notch);box-sizing:content-box}
+#bossCard b{display:block;font-size:24px;color:var(--ink);white-space:nowrap}
+#bossCard span{white-space:nowrap}
+#bossCard b::before{content:"BOSS";display:block;font-size:12px;color:var(--red);letter-spacing:.1em}
+#bossCard span{font-size:13px;color:var(--muted)}
+#bossCard.show{animation:bossCard 2.4s steps(1,end) forwards}
+@keyframes bossCard{0%{transform:translateX(-120vw)}4%{transform:translateX(-80%)}8%{transform:translateX(-50%)}85%{transform:translateX(-50%)}90%{transform:translateX(-20%)}95%{transform:translateX(60vw)}100%{transform:translateX(150vw)}}

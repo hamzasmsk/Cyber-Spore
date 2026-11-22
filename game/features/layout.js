@@ -2,7 +2,7 @@
    - The top-left square button opens Ayarlar; the settings side button from settings.js stays hidden.
    - Side columns are put in a fixed order: combat on the left, economy on the right (4 + 5 tiles). */
 (function () {
-  const LEFT = ['guns', 'team', 'skinBtn', 'rebirth'];
+  const LEFT = ['guns', 'team', 'skinBtn', 'dexBtn', 'rebirth'];
   const RIGHT = ['missionsBtn', 'shopBtn', 'mineBtn', 'piggyBtn', 'boostBtn'];
   function key(b) {
     if (b.dataset.open) return b.dataset.open;
