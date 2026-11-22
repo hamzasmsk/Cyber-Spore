@@ -32,7 +32,20 @@ ve `assets/fonts/` dosyalarını üretir:
 python3 game/tools/build_assets.py "<.../Ninja Adventure - Asset Pack>" <pixelify-sans paket klasörü>
 ```
 
+## Para kazanma
+Ödüllü reklamlar (yalnızca isteğe bağlı), uygulama içi satın almalar, Ninja Yolu sezon bileti, kumbara ve bağlama göre
+teklifler. Ayrıntılar ve mağaza kurulumu: [MONETIZATION.md](MONETIZATION.md). Ayarlar: `monetize.config.js`.
+Tarayıcıda her şey açıkça etiketli **TEST MODU**nda çalışır (gerçek ödeme/reklam yok).
+
+## Uygulama olarak paketleme (Capacitor)
+```
+npm install
+npx cap add ios && npx cap add android
+npm run ios        # veya: npm run android
+```
+
 ## Dosyalar
 - `index.html`, `game.css`, `game.js` — oyun çekirdeği ve eklenti API'si (`window.SS`)
-- `features/*.js|css` — ek modüller
+- `features/*.js|css` — ek modüller (görevler, maden, kumbara, güçlendirme, mağaza, kostüm, koleksiyon, Ninja Yolu, ayarlar, para kazanma, uygulama köprüsü)
+- `monetize.config.js`, `package.json`, `capacitor.config.json`, `tools/build-www.js` — para kazanma ayarları ve uygulama paketleme
 - `assets/` — üretilmiş varlıklar ve lisanslar (`assets/LICENSE-ASSETS.txt`)

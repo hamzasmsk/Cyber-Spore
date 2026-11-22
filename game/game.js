@@ -467,6 +467,7 @@ function bossWin() {
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
   const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
+  setTimeout(() => { const mon = window.SS && window.SS.mon; if (mon) mon.bossReward(gems); }, 1400);
   R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15; R.cheerT = 2;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
@@ -483,7 +484,7 @@ function bossFail() {
   $('bossHud').classList.add('hidden');
   banner('BOSS KAÇTI!', 'Güçlen ve tekrar dene'); sfx('fail', 0);
   R.retryT = 12; startAdvance(160 * U, 110 * U);
-  R.bossFails++; if (R.bossFails >= 2 && rebirthGain() > 0) setTimeout(() => toast('İpucu: Doğuş ile kalıcı güç kazan!'), 2300);
+  R.bossFails++; runHooks('bossFail', b); if (R.bossFails >= 2 && rebirthGain() > 0) setTimeout(() => toast('İpucu: Doğuş ile kalıcı güç kazan!'), 2300);
   uiKey = '';
 }
 function damage(target, dmg, crit, isBoss) {
@@ -1090,7 +1091,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], buy: [], stage: [], hurt: [], ko: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1157,7 +1158,16 @@ function update(dt) {
   if (b) {
     b.anim += dt; if (b.flash > 0) b.flash -= dt;
     if (b.arrive < 1) { b.arrive = Math.min(1, b.arrive + dt / 1.4); const p = along(F.A, lerp(40, -330, b.arrive) * U, 0); b.x = p.x; b.y = p.y; if (b.arrive >= 1) { R.shake = 5; puff(b.x - 30 * U, b.y, 2); puff(b.x + 30 * U, b.y, 2); } }
-    else { b.t -= dt; if (b.t <= 0) bossFail(); else if (!ko) updateBossAI(b, dt); }
+    else {
+      b.t -= dt;
+      if (b.t <= 0) {
+        const mon = window.SS && window.SS.mon;
+        if (!b.cont && mon && mon.canContinue() && b.hp < b.maxHp * 0.6) {   // only offered when the win is in reach
+          b.cont = true; b.t = 0; R.paused = true;
+          mon.offerContinue(ok => { R.paused = false; last = performance.now(); if (ok && R.boss === b) { b.t = 15; banner('+15 SN!', 'Bitir şunu!'); sfx('skill', 0); uiKey = ''; } else if (R.boss === b) bossFail(); });
+        } else bossFail();
+      } else if (!ko) updateBossAI(b, dt);
+    }
   }
   if (R.leavingBoss) { const lb = R.leavingBoss; lb.leaving += dt; lb.x += F.dir.x * 300 * U * dt; lb.y += F.dir.y * 300 * U * dt; if (lb.leaving > 2) R.leavingBoss = null; }
   const rate = fireRate();
@@ -1705,9 +1715,11 @@ function offlineReward() {
   openPanel('Hoş geldin!', 'green', body => {
     body.appendChild(el(`<p class="big-note">Sen yokken (${h ? h + ' sa ' : ''}${m} dk) takımın savaşmaya devam etti:</p>`));
     body.appendChild(el(`<div class="big-num">+${fmt(gain)}</div>`));
-    const btn = el('<button class="btn yellow wide"><img src="assets/ui/coin.png" alt="">TOPLA</button>');
-    btn.onclick = () => { audioInit(); addMoney(gain, W / 2, H / 2, 16); sfx('gold', 0); closePanel(); persist(); };
-    body.appendChild(btn);
+    const Ads = window.SS && window.SS.Ads;
+    const row = el(`<div class="btnrow"><button class="btn green"><img src="assets/ui/coin.png" alt="">TOPLA</button>${Ads && Ads.available('offline') ? '<button class="btn yellow"><img src="assets/ui/play.png" alt="">x2 TOPLA</button>' : ''}</div>`);
+    row.children[0].onclick = () => { audioInit(); addMoney(gain, W / 2, H / 2, 16); sfx('gold', 0); closePanel(); persist(); };
+    if (row.children[1]) row.children[1].onclick = async () => { audioInit(); const ok = await Ads.show('offline'); addMoney(gain * (ok ? 2 : 1), W / 2, H / 2, ok ? 24 : 16); sfx('gold', 0); closePanel(); persist(); };
+    body.appendChild(row);
   });
 }
 
@@ -1716,7 +1728,8 @@ let last = performance.now(), saveT = 0, popOn = false;
 function frame(now) {
   let dt = Math.min(1 / 20, (now - last) / 1000); last = now;
   if (R.stop > 0) { R.stop -= dt; dt *= 0.12; }
-  update(dt); render(); updateUI(dt);
+  if (R.paused) dt = 0;
+  if (dt > 0) update(dt); render(); updateUI(dt);
   const pop = R.walletPop > 0; if (pop !== popOn) { popOn = pop; $('money').parentNode.classList.toggle('pop', pop); }
   saveT += dt; if (saveT > 5) { saveT = 0; persist(); }
   requestAnimationFrame(frame);

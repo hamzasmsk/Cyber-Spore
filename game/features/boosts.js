@@ -49,7 +49,8 @@
   function startAd() {
     if (adOn() || adCooling() || simulating) { SS.sfx('no'); return; }
     SS.closePanel();
-    fakeAd(() => {
+    const run = SS.Ads && SS.Ads.enabled ? cb => SS.Ads.show('boost').then(ok => { if (ok) cb(); }) : fakeAd;
+    run(() => {
       const b = st(); b.adEnd = now() + AD_DUR; b.adCd = b.adEnd + AD_CD;
       SS.persist(); SS.refreshUI(); SS.sfx('win'); vib(60);
       SS.banner('x2 GÜÇ!', 'Hasar ve para 3 dakika boyunca x2');

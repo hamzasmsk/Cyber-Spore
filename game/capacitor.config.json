@@ -1,0 +1,8 @@
+{
+  "appId": "com.example.shurikensquad",
+  "appName": "Shuriken Squad",
+  "webDir": "www",
+  "backgroundColor": "#131b1b",
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false }
+}

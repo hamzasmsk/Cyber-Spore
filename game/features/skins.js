@@ -49,9 +49,10 @@ function boot() {
         const owned = !!K.owned[it.id], eq = eqId === it.id;
         const row = SS.el(`<div class="row-card fb-skin ${eq ? 'cur' : ''}"><div class="ico face"><img src="assets/ui/face_${it.id}.png" alt=""></div>
           <div class="info"><h4>${it.name}</h4><p>${it.desc}</p></div>
-          ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : `<button class="btn yellow ${save.gems < it.cost ? 'cant' : ''}"><img src="assets/ui/gem.png" alt="">${it.cost}</button>`}</div>`);
+          ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : it.pass ? '<button class="btn purple pass">Ninja Yolu</button>' : `<button class="btn yellow ${save.gems < it.cost ? 'cant' : ''}"><img src="assets/ui/gem.png" alt="">${it.cost}</button>`}</div>`);
         const b = row.querySelector('.btn');
-        if (!eq) b.onclick = () => {
+        if (!eq && !owned && it.pass) { b.onclick = () => { SS.sfx('click'); if (SS.pass) SS.pass.open(); }; row.querySelector('p').textContent = it.desc + ' · Ninja Yolu 30. seviye ödülü'; }
+        else if (!eq) b.onclick = () => {
           if (!owned) {
             if (save.gems < it.cost) { SS.sfx('no'); SS.toast('Yeterli elmas yok'); return; }
             save.gems -= it.cost; K.owned[it.id] = true; SS.sfx('buy'); SS.toast(`${it.name} açıldı!`);

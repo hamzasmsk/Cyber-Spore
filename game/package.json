@@ -1,0 +1,25 @@
+{
+  "name": "shuriken-squad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shuriken Squad - portrait idle ninja squad shooter (HTML5, packaged with Capacitor)",
+  "scripts": {
+    "build": "node tools/build-www.js",
+    "sync": "npm run build && npx cap sync",
+    "ios": "npm run sync && npx cap open ios",
+    "android": "npm run sync && npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.4.2",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.6.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@revenuecat/purchases-capacitor": "^14.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}
