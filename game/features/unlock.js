@@ -1,7 +1,7 @@
 /* Shuriken Squad — menus unlock step by step (loads after layout.js).
    A new player starts with the three upgrade cards, the boss button and nothing else; each menu appears when it
-   becomes useful (best stage reached), with a short introduction card the first time. Players who are already
-   past a step (older saves) simply have it open. The Görev panel's Kule / Başarım tabs follow the same rule. */
+   becomes useful (best stage reached), with a short introduction card the first time. Locked menus stay on screen
+   greyed out with the stage they open at. Players already past a step (older saves) simply have it open. The Görev panel's Kule / Başarım tabs follow the same rule. */
 'use strict';
 (() => {
   const SS = window.SS;
@@ -32,9 +32,22 @@
   const on = k => !!U[k];
   SS.unlocked = k => { const s = STEPS.find(x => x[0] === k); return s ? on(k) : TABS[k] ? (save.best || 1) >= TABS[k] : true; };
 
+  // locked menus stay visible (greyed, padlock, "Bölüm N") so a new player sees what is coming
   function paint() {
-    for (const [k] of STEPS) { const b = el(k); if (!b) continue; b.style.display = on(k) ? '' : 'none'; b.classList.toggle('is-new', U[k] === 1); }
+    for (const [k, lv] of STEPS) {
+      const b = el(k); if (!b) continue;
+      b.style.display = ''; b.classList.toggle('m-lock', !on(k)); b.classList.toggle('is-new', U[k] === 1);
+      if (!on(k)) b.dataset.lv = 'Bölüm ' + lv; else delete b.dataset.lv;
+    }
   }
+  // a tap on a locked menu explains when it opens instead of opening it
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.sbtn.m-lock'); if (!b) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const s = STEPS.find(x => el(x[0]) === b); if (!s) return;
+    SS.sfx('no'); SS.toast(`${s[2]} ${s[1]}. bölümde açılır`);
+    b.classList.remove('m-shake'); void b.offsetWidth; b.classList.add('m-shake');
+  }, true);
   let queue = [], showing = false;
   function intro(s) {
     const [k, , title, txt, icon] = s, b = el(k);
