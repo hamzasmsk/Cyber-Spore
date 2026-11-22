@@ -15,7 +15,7 @@ function boot() {
   const IAP = SS.IAP, Ads = SS.Ads, mon = SS.mon;
   const paid = !!(IAP && IAP.enabled);
 
-  const income = () => Math.max(save.rate || 0, SS.enemyHp() * 0.55 * SS.moneyMul() * 1.2, 1);
+  const income = () => Math.max(Math.min(save.rate || 0, SS.reward() * 0.5 * SS.moneyMul() * 8), SS.reward() * 0.5 * SS.moneyMul() * 0.6, 1);   // ~gold per second, from the reward curve
   const PACKS = [
     { gems: 10, min: 30, name: 'Altın Kesesi', img: 'coin.png' },
     { gems: 35, min: 120, name: 'Altın Sandığı', img: 'chest.png', tag: '+%14' },

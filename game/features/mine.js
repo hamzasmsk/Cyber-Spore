@@ -12,9 +12,9 @@ function boot() {
   if (!(M.t > 0)) M.t = Date.now();
 
   // gems per hour, storage cap (hours of production), upgrade cost (scales with stage)
-  const perHour = lv => 6 * Math.pow(1.18, lv - 1);            // lv1: 1 gem / 10 min
-  const capOf = lv => Math.max(10, Math.floor(perHour(lv) * 3)); // 3 hours of storage
-  const costOf = lv => SS.enemyHp() * 45 * Math.pow(2.05, lv - 1);
+  const perHour = lv => 2 * Math.pow(1.15, lv - 1);            // lv1: 2 gems / hour (balanced against the gem economy)
+  const capOf = lv => Math.max(16, Math.floor(perHour(lv) * 8)); // 8 hours of storage: one collection a night is enough
+  const costOf = lv => (SS.reward ? SS.reward() : SS.enemyHp()) * 45 * Math.pow(2.05, lv - 1);
 
   function accrue() {
     const now = Date.now(), dt = Math.max(0, now - (M.t || now)) / 3.6e6;

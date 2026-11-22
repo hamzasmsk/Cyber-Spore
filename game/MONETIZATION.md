@@ -29,7 +29,7 @@ Tüm ayarlar `monetize.config.js` dosyasındadır; kodu değiştirmeden fiyat, s
 | `ss_noads` | kalıcı | Tüm reklam ödülleri izlemeden anında + kalıcı +%10 altın | ₺149,99 | — |
 | `ss_monthly` | tüketilebilir (30 gün) | Hemen 300 + 30 gün her gün 60 elmas (toplam 2.100) | ₺99,99 | ~x5 |
 | `ss_pass` | tüketilebilir (sezonluk) | Ninja Yolu premium: ~850 elmas, 3 saat x2 güç, Usta kostümü | ₺149,99 | ~x2+ |
-| `ss_piggy` | tüketilebilir | Kumbarayı kır (100–500 elmas) | ₺49,99 | x2–x2,5 |
+| `ss_piggy` | tüketilebilir | Kumbarayı kır (100–500 elmas) | ₺49,99 | x0,5–x2,5 |
 | `ss_offer_power` | tüketilebilir | 500 elmas + 1 saat x2 güç (süreli teklif) | ₺79,99 | ~x1,6 |
 
 \* Değer: ₺0,25/elmas taban fiyata göre. Basamaklı yapı küçük alıcıyı kaybetmeden büyük paketi daha avantajlı yapar.
@@ -63,7 +63,7 @@ sezonun ortasında alan oyuncu ulaştığı seviyelerin ödüllerini hemen alır
 
 ### Kumbara
 
-Her 10 düşmanda kumbaraya 1 elmas düşer (en fazla 500). En az 100 elmasta, sabit fiyatla kırılır. Para kazanma
+Her 40 düşmanda kumbaraya 1 elmas düşer (en fazla 500; aktif oyunda ~10 saatte dolar). En az 100 elmasta, sabit fiyatla kırılır. Para kazanma
 kapalı (`mode: 'off'`) bir yayında eski ücretsiz kurala döner.
 
 ## Teknik yapı
@@ -114,3 +114,32 @@ Mod seçimi (`monetize.config.js`):
 - **1/7/30. gün tutma** → reklam sıklığı arttıkça izle; düşerse sınırları azalt.
 - **Ninja Yolu tamamlama oranı** → `XP_PER` (pass.js) ve XP kaynakları.
 - **Kumbara kırma oranı** → kapasite ve elmas/düşman oranı (piggy.js).
+
+## Denge (ekonomi simülasyonu)
+
+`node tools/economy-sim.js` oyunun formüllerini (düşman canı, altın, geliştirme maliyetleri, silah/yıldız, takım,
+Doğuş, elmas kaynakları) birebir çalıştırıp açgözlü bir oyuncunun ilerlemesini dakika dakika ölçer.
+
+**Bulunan sorunlar ve çözümler**
+
+| Sorun | Ölçüm (önce) | Çözüm | Sonra |
+|---|---|---|---|
+| Boss elması her geçişte, Doğuş sonrası tekrar tekrar | 8 saatte 5.837 elmas, tüm silahlar 5 saatte | Elmas yalnızca bölüm ilk kez geçilince (3 + bölüm/4) | 10 saatte ~2.200 elmas |
+| Hazine canavarı çok sık (%16) ve 1–2 elmas | saatte ~100 elmas | %5, 1 elmas (25. bölümden sonra 2) | saatte ~20 |
+| Maden 6 elmas/sa | günde 70–140 | 2 elmas/sa (+%15/seviye), 8 saat depo | günde ~16–40 |
+| Doğuş puanı bölümle doğrusal | 4. Doğuştan sonra saatte 1–2 bölüm, oyun tıkanıyor | Puan bölüm başına x1,18 (8. bölümden itibaren) | Her Doğuş +10–17 bölüm |
+| Takım 14 dakikada doluyor | uzun vadeli hedef yok | Maliyetler 800 / 5M / 500B / 5e17 | 3 / 8 / 15 / 28. dakika |
+| Mağaza "altın paketi" gelir tahmini düşman canına bağlı | ileri bölümlerde gerçeğin binlerce katı altın | Ödül eğrisine bağlandı | tutarlı |
+
+**Ücretsiz oyuncu, ilk 10 saat** (aktif oyun)
+
+| Hedef | Dakika |
+|---|---|
+| Bölüm 10 / 20 / 30 | 9 / 18 / 34 |
+| İlk duvar / ilk Doğuş | ~32 (bölüm 29) / ~41 |
+| Kunai / Üçlü Ok / Büyük Kunai / Büyü Yıldızı | 2 / 8 / 16 / 48 |
+| Buz Mızrağı / Ateş Topu | 140 / 333 |
+| Doğuş başına duvar | 29 → 46 → 61 → 73 → 83 → 93 → 101 |
+
+**Ödeme yapan oyuncu** (başlangıç paketi + 650 elmas, ~₺200): ilk 4 silah 3. dakikada, Ateş Topu 60. dakikada;
+10. saatte ücretsiz oyuncudan ~%5 ileride. Para hızlandırır, oyunun sonunu satın almaz.

@@ -171,10 +171,10 @@ const GUNS = [
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
   { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
-  { id: 'NinjaRed',    name: 'Kızıl',   cost: 500,  perk: 'Takıma +%10 atış hızı' },
-  { id: 'NinjaYellow', name: 'Altın',   cost: 2e5,  perk: 'Takıma +%20 altın' },
-  { id: 'NinjaBomb',   name: 'Bombacı', cost: 1e8,  perk: 'Atışların %20si patlar (alan hasarı)' },
-  { id: 'NinjaMasked', name: 'Maske',   cost: 5e10, perk: '+%6 kritik şansı' },
+  { id: 'NinjaRed',    name: 'Kızıl',   cost: 800,  perk: 'Takıma +%10 atış hızı' },
+  { id: 'NinjaYellow', name: 'Altın',   cost: 5e6,  perk: 'Takıma +%20 altın' },
+  { id: 'NinjaBomb',   name: 'Bombacı', cost: 5e11, perk: 'Atışların %20si patlar (alan hasarı)' },
+  { id: 'NinjaMasked', name: 'Maske',   cost: 5e17, perk: '+%6 kritik şansı' },
 ];
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
 const SUBS = 5, KILLS_PER_SUB = 8, BOSS_TIME = 30;
@@ -212,7 +212,11 @@ const reward = () => 10 * Math.pow(1.28, stageIdx());
 const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 22;
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
-const rebirthGain = () => save.stage >= 6 ? Math.floor((save.stage - 1) * 1.5) : 0;
+// rebirth points grow x1.18 per stage (from stage 8): each rebirth then pushes the wall ~10-15 stages further
+// instead of stalling (a linear formula flattened out after 3-4 rebirths in the economy simulation)
+const REBIRTH_MIN = 8;
+const rebirthGain = () => save.stage >= REBIRTH_MIN ? Math.floor(2 * Math.pow(1.18, save.stage - REBIRTH_MIN)) : 0;
+const rebirthGems = g => g > 0 ? 5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4)) : 0;
 const heroId = i => (i === 0 && save.skin) ? save.skin : TEAM[i].id;
 
 // ================================================================ audio
@@ -407,7 +411,7 @@ function startWave() {
   R.phase = 'fight';
   R.toSpawn = 3 + Math.floor(Math.random() * 3) + (save.stage > 3 ? 1 : 0);
   R.spawnT = 0.1;
-  if (save.stage >= 2 && Math.random() < 0.16) setTimeout(spawnTreasure, 1200);
+  if (save.stage >= 2 && Math.random() < 0.05) setTimeout(spawnTreasure, 1200);
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
   const CHT = CH * 16 * P;
@@ -465,13 +469,14 @@ function bossWin() {
   for (const e of R.en) if (e.summoned && !e.dead) { e.dead = true; puff(e.x, e.y, 1); }
   runHooks('bossWin', b);
   for (let i = 0; i < 6; i++) setTimeout(() => boom(b.x + rand(-50, 50) * U, b.y - rand(10, bossH(b) * 0.8), 1), i * 110);
-  const gems = 2 + Math.floor(save.stage / 3), cash = enemyHp() * 25 * moneyMul();
+  // gems only for a stage beaten for the first time (replaying after a rebirth pays gold, not gems)
+  const first = save.stage >= (save.best || 1), gems = first ? 3 + Math.floor(save.stage / 4) : 0, cash = reward() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
   setTimeout(() => { const mon = window.SS && window.SS.mon; if (mon) mon.bossReward(gems); }, 1400);
   R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15; R.cheerT = 2;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
-  banner('ZAFER!', `+${gems} elmas · ${biome().name}`); sfx('win', 0);
+  banner('ZAFER!', gems ? `+${gems} elmas · ${biome().name}` : `Bölüm ${save.stage} · ${biome().name}`); sfx('win', 0);
   persist();
   setTimeout(() => { newBiomeAhead(); musicUpdate(); }, 1100);
   R.phase = 'wait';
@@ -503,7 +508,7 @@ function kill(e) {
   R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.3;
   sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
   if (e.elite || e.treasure) R.stop = 0.07;
-  if (e.treasure) { const g = 1 + (save.stage >= 10 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
+  if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
   R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04));
   if (!R.boss && !save.bossReady) {
     save.kills++;
@@ -1690,16 +1695,17 @@ const PANELS = {
   }),
   rebirth: () => openPanel('Yeniden Doğuş', 'purple', body => {
     const gain = rebirthGain();
-    body.appendChild(el(`<div class="big-num">x${(1 + save.rp * 0.3).toFixed(1)}</div>`));
+    body.appendChild(el(`<div class="big-num">x${fmt(1 + save.rp * 0.3)}</div>`));
     body.appendChild(el('<p class="big-note">Kalıcı hasar ve para bonusun. Her doğuş puanı +%30 ekler.</p>'));
-    body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${gain} doğuş puanı</h4>
-      <p>${save.stage >= 6 ? 'Bölüm, seviyeler ve altın sıfırlanır. Elmas, silahlar ve takım kalır.' : '6. bölüme ulaşınca açılır.'}</p></div></div>`));
+    body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${fmt(gain)} doğuş puanı</h4>
+      <p>${gain > 0 ? `Bonus x${fmt(1 + save.rp * 0.3)} → x${fmt(1 + (save.rp + gain) * 0.3)} · +${rebirthGems(gain)} elmas. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar ve takım kalır.` : `${REBIRTH_MIN}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.`}</p></div></div>`));
     const btn = el(`<button class="btn purple wide ${gain > 0 ? '' : 'off'}">YENİDEN DOĞ</button>`);
     btn.onclick = () => {
       if (gain <= 0) return;
+      const rg = rebirthGems(gain); save.gems += rg;
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
       R.en.length = 0; R.eb.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
-      persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${(1 + save.rp * 0.3).toFixed(1)}`); sfx('win', 0); uiKey = '';
+      persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${fmt(1 + save.rp * 0.3)} · +${rg} elmas`); sfx('win', 0); uiKey = '';
     };
     body.appendChild(btn);
   }),
@@ -1773,7 +1779,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
 }
 window.SS = {
   save, R, F, GUNS, TEAM, BIOMES, BOSSES, EDEF, MODS, HOOKS, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
-  spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, buy, startBoss, setupHeroes, heroId,
+  spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
   get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; }, get P() { return P; },

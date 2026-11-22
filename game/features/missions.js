@@ -11,7 +11,7 @@
   const hms = ms => { const s = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0'); };
   const pickOf = a => a[Math.floor(Math.random() * a.length)];
   const nice = v => { if (v < 100) return Math.ceil(v); const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.ceil(v / p) * p; };
-  const killReward = () => { try { return SS.enemyHp() * 0.55 * SS.moneyMul(); } catch (e) { return 10; } };
+  const killReward = () => { try { return (SS.reward ? SS.reward() : SS.enemyHp()) * 0.5 * SS.moneyMul(); } catch (e) { return 10; } };
 
   // ---------------- mission templates (icons come from the Ninja Adventure pack in assets/ui/)
   const bio = () => { try { return SS.biome() || {}; } catch (e) { return {}; } };

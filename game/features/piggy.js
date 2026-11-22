@@ -1,5 +1,5 @@
 /* Shuriken Squad feature: "Kumbara" (piggy bank).
-   Paid mode (monetization on): every 10 kills drop a gem into the bank (up to 500); once it holds 100+ gems it can
+   Paid mode (monetization on): every 40 kills drop a gem into the bank (up to 500); once it holds 100+ gems it can
    be broken with a one-off purchase (SS.IAP 'ss_piggy') — the price is fixed, so the fuller it is, the better the deal.
    Free mode (monetization off, e.g. a public web build): 1 gem per 25 kills, up to 50, breaks free when full or
    after a boss win. */
@@ -9,7 +9,7 @@ function boot() {
   const SS = window.SS; if (!SS || SS._piggyB) return; SS._piggyB = true;
   const save = SS.save, IAP = SS.IAP;
   const paid = !!(IAP && IAP.enabled);
-  const KILLS_PER_GEM = paid ? 10 : 25, CAP = paid ? 500 : 50, MIN_PAID = 100;
+  const KILLS_PER_GEM = paid ? 40 : 25, CAP = paid ? 500 : 50, MIN_PAID = 100;
   if (!save.piggy || typeof save.piggy !== 'object') save.piggy = {};
   const P = save.piggy;
   if (!(P.kills >= 0)) P.kills = 0;
