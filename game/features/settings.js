@@ -72,6 +72,29 @@
       });
       wrap.appendChild(vols);
 
+      // save code: move the game to another device / browser without an account (copy here, paste there)
+      const code = SS.el(`<div class="toggles"><div class="vol sv-code"><img src="assets/ui/key.png" alt=""><label>Kayıt kodu<small>Başka cihaza taşı</small></label>
+        <button class="btn blue">KOPYALA</button><button class="btn grey">YÜKLE</button></div></div>`);
+      const [cp, ld] = code.querySelectorAll('.btn');
+      cp.onclick = async () => {
+        SS.persist(); let c = '';
+        try { c = 'SS1.' + btoa(unescape(encodeURIComponent(localStorage.getItem(SAVE_KEY) || JSON.stringify(save)))); } catch (e) { c = ''; }
+        try { await navigator.clipboard.writeText(c); SS.toast('Kayıt kodu kopyalandı'); } catch (e) { prompt('Kayıt kodun (kopyala):', c); }
+        SS.sfx('click');
+      };
+      ld.onclick = () => {
+        const c = (prompt('Kayıt kodunu yapıştır (şu anki ilerleme silinir):') || '').trim();
+        if (!c) return;
+        try {
+          if (!c.startsWith('SS1.')) throw 0;
+          const j = JSON.parse(decodeURIComponent(escape(atob(c.slice(4)))));
+          if (!j || typeof j !== 'object' || typeof j.stage !== 'number') throw 0;
+          localStorage.setItem(SAVE_KEY, JSON.stringify(j));
+          SS.R.noSave = true; SS.banner('KAYIT YÜKLENDİ', 'Yeniden başlıyor…');
+          setTimeout(() => location.reload(), 600);
+        } catch (e) { SS.sfx('no'); SS.toast('Geçersiz kayıt kodu'); }
+      };
+      wrap.appendChild(code);
       const zone = SS.el('<div class="fa-danger"></div>');
       if (!confirming) {
         const r = SS.el(`<div class="fa-resetrow"><img src="assets/ui/ic_rebirth.png" alt="">

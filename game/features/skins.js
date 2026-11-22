@@ -21,10 +21,12 @@ function boot() {
   if (!save.skins || typeof save.skins !== 'object') save.skins = {};
   const K = save.skins;
   if (!K.owned || typeof K.owned !== 'object') K.owned = {};
-  for (const k of Object.keys(K.owned)) if (!byId(k)) delete K.owned[k];
   delete K.bullet; delete K.hat;
   K.owned[DEF_ID] = true;
-  if (save.skin && (!byId(save.skin) || !K.owned[save.skin] || save.skin === DEF_ID)) delete save.skin;
+  // other features (Ninja Yolu, festivals) add their costumes to SKINS after this file runs, so ownership is never
+  // pruned here (a paid costume must survive a reload) and the equipped one is only checked once every script ran
+  const check = () => { if (save.skin && (!byId(save.skin) || !K.owned[save.skin] || save.skin === DEF_ID)) { delete save.skin; if (SS.R.heroes.length) SS.setupHeroes(); } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', check); else setTimeout(check, 0);
 
   const cur = () => byId(save.skin) || SKINS[0];
   const bonus = k => (cur().bonus || {})[k] || 1;
@@ -49,9 +51,10 @@ function boot() {
         const owned = !!K.owned[it.id], eq = eqId === it.id;
         const row = SS.el(`<div class="row-card fb-skin ${eq ? 'cur' : ''}"><div class="ico face"><img src="assets/ui/face_${it.id}.png" alt=""></div>
           <div class="info"><h4>${it.name}</h4><p>${it.desc}</p></div>
-          ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : it.pass ? '<button class="btn purple pass">Ninja Yolu</button>' : `<button class="btn yellow ${save.gems < it.cost ? 'cant' : ''}"><img src="assets/ui/gem.png" alt="">${it.cost}</button>`}</div>`);
+          ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : it.event ? '<button class="btn grey off">Festival</button>' : it.pass ? '<button class="btn purple pass">Ninja Yolu</button>' : `<button class="btn yellow ${save.gems < it.cost ? 'cant' : ''}"><img src="assets/ui/gem.png" alt="">${it.cost}</button>`}</div>`);
         const b = row.querySelector('.btn');
-        if (!eq && !owned && it.pass) {
+        if (!eq && !owned && it.event) { row.querySelector('p').textContent = it.desc + ' · ' + it.event; }
+        else if (!eq && !owned && it.pass) {
           const now = SS.pass && SS.pass.theme().skins.includes(it.id);
           if (now) { b.onclick = () => { SS.sfx('click'); SS.pass.open(); }; row.querySelector('p').textContent = it.desc + ' · bu sezon Ninja Yolu ödülü'; }
           else { b.className = 'btn grey off'; b.textContent = 'Sezonu bekle'; row.querySelector('p').textContent = it.desc + ' · başka bir sezonun Ninja Yolu ödülü'; }

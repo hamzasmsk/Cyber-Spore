@@ -192,7 +192,7 @@ const SAVE_KEY = 'swarmsquad_idle_v1';
 const DEF = { money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1, rebirths: 0, rp: 0, auto: true, sound: true, music: true, t: 0, rate: 0, best: 1 };
 const save = (() => { let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { s = null; }
   const d = JSON.parse(JSON.stringify(DEF)); if (s && typeof s === 'object') { Object.assign(d, s); d.lv = Object.assign({ power: 0, speed: 0, money: 0 }, s.lv || {}); } return d; })();
-function persist() { save.t = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage blocked */ } }
+function persist() { if (R.noSave) return; save.t = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage blocked */ } }
 
 // ================================================================ economy
 const rebirthMul = () => 1 + save.rp * 0.3;
@@ -230,6 +230,25 @@ const REBIRTH_MIN = 8;
 const rebirthGain = () => save.stage >= REBIRTH_MIN ? Math.floor(2 * Math.pow(1.18, save.stage - REBIRTH_MIN)) : 0;
 const rebirthGems = g => g > 0 ? Math.round((5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4))) * modMul('rgems')) : 0;
 const heroId = i => (i === 0 && save.skin) ? save.skin : TEAM[i].id;
+// hero levels (1-20): scrolls (Parşömen) from bosses + gold. Each level: +8% damage for that ninja's throws and a
+// stronger team perk. Levels survive rebirth.
+const HERO_MAX = 20;
+if (!Array.isArray(save.hlv)) save.hlv = [];
+if (!Array.isArray(save.scrolls)) save.scrolls = [];
+const hlv = i => clamp(save.hlv[i] || 1, 1, HERO_MAX);
+const heroMul = i => 1 + 0.08 * (hlv(i) - 1);
+const scrollNeed = lv => lv * 2;
+const heroCost = lv => reward() * 40 * lv;
+const PERK_TXT = [
+  l => `Takım canı +%${4 * (l - 1)}`, l => `Takıma +%${10 + (l - 1)} atış hızı`, l => `Takıma +%${20 + 2 * (l - 1)} altın`,
+  l => `Atışların %${20 + (l - 1)}'si patlar (alan hasarı)`, l => `+%${(6 + 0.5 * (l - 1)).toFixed(1).replace('.0', '')} kritik şansı`];
+function giveScroll(n, x, y) {
+  const owned = Math.max(1, save.team), i = Math.floor(Math.random() * owned);
+  save.scrolls[i] = (save.scrolls[i] || 0) + n;
+  if (x !== undefined) { addText(x, y, '+' + n, 'gem'); }
+  const ready = hlv(i) < HERO_MAX && save.scrolls[i] >= scrollNeed(hlv(i));
+  toast(`Parşömen +${n} · ${TEAM[i].name}${ready ? ' · seviye atlayabilir!' : ''}`);
+}
 
 // ================================================================ audio
 // Signal chain:  samples ─┬─> sfx bus ──> gentle high-cut ──┐
@@ -348,9 +367,10 @@ function musicTick(dt) {
 const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
   cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0, corpses: [], swish: [], ghosts: [], ghostT: 0 };
-MODS.rate.push(() => save.team >= 2 ? 1.1 : 1);
-MODS.money.push(() => save.team >= 3 ? 1.2 : 1);
-const critChance = () => 0.1 + (save.team >= 5 ? 0.06 : 0) + modAdd('crit');
+MODS.rate.push(() => save.team >= 2 ? 1.1 + 0.01 * (hlv(1) - 1) : 1);
+MODS.money.push(() => save.team >= 3 ? 1.2 + 0.02 * (hlv(2) - 1) : 1);
+MODS.hp.push(() => 1 + 0.04 * (hlv(0) - 1));
+const critChance = () => 0.1 + (save.team >= 5 ? 0.06 + 0.005 * (hlv(4) - 1) : 0) + modAdd('crit');
 const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)) * modMul('hp'));
 const hpBase = () => 100 + 12 * (save.stage - 1);
 function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 70 * U, s[0] * F.pathW * 0.4); }
@@ -498,6 +518,7 @@ function bossWin() {
   // gems only for a stage beaten for the first time (replaying after a rebirth pays gold, not gems)
   const first = save.stage >= (save.best || 1), gems = first ? 3 + Math.floor(save.stage / 4) : 0, cash = reward() * 25 * moneyMul();
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
+  setTimeout(() => giveScroll(first ? 2 : 1), 2200);
   setTimeout(() => { const mon = window.SS && window.SS.mon; if (mon) mon.bossReward(gems); }, 1400);
   R.bossFails = 0; R.ult = Math.min(1, R.ult + 0.25); R.stop = 0.15; R.cheerT = 2;
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
@@ -537,6 +558,7 @@ function kill(e) {
   R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.3;
   sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
   if (e.elite || e.treasure) R.stop = 0.07;
+  if (e.elite && Math.random() < 0.04) giveScroll(1, e.x, e.y - 24 * P);
   if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
   R.ult = Math.min(1, R.ult + (e.elite ? 0.12 : 0.04) * modMul('ult'));
   if (!R.boss && !save.bossReady) {
@@ -592,7 +614,7 @@ function hitFx(q, t) {
   if (q.crit) { fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22); if (gate(0.06)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.22); }
   else if (evolved() && gate(0.12)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.2);
   if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx(g.hsnd || 'hit', 0, x);
-  if (save.team >= 4 && t !== R.boss && Math.random() < 0.2) {   // Bombacı perk: splash
+  if (save.team >= 4 && t !== R.boss && Math.random() < 0.2 + 0.01 * (hlv(3) - 1)) {   // Bombacı perk: splash
     boom(x, y, 0.5);
     for (const e of R.en) if (e !== t && !e.dead && Math.hypot(e.x - x, e.y - 8 * P - y) < 60 * U) damage(e, q.dmg * 0.6, false, false);
   }
@@ -625,7 +647,7 @@ function throwNow(h) {
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
-  const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
+  const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * heroMul(h.i) * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
   let tg = [t];
   if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > 140).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
   for (let k = 0; k < ns; k++) {
@@ -1418,7 +1440,8 @@ function render() {
     ctx.globalAlpha = Math.min(1, tx.life * 4);
     const age = tx.max - tx.life, big = tx.kind === 'crit';
     if (tx.kind === 'gem') { spr('gem_icon', tx.x - 6 * P, tx.y, 0.5, 0.5, 0.5); }
-    btext(big ? tx.s + '!' : tx.kind === 'money' ? '+' + tx.s : tx.s, tx.x, tx.y, tx.kind === 'money' ? 'y' : big ? 'o' : tx.kind === 'hurt' ? 'r' : tx.kind === 'gem' ? 'w' : 'w', big ? (age < 0.08 ? 1.5 : 1) : tx.kind === 'gem' ? 1 : 0.5);
+    else if (tx.kind === 'fen') spr('m_LanternRed_d0', tx.x - 7 * P, tx.y + 4 * P, 0.5, 0.5, 1);
+    btext(big ? tx.s + '!' : tx.kind === 'money' ? '+' + tx.s : tx.s, tx.x, tx.y, tx.kind === 'money' ? 'y' : big ? 'o' : tx.kind === 'hurt' ? 'r' : tx.kind === 'gem' || tx.kind === 'fen' ? 'w' : 'w', big ? (age < 0.08 ? 1.5 : 1) : tx.kind === 'gem' || tx.kind === 'fen' ? 1 : 0.5);
   }
   ctx.globalAlpha = 1;
   runHooks('render', ctx);
@@ -1610,7 +1633,7 @@ function updateUI(dt) {
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
   note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
-  note('[data-open="team"]', save.team < TEAM.length && save.money >= TEAM[save.team].cost);
+  note('[data-open="team"]', (save.team < TEAM.length && save.money >= TEAM[save.team].cost) || TEAM.some((h, i) => i < save.team && hlv(i) < HERO_MAX && (save.scrolls[i] || 0) >= scrollNeed(hlv(i)) && save.money >= heroCost(hlv(i))));
   note('[data-open="rebirth"]', (rebirthGain() > 0 && R.bossFails >= 2) || !!(window.SS && window.SS.tree && window.SS.tree.canBuy()));
   // first steps
   if (!save.tut) save.tut = {};
@@ -1754,13 +1777,25 @@ const PANELS = {
     });
   }),
   team: () => openPanel('Takım', 'green', body => {
-    body.appendChild(el('<p class="big-note">Her yeni ninja takıma bir atıcı daha ekler.</p>'));
+    const sc = $('pBody').scrollTop;
+    body.appendChild(el('<p class="big-note">Her ninja takıma bir atıcı ve bir yetenek ekler. Bosslardan düşen <b>parşömenlerle</b> seviye atlarlar (Doğuşta sıfırlanmaz).</p>'));
     TEAM.forEach((h, i) => {
-      const owned = i < save.team, next = i === save.team;
-      const row = el(`<div class="row-card ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt=""></div>
-        <div class="info"><h4>${h.name}</h4><p>${h.perk}</p></div>
-        ${owned ? '<button class="btn grey off">TAKIMDA</button>' : next ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(h.cost)}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
-      if (next) row.querySelector('.btn').onclick = () => { if (save.money < h.cost) { sfx('no'); toast('Yeterli altın yok'); return; } save.money -= h.cost; save.team++; setupHeroes(); sfx('bonus', 0); persist(); uiKey = ''; PANELS.team(); };
+      const owned = i < save.team, next = i === save.team, lv = hlv(i), sc2 = save.scrolls[i] || 0, need = scrollNeed(lv), max = lv >= HERO_MAX, cost = heroCost(lv), can = owned && !max && sc2 >= need;
+      const bar = owned && !max ? `<div class="hl-bar ${sc2 >= need ? 'full' : ''}"><i style="width:${Math.min(100, sc2 / need * 100)}%"></i><span><img src="assets/ui/ic_book.png" alt="">${sc2} / ${need}</span></div>` : '';
+      const row = el(`<div class="row-card hl-row ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt="">${owned ? `<span class="hl-lv">${max ? 'MAKS' : 'Sv.' + lv}</span>` : ''}</div>
+        <div class="info"><h4>${h.name}</h4><p>${owned ? PERK_TXT[i](lv) : h.perk}${owned && lv > 1 ? ` · <b>+%${Math.round((heroMul(i) - 1) * 100)} hasar</b>` : ''}</p>${bar}</div>
+        ${owned ? (max ? '<button class="btn grey off">MAKS</button>' : `<button class="btn ${can ? 'green' : 'grey off'} up"><img src="assets/ui/coin.png" alt="">${fmt(cost)}</button>`)
+          : next ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(h.cost)}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
+      const b = row.querySelector('.btn');
+      if (next) b.onclick = () => { if (save.money < h.cost) { sfx('no'); toast('Yeterli altın yok'); return; } save.money -= h.cost; save.team++; setupHeroes(); sfx('bonus', 0); persist(); uiKey = ''; PANELS.team(); };
+      if (can) b.onclick = () => {
+        if (save.money < cost) { sfx('no'); toast('Yeterli altın yok'); return; }
+        save.money -= cost; save.scrolls[i] = sc2 - need; save.hlv[i] = lv + 1; persist(); uiKey = '';
+        sfx('buy', 0, undefined, PENTA[Math.min(lv, 10)]); sfx('skill', 0);
+        const hh = R.heroes[i]; if (hh) { vfx('ring', 'gold', hh.x, hh.y - 8 * P, 1, 0.45); vfx('burst', 'gold', hh.x, hh.y - 10 * P, 1, 0.4); fx('fx_aura', hh.x, hh.y, 1, 0.5, 1); }
+        if (i === 0 && R.sq) R.sq.maxHp = sqMaxHp();
+        PANELS.team(); $('pBody').scrollTop = sc;
+      };
       body.appendChild(row);
     });
   }),
@@ -1868,7 +1903,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  save, R, F, GUNS, TEAM, giveScroll, hlv, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },

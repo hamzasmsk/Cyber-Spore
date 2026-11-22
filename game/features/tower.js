@@ -56,7 +56,7 @@
       T.best = Math.max(T.best, f);
       const r = rewardOf(f), inv = save.inv = save.inv || {};
       save.gems += r.gems; for (const k of ['star', 'storm', 'ticket']) if (r[k]) inv[k] = (inv[k] || 0) + r[k];
-      SS.addMoney(SS.reward() * 12 * SS.moneyMul(), SS.W / 2, SS.H * 0.4, 10);
+      SS.addMoney(SS.reward() * 12 * SS.moneyMul(), SS.W / 2, SS.H * 0.4, 10); setTimeout(() => SS.giveScroll(2), 1800);
       SS.banner(`${f}. KAT GEÇİLDİ!`, `+${r.gems} elmas${r.star ? ' · Yıldız Taşı' : ''}${r.storm ? ' · Tılsım' : ''}`);
       SS.HOOKS.tower && SS.HOOKS.tower.forEach(h => { try { h(f); } catch (e) { /* ignore */ } });
       setTimeout(() => { if (!SS.R.boss && document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov')) open(); }, 2600);

@@ -47,6 +47,7 @@
   }
   function open() {
     SS.openPanel('Günlük Ödül', 'green', body => {
+      if (SS.events) SS.events.tabs(body, 'daily');
       body.appendChild(SS.el(`<p class="big-note">Her gün gir, ödülün büyüsün. Kaçırdığın gün sıfırlamaz, seni bekler.${L.week ? ` · <b>${L.week + 1}. hafta: elmaslar x${wk().toFixed(1).replace('.0', '')}</b>` : ''}</p>`));
       const g = SS.el('<div class="lg-grid"></div>');
       DAYS.forEach((d, i) => {

@@ -13,6 +13,16 @@ Telefon için **dikey idle nişancı**. Saf HTML5 Canvas + JavaScript, hiçbir k
 - Ek modüller (`features/`): görevler, maden, kumbara, güçlendirmeler, mağaza, kostüm (lider karakteri), ayarlar.
 - 5 bölge döngüyle değişir: Bambu Vadisi, Kara Orman, Kızıl Kanyon, Buz Geçidi, Kül Diyarı.
 
+## Uzun vadeli sistemler
+- **Ruh Ağacı** (Doğuş → Ruh Ağacı): her Doğuş ruh verir; Saldırı / Servet / Ustalık dalları ve Gölge Yolu usta düğümü (`features/tree.js`).
+- **Yetenek kartları**: her boss sonrası 3 karttan biri (delme, sekme, buz, alev, şimşek, patlama, çifte bıçak…); Doğuşa kadar geçerli (`features/perks.js`).
+- **Kahraman seviyeleri**: bosslardan düşen parşömen + altınla her ninja 20 seviyeye kadar (Takım paneli).
+- **Kule**: sabit zorlukta sonsuz boss katları, her katın kuralı farklı, günde 3 hak (`features/tower.js`).
+- **Başarımlar**: kademeli hedefler; her kademe elmas + kalıcı %2 hasar (`features/achievements.js`). Görevler · Kule · Başarım tek panelde (`features/hub.js`).
+- **Günlük ödül takvimi** (7 gün, kaçırılan gün sıfırlamaz) ve isteğe bağlı **hatırlatıcı bildirimler** (günde en fazla 2, gece yok) (`features/daily.js`).
+- **Fener Festivali**: her hafta sonu fener düşer, festival mağazasında özel kostüm ve eşyalar (`features/events.js`).
+- **Kayıt kodu**: Ayarlar → Kayıt kodu ile ilerleme başka cihaza taşınır.
+
 ## Sanat yönü: tek kaynak, piksel-mükemmel
 Bütün grafik, efekt, arayüz çerçevesi, ikon, ses ve müzik **tek bir paketten** gelir:
 **Ninja Adventure** — Pixel-boy & AAA, CC0 (ticari kullanım serbest). Böylece palet, piksel yoğunluğu ve kontur
@@ -46,6 +56,6 @@ npm run ios        # veya: npm run android
 
 ## Dosyalar
 - `index.html`, `game.css`, `game.js` — oyun çekirdeği ve eklenti API'si (`window.SS`)
-- `features/*.js|css` — ek modüller (görevler, maden, kumbara, güçlendirme, mağaza, kostüm, koleksiyon, Ninja Yolu, ayarlar, para kazanma, uygulama köprüsü)
+- `features/*.js|css` — ek modüller (görevler, maden, kumbara, güçlendirme, mağaza, kostüm, koleksiyon, Ninja Yolu, Ruh Ağacı, yetenek kartları, Kule, başarımlar, günlük ödül, festival, ayarlar, para kazanma, uygulama köprüsü)
 - `monetize.config.js`, `package.json`, `capacitor.config.json`, `tools/build-www.js` — para kazanma ayarları ve uygulama paketleme
 - `assets/` — üretilmiş varlıklar ve lisanslar (`assets/LICENSE-ASSETS.txt`)

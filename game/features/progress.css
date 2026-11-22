@@ -139,3 +139,23 @@
 .tw-hp em{font-style:normal;padding:0 4px;color:var(--cream)}
 .tw-hp em.ez{background:var(--green)}.tw-hp em.md{background:#c98f2f}.tw-hp em.hd{background:var(--red)}.tw-hp em.no{background:var(--ink2)}
 .hub-tabs .btn{font-size:13px}
+
+/* Kahraman seviyeleri */
+.hl-row .ico{position:relative}
+.hl-lv{position:absolute;left:3px;right:3px;bottom:3px;font-size:11px;line-height:13px;text-align:center;color:var(--ink);background:var(--gold)}
+.hl-row p b{color:var(--green)}
+.hl-row p{margin:1px 0 2px;font-size:12px}
+.hl-bar{position:relative;height:16px;background:var(--sage3);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--ink)}
+.hl-bar i{position:absolute;inset:2px auto 2px 2px;max-width:calc(100% - 4px);background:var(--purple)}
+.hl-bar.full i{background:var(--green)}
+.hl-bar span{position:relative;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:16px;color:var(--cream);text-shadow:var(--o-sm)}
+.hl-bar img{width:12px;height:12px}
+.big-note b{color:var(--purple)}
+
+/* Fener Festivali */
+.ev-head{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#5b2433;clip-path:var(--notch);color:var(--cream)}
+.ev-head img{width:36px;height:36px}
+.ev-head b{display:block;font-size:20px;color:var(--gold2);text-shadow:var(--o-sm)}
+.ev-head span{font-size:11px;color:#f3c4b8}
+.ev-row .btn img{width:20px;height:20px}
+#dailyBtn.ev-on::before{content:"";position:absolute;left:-4px;top:-6px;width:27px;height:27px;background:url(../assets/ui/mon_LanternRed.png) center/contain no-repeat;image-rendering:pixelated;z-index:2;animation:blink3 1s steps(2) infinite}
