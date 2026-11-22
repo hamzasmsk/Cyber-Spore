@@ -139,7 +139,7 @@
     if (p.flag) M.owned[p.flag] = true;
     if (p.kind === 'non_consumable') M.owned[p.id] = true;
     if (p.monthly) { M.monthly.end = Math.max(now(), M.monthly.end || 0) + p.monthly.days * DAY; M.monthly.daily = p.monthly.daily; M.monthly.last = ''; got.push('Aylık Kart aktif'); }
-    if (p.pass && SS.pass) { SS.pass.unlockPremium(); got.push('Ninja Yolu Premium'); }
+    if (p.pass && SS.pass) { SS.pass.unlockPremium(p.passLevels || 0); got.push('Ninja Yolu Premium' + (p.passLevels ? ` + ${p.passLevels} seviye` : '')); }
     if (p.piggy && SS.piggy && SS.piggy.breakPaid) SS.piggy.breakPaid();
     M.log.push({ id: p.id, t: now() });
     SS.persist(); SS.refreshUI();
@@ -226,15 +226,19 @@
     };
   }
   // boss timer ran out: one +15 s continue per fight
-  const canContinue = () => Ads.available('continue');
+  const tickets = () => (save.inv && save.inv.ticket) || 0;
+  const canContinue = () => Ads.available('continue') || tickets() > 0;
   function offerContinue(cb) {
     SS.openPanel('Süre doldu!', 'red', body => {
       body.appendChild(SS.el(`<div class="big-num">+15 sn</div>`));
-      body.appendChild(SS.el('<p class="big-note">Boss kaçmak üzere. Bir reklam izle, 15 saniye daha savaş.</p>'));
-      const row = SS.el(`<div class="btnrow"><button class="btn grey">Vazgeç</button><button class="btn green"><img src="assets/ui/play.png" alt="">${Ads.noads() ? 'Devam et' : 'İzle'}</button></div>`);
+      const tk = tickets(), ad = Ads.available('continue');
+      body.appendChild(SS.el(`<p class="big-note">Boss kaçmak üzere. ${tk ? `Boss Bileti kullan (${tk} adet)` : 'Bir reklam izle'}, 15 saniye daha savaş.</p>`));
+      const row = SS.el(`<div class="btnrow"><button class="btn grey">Vazgeç</button>${tk ? '<button class="btn yellow tk"><img src="assets/ui/ic_shield.png" alt="">Bilet</button>' : ''}${ad ? `<button class="btn green ad"><img src="assets/ui/play.png" alt="">${Ads.noads() ? 'Devam' : 'İzle'}</button>` : ''}</div>`);
       let done = false; const fin = v => { if (done) return; done = true; SS.closePanel(); cb(v); };
       row.children[0].onclick = () => fin(false);
-      row.children[1].onclick = async () => fin(await Ads.show('continue'));
+      const tb = row.querySelector('.tk'), ab = row.querySelector('.ad');
+      if (tb) tb.onclick = () => { save.inv.ticket--; SS.persist(); fin(true); };
+      if (ab) ab.onclick = async () => fin(await Ads.show('continue'));
       body.appendChild(row);
       // closing the panel any other way counts as "no"
       const watch = setInterval(() => { if (document.getElementById('panel').classList.contains('hidden')) { clearInterval(watch); fin(false); } }, 200);

@@ -86,8 +86,10 @@ h2,h3,h4{margin:0;font-weight:700}
 .loading-txt{font-size:22px;color:var(--cream);text-shadow:var(--o)}
 .panel{position:relative;border:15px solid transparent;border-image:url(assets/ui/theme/panel.png) 20 / 15px stretch;image-rendering:pixelated;
   background:var(--paper);background-clip:padding-box;color:var(--dark);padding:16px 8px 8px}
-.panel.pop{width:min(440px,94vw);margin-top:24px;display:flex;flex-direction:column;gap:10px;align-items:stretch;animation:pop .2s steps(3) both}
-@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.panel.pop{width:min(440px,94vw);margin-top:24px;display:flex;flex-direction:column;gap:10px;align-items:stretch;animation:pop .14s cubic-bezier(.2,.9,.3,1) both;will-change:transform}
+@keyframes pop{0%{transform:translateY(14px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
+#panel:not(.hidden){animation:fadeIn .12s ease-out both}
+@keyframes fadeIn{0%{background-color:rgba(19,27,27,0)}100%{background-color:rgba(19,27,27,.6)}}
 @keyframes starpop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
 .ribbon{position:absolute;left:50%;top:-38px;transform:translateX(-50%);white-space:nowrap;min-width:150px;text-align:center;
   padding:2px 22px 5px;border:6px solid transparent;border-image:url(assets/ui/theme/btn.png) 8 fill / 6px stretch;image-rendering:pixelated;
@@ -287,3 +289,5 @@ h2,h3,h4{margin:0;font-weight:700}
 #bossCard span{font-size:13px;color:var(--muted)}
 #bossCard.show{animation:bossCard 2.4s steps(1,end) forwards}
 @keyframes bossCard{0%{transform:translateX(-120vw)}4%{transform:translateX(-80%)}8%{transform:translateX(-50%)}85%{transform:translateX(-50%)}90%{transform:translateX(-20%)}95%{transform:translateX(60vw)}100%{transform:translateX(150vw)}}
+
+#ultBtn[data-charm]:not([data-charm=""])::after{content:attr(data-charm);position:absolute;top:-4px;right:-2px;min-width:16px;height:16px;padding:0 3px;font-size:11px;line-height:16px;text-align:center;color:var(--cream);background:var(--purple);box-shadow:inset 0 0 0 2px var(--ink);z-index:3}

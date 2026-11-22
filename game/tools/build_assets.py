@@ -99,10 +99,15 @@ def save_ui(name, im, k=4):
 # ------------------------------------------------------------------ actors
 # squad (5 ninjas) + leader skins; sheet = 4 columns (down, up, left, right) x 7 rows (4 walk, attack, jump, misc)
 HEROES = ['NinjaBlue', 'NinjaRed', 'NinjaYellow', 'NinjaBomb', 'NinjaMasked',
-          'SamuraiBlue', 'KnightGold', 'MaskFrog', 'Skeleton', 'RedNinja3', 'Master']
+          'SamuraiBlue', 'KnightGold', 'MaskFrog', 'Skeleton', 'RedNinja3', 'Master',
+          # Ninja Yolu season-exclusive costumes
+          'NinjaMageBlack', 'NinjaEskimo', 'Tengu', 'MaskRacoon', 'SamuraiRed', 'NinjaDark', 'Vampire', 'Princess']
 DIRS = 'dulr'
 for h in HEROES:
-    sh = load(A('Actor', 'Characters', h, 'SpriteSheet.png'))
+    shp = A('Actor', 'Characters', h, 'SpriteSheet.png')
+    if not os.path.exists(shp):   # a few characters name their sheet differently
+        shp = [p for p in glob.glob(A('Actor', 'Characters', h, '*.png')) if 'Faceset' not in p][0]
+    sh = load(shp)
     for c, d in enumerate(DIRS):
         for r in range(4):
             add(f'h_{h}_{d}{r}', sh.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16)))

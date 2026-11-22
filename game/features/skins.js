@@ -51,7 +51,11 @@ function boot() {
           <div class="info"><h4>${it.name}</h4><p>${it.desc}</p></div>
           ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : it.pass ? '<button class="btn purple pass">Ninja Yolu</button>' : `<button class="btn yellow ${save.gems < it.cost ? 'cant' : ''}"><img src="assets/ui/gem.png" alt="">${it.cost}</button>`}</div>`);
         const b = row.querySelector('.btn');
-        if (!eq && !owned && it.pass) { b.onclick = () => { SS.sfx('click'); if (SS.pass) SS.pass.open(); }; row.querySelector('p').textContent = it.desc + ' · Ninja Yolu 30. seviye ödülü'; }
+        if (!eq && !owned && it.pass) {
+          const now = SS.pass && SS.pass.theme().skins.includes(it.id);
+          if (now) { b.onclick = () => { SS.sfx('click'); SS.pass.open(); }; row.querySelector('p').textContent = it.desc + ' · bu sezon Ninja Yolu ödülü'; }
+          else { b.className = 'btn grey off'; b.textContent = 'Sezonu bekle'; row.querySelector('p').textContent = it.desc + ' · başka bir sezonun Ninja Yolu ödülü'; }
+        }
         else if (!eq) b.onclick = () => {
           if (!owned) {
             if (save.gems < it.cost) { SS.sfx('no'); SS.toast('Yeterli elmas yok'); return; }
@@ -59,6 +63,19 @@ function boot() {
           } else SS.sfx('accept');
           equip(it.id); SS.persist(); SS.refreshUI(); open();
         };
+        root.appendChild(row);
+      });
+      // shot trails (Ninja Yolu cosmetics): tint the ghost / speed-line trail and the glow of every projectile
+      const T = SS.pass && SS.pass.TRAILS; if (!T) return;
+      const cos = save.cos = save.cos || {}; cos.trails = cos.trails || {};
+      root.appendChild(SS.el('<h3 class="fb-sec"><img src="assets/ui/ic_magic.png" alt="">Atış İzleri</h3>'));
+      [['', { name: 'Standart İz', col: '#fce2ca' }]].concat(Object.entries(T)).forEach(([id, t]) => {
+        const owned = !id || cos.trails[id], eq = (cos.trail || '') === id;
+        const row = SS.el(`<div class="row-card ${eq ? 'cur' : ''}"><div class="ico"><i class="fb-trail" style="background:${t.col}"></i></div>
+          <div class="info"><h4>${t.name}</h4><p>${id ? 'Mermilerin izi ve parıltısı' : 'Varsayılan'}</p></div>
+          ${eq ? '<button class="btn grey off">TAKILI</button>' : owned ? '<button class="btn green">TAK</button>' : SS.pass.theme().trails.includes(id) ? '<button class="btn purple">Ninja Yolu</button>' : '<button class="btn grey off">Sezonu bekle</button>'}</div>`);
+        const b = row.querySelector('.btn');
+        if (!eq) b.onclick = () => { if (!owned) { SS.sfx('click'); if (SS.pass) SS.pass.open(); return; } if (id) cos.trail = id; else delete cos.trail; SS.sfx('accept'); SS.persist(); open(); };
         root.appendChild(row);
       });
     });

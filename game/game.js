@@ -168,6 +168,7 @@ const GUNS = [
   { name: 'Ruh Küresi', glow: 'ice',   evo: { name: 'Gök Gürültüsü',   sp: 'thunder', desc: 'Gökten inen zincir şimşekler' },    mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
     trail: 'aura', hit: 'thunder', snd: 'throw_magic', hsnd: 'magic', tags: ['Zincir şimşek x3', 'Patlar'] },
 ];
+const TRAIL_COL = { gold: '#ffe18d', magic: '#d3a2c0', fire: '#ff9554', ice: '#8feff1', leaf: '#adbc3a', ink: '#8d977f' };
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
   { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
@@ -411,7 +412,7 @@ function startWave() {
   R.phase = 'fight';
   R.toSpawn = 3 + Math.floor(Math.random() * 3) + (save.stage > 3 ? 1 : 0);
   R.spawnT = 0.1;
-  if (save.stage >= 2 && Math.random() < 0.05) setTimeout(spawnTreasure, 1200);
+  if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05)) setTimeout(spawnTreasure, 1200);
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
   const CHT = CH * 16 * P;
@@ -822,10 +823,15 @@ function useUlt() {
   if (R.ult < 1 || R.ultT > 0 || !R.sq || R.sq.ko > 0) return;
   R.ult = 0; R.ultT = 5; R.ultFull = 0; R.flash = 0.25; R.shake = 4;
   for (const h of R.heroes) { fx('fx_circlew', h.x, h.y - 8 * P, 1, 0.35); fx('fx_aura', h.x, h.y, 1, 0.4, 1); }
-  banner('FIRTINA!', '5 saniye x3 atış'); sfx('skill', 0); uiKey = '';
+  banner('FIRTINA!', '5 saniye x3 atış'); sfx('skill', 0); uiKey = ''; runHooks('ult');
   if (save.tut) save.tut.ult = true;
 }
-$('ultBtn').addEventListener('click', () => { audioInit(); useUlt(); });
+$('ultBtn').addEventListener('click', () => {
+  audioInit();
+  const inv = save.inv || {};
+  if (R.ult < 1 && R.ultT <= 0 && inv.storm > 0 && R.sq && R.sq.ko <= 0) { inv.storm--; R.ult = 1; toast(`Fırtına Tılsımı kullanıldı · ${inv.storm} kaldı`); persist(); }
+  useUlt();
+});
 
 // ================================================================ squad: input, AI steering, health
 const keys = {};
@@ -1096,7 +1102,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1323,17 +1329,18 @@ function render() {
   // thrown weapons: fading ghost trail, then the weapon (never freely rotated: spin = frame flip, else 16 directions)
   for (const q of R.bul) {
     const g = q.g, n = AN['p_' + g.spr] || 1, sc = q.sc || g.sc || 1;
-    if (g.glow && (q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
+    const cosT = save.cos && save.cos.trail, trailCol = cosT ? TRAIL_COL[cosT] : '#fce2ca', glowName = cosT || g.glow;
+    if (glowName && (cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
       ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + 0.1 * Math.sin(q.age * 20);
-      spr(`vx_glow${q.special || evolved() ? 40 : 24}_${g.glow}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
+      spr(`vx_glow${q.special || evolved() ? 40 : 24}_${glowName}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     }
     const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
     const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
     if (g.trail === 'line') {
       const e = q.trail[q.trail.length - 1];
-      if (e) { const n = Math.ceil(Math.hypot(q.x - e.x, q.y - e.y) / P); for (let k = 1; k <= n; k++) { ctx.globalAlpha = 0.55 * (1 - k / (n + 1)); prect(lerp(q.x, e.x, k / n) - P / 2, lerp(q.y, e.y, k / n) - P / 2, P, P, '#fce2ca'); } }
-    } else for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' ? '#fce2ca' : null); }
+      if (e) { const n = Math.ceil(Math.hypot(q.x - e.x, q.y - e.y) / P); for (let k = 1; k <= n; k++) { ctx.globalAlpha = 0.55 * (1 - k / (n + 1)); prect(lerp(q.x, e.x, k / n) - P / 2, lerp(q.y, e.y, k / n) - P / 2, P, P, trailCol); } }
+    } else for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' || cosT ? trailCol : null); }
     ctx.globalAlpha = 1;
     spr(name, q.x, q.y, sc, 0.5, 0.5, false, rot);
   }
@@ -1504,7 +1511,7 @@ function ctrlBadge() {
 }
 function updateUI(dt) {
   uiT -= dt; if (uiT > 0 && uiKey) return; uiT = 0.12;
-  const key = [Math.floor(save.money), save.gems, Math.round(R.ult * 20), R.ultT > 0, R.bossFails, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
+  const key = [Math.floor(save.money), save.gems, save.inv ? save.inv.storm : 0, Math.round(R.ult * 20), R.ultT > 0, R.bossFails, save.stage, save.sub, save.kills, save.bossReady, !!R.boss, R.boss ? Math.ceil(R.boss.hp) : 0, R.boss ? Math.ceil(R.boss.t) : 0, save.lv.power, save.lv.speed, save.lv.money, save.gun, save.team, save.auto, save.sound, R.phase].join('|');
   if (key === uiKey) return; uiKey = key;
   $('money').textContent = fmt(save.money);
   $('gems').textContent = fmt(save.gems);
@@ -1537,6 +1544,7 @@ function updateUI(dt) {
   const gi = document.querySelector('.gunico'); if (gi) gi.src = `assets/ui/wi_${GUNS[save.gun].spr}.png`;
   // ultimate meter
   const ub = $('ultBtn'); ub.querySelector('i').style.height = Math.round(R.ult * 100) + '%';
+  const sc2 = (save.inv && save.inv.storm) || 0; ub.dataset.charm = sc2 > 0 && R.ult < 1 ? sc2 : '';
   $('hint').style.visibility = R.boss ? 'hidden' : '';
   if (R.t > 20 && !$('hint').classList.contains('gone')) { $('hint').classList.add('gone'); try { localStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }
   ub.classList.toggle('full', R.ult >= 1 && R.ultT <= 0); ub.classList.toggle('active', R.ultT > 0);
@@ -1581,6 +1589,8 @@ function openPanel(title, color, build) {
   const body = $('pBody'); body.innerHTML = ''; build(body);
   if ($('panel').classList.contains('hidden')) sfx('open', 0);
   $('panel').classList.remove('hidden');
+  const imgs = [...body.querySelectorAll('img')].filter(im => im.complete && im.naturalWidth && !im.dataset.px), rs = imgs.map(im => im.getBoundingClientRect());
+  imgs.forEach((im, i) => { if (rs[i].width) { im.dataset.r = rs[i].width + ',' + rs[i].height; snapImg(im); } });
 }
 function closePanel() { if (!$('panel').classList.contains('hidden')) sfx('close', 0); $('panel').classList.add('hidden'); }
 $('pClose').onclick = () => closePanel();
@@ -1660,7 +1670,7 @@ const PANELS = {
       const stars = owned ? `<div class="stars">${[1, 2, 3, 4, 5].map(k => `<i class="${k <= st ? 'on' : ''}"></i>`).join('')}</div>` : '';
       const nextTxt = !owned ? g.tags.join(' · ') : evo ? `<b class="evo">${g.evo.name}</b> · ${g.evo.desc}` : st === 2 ? `★3: +1 atış` : st === 4 ? `★5: Evrim → ${g.evo.name}` : `★${st + 1}: +%30 hasar`;
       let btn;
-      if (cur && st < 5) btn = `<button class="btn yellow up"><img src="assets/ui/gem.png" alt="">${starCost(i, st)}</button>`;
+      if (cur && st < 5) btn = (save.inv && save.inv.star > 0) ? `<button class="btn purple up"><img src="assets/ui/ic_luck.png" alt="">Taş (${save.inv.star})</button>` : `<button class="btn yellow up"><img src="assets/ui/gem.png" alt="">${starCost(i, st)}</button>`;
       else if (cur) btn = '<button class="btn purple off">EVRİM</button>';
       else if (owned) btn = '<button class="btn green eq">TAK</button>';
       else if (next) btn = `<button class="btn yellow buy"><img src="assets/ui/gem.png" alt="">${g.cost}</button>`;
@@ -1670,8 +1680,9 @@ const PANELS = {
       row.querySelector('.ico').onclick = row.querySelector('.info').onclick = () => { sfx('tick', 0); PANELS.guns(i); };
       const b = row.querySelector('.btn');
       if (b.classList.contains('up')) b.onclick = () => {
-        const c = starCost(i, st); if (save.gems < c) { sfx('no'); toast('Yeterli elmas yok'); return; }
-        save.gems -= c; save.wstar[i] = st + 1; persist(); uiKey = '';
+        const c = starCost(i, st), stone = (save.inv && save.inv.star) > 0;
+        if (stone) save.inv.star--; else { if (save.gems < c) { sfx('no'); toast('Yeterli elmas yok'); return; } save.gems -= c; }
+        save.wstar[i] = st + 1; persist(); uiKey = ''; runHooks('star');
         if (st + 1 >= 5) { closePanel(); evolveMoment(g); } else { sfx('buy', 0, undefined, PENTA[st + 2]); vfx('burst', g.glow || 'gold', W / 2, H / 2, 1, 0.3); PANELS.guns(i); }
       };
       if (b.classList.contains('eq')) b.onclick = () => { save.gun = i; persist(); uiKey = ''; sfx('accept', 0); PANELS.guns(i); };
@@ -1702,7 +1713,7 @@ const PANELS = {
     const btn = el(`<button class="btn purple wide ${gain > 0 ? '' : 'off'}">YENİDEN DOĞ</button>`);
     btn.onclick = () => {
       if (gain <= 0) return;
-      const rg = rebirthGems(gain); save.gems += rg;
+      const rg = rebirthGems(gain); save.gems += rg; runHooks('rebirth');
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
       R.en.length = 0; R.eb.length = 0; R.boss = null; $('bossHud').classList.add('hidden');
       persist(); R.bioEdge = -1e9; R.oldBio = null; chunks.clear(); startAdvance(150 * U, 110 * U); musicUpdate(); closePanel(); banner('YENİDEN DOĞDUN!', `Bonus x${fmt(1 + save.rp * 0.3)} · +${rg} elmas`); sfx('win', 0); uiKey = '';
@@ -1759,15 +1770,24 @@ window.addEventListener('pointerdown', audioInit, { once: true });
 function snapImg(im) {
   if (!im || !im.naturalWidth || im.dataset.px || !/assets\/ui\//.test(im.src) || /\/theme\//.test(im.src)) return;
   const f = /\/(face|mon|boss)_/.test(im.src) ? 3 : /lever/.test(im.src) ? 2 : 4, aw = im.naturalWidth / f, ah = im.naturalHeight / f;
-  const r = im.getBoundingClientRect(); if (!r.width) return;
+  const rr = im.dataset.r ? im.dataset.r.split(',').map(Number) : null, r = rr ? { width: rr[0], height: rr[1] } : im.getBoundingClientRect(); if (!r.width) return;
   const want = Math.max(r.width / aw, r.height / ah), dev = window.devicePixelRatio || 1;
   const k = Math.max(1, Math.round(want * dev)) / dev;   // whole device pixels per art pixel
   im.style.width = aw * k + 'px'; im.style.height = ah * k + 'px'; im.style.maxWidth = 'none'; im.style.maxHeight = 'none'; im.style.objectFit = 'fill';
   im.dataset.px = '1';
 }
-function snapAll(root = document) { root.querySelectorAll('img').forEach(im => { if (im.complete) snapImg(im); }); }
-document.addEventListener('load', e => { const im = e.target; if (im && im.tagName === 'IMG') { delete im.dataset.px; im.style.width = im.style.height = ''; requestAnimationFrame(() => snapImg(im)); } }, true);
-new MutationObserver(() => requestAnimationFrame(() => snapAll())).observe(document.body, { childList: true, subtree: true });
+function snapAll(root = document) { root.querySelectorAll('img').forEach(queueSnap); }
+// only images that are new or whose file changed are measured (re-measuring every image on every DOM change was
+// the main cost behind slow panel opening); reads happen before writes so layout is computed once per batch
+let snapQ = new Set(), snapRaf = 0;
+function queueSnap(im) { snapQ.add(im); if (!snapRaf) snapRaf = requestAnimationFrame(flushSnap); }
+function flushSnap() {
+  snapRaf = 0; const list = [...snapQ].filter(im => im.isConnected && im.complete && im.naturalWidth); snapQ.clear();
+  const rects = list.map(im => im.getBoundingClientRect());
+  list.forEach((im, i) => { if (rects[i].width) { im.dataset.r = rects[i].width + ',' + rects[i].height; snapImg(im); } });
+}
+document.addEventListener('load', e => { const im = e.target; if (im && im.tagName === 'IMG' && im.dataset.nw !== String(im.naturalWidth)) { im.dataset.nw = im.naturalWidth; if (im.dataset.px) { delete im.dataset.px; im.style.width = im.style.height = ''; } queueSnap(im); } }, true);
+new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) { if (n.tagName === 'IMG') queueSnap(n); else if (n.querySelectorAll) n.querySelectorAll('img').forEach(queueSnap); } }).observe(document.body, { childList: true, subtree: true });
 window.addEventListener('resize', () => { document.querySelectorAll('img[data-px]').forEach(im => { delete im.dataset.px; im.style.width = im.style.height = ''; }); requestAnimationFrame(() => snapAll()); });
 
 // ---------------- plugin API used by features/*.js
