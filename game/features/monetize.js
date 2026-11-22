@@ -273,10 +273,15 @@
   // triggers
   SS.HOOKS.bossFail = SS.HOOKS.bossFail || [];
   SS.HOOKS.bossFail.push(() => {
-    if (save.stage >= 5 && SS.R.bossFails >= 2) setTimeout(() => maybePopup('ss_offer_power', { title: 'Güç Paketi', img: 'ic_power.png' }, 6), 2600);
+    if (save.stage >= 5 && SS.R.bossFails >= 2) { const f = () => maybePopup('ss_offer_power', { title: 'Güç Paketi', img: 'ic_power.png' }, 6); if (SS.flow) SS.flow.request('offer_power', f, 4); else setTimeout(f, 2600); }
   });
-  SS.HOOKS.stage.push(() => {
-    if (save.stage >= 3 && !M.owned.ss_starter && !(M.offers.ss_starter && M.offers.ss_starter.shown)) setTimeout(() => maybePopup('ss_starter', { title: 'Başlangıç Paketi', img: 'face_KnightGold.png' }), 1500);
+  // starter pack: shown once, right after a boss win (a natural pause), from the second session on or after 12
+  // minutes of a first session; never in the middle of a fight or on top of another popup
+  SS.HOOKS.bossWin.push(() => {
+    if (save.stage < 3 || M.owned.ss_starter || (M.offers.ss_starter && M.offers.ss_starter.shown)) return;
+    if ((save.sessions || 1) < 2 && Date.now() - (save.sessStart || 0) < 12 * 60000) return;
+    const f = () => maybePopup('ss_starter', { title: 'Başlangıç Paketi', img: 'face_KnightGold.png' });
+    if (SS.flow) SS.flow.request('starter', f, 7); else setTimeout(f, 2500);
   });
 
   // countdown labels inside open panels

@@ -44,7 +44,7 @@
     L.day++; if (L.day >= DAYS.length) { L.day = 0; L.week++; }
     SS.persist(); SS.refreshUI(); paint();
     SS.closePanel();
-    if (!save.notifyAsked && Notif.native) setTimeout(askNotify, 2600);
+    if (!save.notifyAsked && Notif.native) { if (SS.flow) SS.flow.request('notify', askNotify, 8); else setTimeout(askNotify, 2600); }
   }
   function open() {
     SS.openPanel('Günlük Ödül', 'green', body => {
@@ -74,7 +74,7 @@
   // show the calendar once per day on start (after the welcome-back panel, never on top of another panel)
   if (ready()) {
     const tryOpen = (n) => { if (!ready() || (SS.unlocked && !SS.unlocked('dailyBtn'))) return; if (!document.getElementById('panel').classList.contains('hidden') || document.querySelector('.pk-ov,.mz-ov')) { if (n < 40) setTimeout(() => tryOpen(n + 1), 1500); return; } open(); };
-    setTimeout(() => tryOpen(0), 2500);
+    setTimeout(() => { if (SS.flow) SS.flow.request('daily', () => { if (!ready() || (SS.unlocked && !SS.unlocked('dailyBtn'))) return false; open(); }, 3, false); else tryOpen(0); }, 2500);
   }
 
   // ---------------- local notifications (Capacitor @capacitor/local-notifications)

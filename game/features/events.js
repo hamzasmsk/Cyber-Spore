@@ -74,6 +74,6 @@
   // lantern badge on the Ödül button + one banner when a festival starts
   function paint() { const b = document.getElementById('dailyBtn'); if (b) b.classList.toggle('ev-on', active()); }
   setInterval(paint, 30000); setTimeout(paint, 0);
-  setTimeout(() => { if (active() && (!SS.unlocked || SS.unlocked('dailyBtn'))) { sync(); if (E.seen !== E.key) { E.seen = E.key; SS.persist(); SS.banner('FESTİVAL!', 'Fener Festivali: hafta sonu fener topla'); } } }, 4000);
+  setTimeout(() => { if (active() && (!SS.unlocked || SS.unlocked('dailyBtn'))) { sync(); if (E.seen !== E.key) { E.seen = E.key; SS.persist(); (SS.flow ? f => SS.flow.request('fest', f, 6) : f => f())(() => SS.banner('FESTİVAL!', 'Fener Festivali: hafta sonu fener topla')); } } }, 4000);
   SS.events = { open, active, tabs, ITEMS };
 })();

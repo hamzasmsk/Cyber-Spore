@@ -52,7 +52,7 @@
   function intro(s) {
     const [k, , title, txt, icon] = s, b = el(k);
     const card = SS.el(`<div class="un-card"><div class="un-ico"><img src="assets/ui/${icon}.png" alt=""></div><div class="un-txt"><small>YENİ MENÜ</small><b>${title}</b><span>${txt}</span></div><button class="btn green">AÇ</button></div>`);
-    const done = () => { card.classList.add('out'); setTimeout(() => card.remove(), 250); showing = false; setTimeout(next, 400); };
+    const done = () => { card.classList.add('out'); setTimeout(() => card.remove(), 250); if (SS.flow) SS.flow.mark(); };
     card.querySelector('.btn').onclick = e => { e.stopPropagation(); U[k] = 2; SS.persist(); paint(); done(); if (b) b.click(); };
     card.onclick = () => done();
     document.getElementById('ui').appendChild(card);
@@ -61,9 +61,10 @@
     setTimeout(() => { if (card.isConnected) done(); }, 7000);
   }
   function next() {
-    if (showing || !queue.length) return;
-    if (!document.getElementById('panel').classList.contains('hidden') || document.querySelector('.pk-ov,.mz-ov') || (SS.R && SS.R.boss)) { setTimeout(next, 1500); return; }
-    showing = true; intro(queue.shift());
+    if (!queue.length) return;
+    const s = queue.shift();
+    if (SS.flow) SS.flow.request('un_' + s[0], () => intro(s), 2, 6000); else intro(s);
+    next();
   }
   function check() {
     const best = save.best || 1; let ch = false;

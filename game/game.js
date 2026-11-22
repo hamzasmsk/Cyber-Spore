@@ -611,7 +611,7 @@ function bossWin() {
   save.gems += gems; addMoney(cash, b.x, b.y - bossH(b) / 2, 16);
   setTimeout(() => giveScroll(first ? 2 : 1), 2200);
   setTimeout(() => { const mon = window.SS && window.SS.mon; if (mon) mon.bossReward(gems); }, 1400);
-  R.bossFails = 0; R.stop = 0.15; R.cheerT = 2;
+  R.bossFails = 0; R.stop = 0.32; R.cheerT = 2; R.flash = 0.35; R.shake = 8;   // the kill blow freezes for a beat
   save.stage++; save.sub = 1; save.kills = 0; save.bossReady = false; save.best = Math.max(save.best, save.stage);
   $('bossHud').classList.add('hidden');
   banner('ZAFER!', gems ? `+${gems} elmas · ${biome().name}` : `Bölüm ${save.stage} · ${biome().name}`); sfx('win', 0);
@@ -702,6 +702,10 @@ function hitFx(q, t) {
     default: fx('fx_spark', x, y);
   }
   if (g.bits) bits(x, y, g.bits, 2);
+  if (q.crit && R.t - (R.critT || 0) > 0.22) {   // impact feel: a 30 ms hit-stop and a one-pixel camera kick along the throw
+    R.critT = R.t; R.stop = Math.max(R.stop, t === R.boss ? 0.05 : 0.03);
+    R.kickX = Math.cos(q.a) * P * (t === R.boss ? 2 : 1); R.kickY = Math.sin(q.a) * P * (t === R.boss ? 2 : 1);
+  }
   if (q.crit) { fx('fx_cut', x + 4 * U, y - 4 * U, 1, 0.22); if (gate(0.06)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.22); }
   else if (evolved() && gate(0.12)) vfx('burst', g.glow || 'gold', x, y, 0.5, 0.2);
   if (g.boom) boom(x, y, t === R.boss ? 1 : 0.5); else sfx(g.hsnd || 'hit', 0, x);
@@ -1392,6 +1396,7 @@ function update(dt) {
   R.en = R.en.filter(e => !e.dead); R.bul = R.bul.filter(q => !q.dead); R.parts = R.parts.filter(p => p.life > 0);
   R.txt = R.txt.filter(t => t.life > 0); R.coins = R.coins.filter(m => !m.dead);
   if (R.shake > 0) R.shake = Math.max(0, R.shake - dt * 30);
+  if (R.kickX || R.kickY) { const k = Math.pow(0.0005, dt); R.kickX = Math.abs(R.kickX * k) < 0.3 ? 0 : R.kickX * k; R.kickY = Math.abs(R.kickY * k) < 0.3 ? 0 : R.kickY * k; }
   if (R.flash > 0) R.flash = Math.max(0, R.flash - dt * 2);
   if (R.hurt > 0) R.hurt = Math.max(0, R.hurt - dt);
   if (R.joy) R.joy.t += dt;
@@ -1405,7 +1410,7 @@ function update(dt) {
 function render() {
   ctx.setTransform(1 / L, 0, 0, 1 / L, 0, 0); ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W + L, H + L);
-  const sh = Math.round(R.shake / P), sx = sh ? Math.round(rand(-sh, sh)) * P : 0, sy = sh ? Math.round(rand(-sh, sh)) * P : 0;
+  const sh = Math.round(R.shake / P), sx = (sh ? Math.round(rand(-sh, sh)) * P : 0) + Math.round((R.kickX || 0) / P) * P, sy = (sh ? Math.round(rand(-sh, sh)) * P : 0) + Math.round((R.kickY || 0) / P) * P;
   ctx.translate(sx, sy);
   const t = R.t;
   drawGroundTiles();

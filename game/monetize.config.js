@@ -32,6 +32,7 @@ window.MONETIZE = {
       bossReward: { cap: 10, label: 'Boss elması x2' },
       continue:   { cap: 5, label: 'Boss +15 saniye' },
       freeGems:   { cap: 5, label: 'Ücretsiz elmas', gems: 3 },
+      revive:     { cap: 5, label: 'Nakavttan hemen kalk' },
     },
   },
 
