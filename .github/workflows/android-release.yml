@@ -33,18 +33,19 @@ jobs:
       VERSION_CODE: ${{ github.run_number }}
       VERSION_NAME: ${{ github.event.inputs.version_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK (preinstalled on the runner)
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls "$ANDROID_HOME"
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -73,7 +74,7 @@ jobs:
           ./gradlew --no-daemon bundleRelease
 
       - name: Keep the bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: shuriken-squad-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}
           path: game/android/app/build/outputs/bundle/release/app-release.aab
