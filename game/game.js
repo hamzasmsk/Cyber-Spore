@@ -192,6 +192,7 @@ const SUBS = 5, KILLS_PER_SUB = 14, BOSS_TIME = 30, EHP = 0.55, EGOLD = 0.6;
 // ================================================================ save
 const SAVE_KEY = 'swarmsquad_idle_v1';
 const DEF = { money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1, rebirths: 0, rp: 0, auto: true, sound: true, music: true, t: 0, rate: 0, best: 1 };
+// auto boss is always on now (the OTO toggle was removed)
 const save = (() => { let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { s = null; }
   const d = JSON.parse(JSON.stringify(DEF)); if (s && typeof s === 'object') { Object.assign(d, s); d.lv = Object.assign({ power: 0, speed: 0, money: 0 }, s.lv || {}); } return d; })();
 function persist() { if (R.noSave) return; save.t = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage blocked */ } }
@@ -319,14 +320,99 @@ function sfx(n, gap, x, semi) {
   if (!AC || save.sound === false) return;
   const m = SFXMAP[n]; if (!m) return;
   const now = AC.currentTime; if (sndLast[n] && now - sndLast[n] < (gap === 0 ? 0 : Math.max(gap || 0, m[3]))) return; sndLast[n] = now;
+  const sy = SYN[n], pan = x !== undefined ? clamp(x / W * 2 - 1, -1, 1) * 0.55 : 0;
+  if (sy) { try { sy[0](semi || 0, pan); } catch (e) { /* synth unavailable */ } if (!sy[1]) return; }
   const bf = SND[pick(m[0])]; if (!bf) return;
   const s = AC.createBufferSource(), g = AC.createGain();
-  s.buffer = bf; s.playbackRate.value = Math.pow(2, (semi || 0) / 12) * (1 + (Math.random() * 2 - 1) * m[2]); g.gain.value = m[1];
+  s.buffer = bf; s.playbackRate.value = Math.pow(2, (semi || 0) / 12) * (1 + (Math.random() * 2 - 1) * m[2]); g.gain.value = m[1] * (sy ? sy[1] : 1);
   s.connect(g);
   if (x !== undefined && AC.createStereoPanner) { const pn = AC.createStereoPanner(); pn.pan.value = clamp(x / W * 2 - 1, -1, 1) * 0.55; g.connect(pn); pn.connect(sfxBus); }
   else g.connect(sfxBus);
   s.start();
 }
+// ---------------- synthesized layer
+// Every event is tuned to one key (D major pentatonic) so kill streaks, coin pickups and rewards play as little
+// melodies instead of noise. Voices: pluck (kalimba-like), bell (FM chime), whoosh (filtered noise sweep),
+// thump (pitch-dropping sine for weight), horn (filtered saw). Samples from the pack stay underneath where they add
+// texture (impacts, explosions, voices); SYN[name] = [voice, sample level (0 = synth only)].
+const KEY = 587.33;   // D5
+const PEN = [0, 2, 4, 7, 9];
+const pf = st => KEY * Math.pow(2, st / 12);
+const penta = k => { const o = Math.floor(k / 5), i = ((k % 5) + 5) % 5; return PEN[i] + 12 * o; };
+function out(pan, t) {   // per-voice gain -> (pan) -> sfx bus
+  const g = AC.createGain(); g.gain.value = 0;
+  if (pan && AC.createStereoPanner) { const p = AC.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(sfxBus); } else g.connect(sfxBus);
+  return g;
+}
+function env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
+function pluck(f, vol, d = 0.35, pan = 0, dt = 0) {
+  const t = AC.currentTime + dt, g = out(pan), lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 5); lp.connect(g);
+  const o1 = AC.createOscillator(), o2 = AC.createOscillator(), g2 = AC.createGain();
+  o1.type = 'triangle'; o1.frequency.value = f; o2.type = 'sine'; o2.frequency.value = f * 4.01; g2.gain.value = 0.18;
+  o1.connect(lp); o2.connect(g2); g2.connect(lp);
+  g2.gain.setValueAtTime(0.25, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);   // bright tine attack
+  env(g, t, 0.004, vol, d); o1.start(t); o2.start(t); o1.stop(t + d + 0.05); o2.stop(t + d + 0.05);
+}
+function bell(f, vol, d = 0.9, pan = 0, dt = 0, ratio = 3.5) {
+  const t = AC.currentTime + dt, g = out(pan), c = AC.createOscillator(), m = AC.createOscillator(), mg = AC.createGain();
+  c.type = 'sine'; c.frequency.value = f; m.type = 'sine'; m.frequency.value = f * ratio;
+  mg.gain.setValueAtTime(f * 2.2, t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + d * 0.7);
+  m.connect(mg); mg.connect(c.frequency); c.connect(g);
+  env(g, t, 0.003, vol, d); c.start(t); m.start(t); c.stop(t + d + 0.05); m.stop(t + d + 0.05);
+}
+function whoosh(f0, f1, d, vol, pan = 0, q = 1.2) {
+  if (!noiseBuf) return;
+  const t = AC.currentTime, src = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = out(pan);
+  src.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = q; bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + d);
+  src.connect(bp); bp.connect(g); env(g, t, d * 0.3, vol, d * 0.7); src.start(t, Math.random()); src.stop(t + d + 0.05);
+}
+function thump(f0, f1, d, vol, pan = 0, dt = 0) {
+  const t = AC.currentTime + dt, o = AC.createOscillator(), g = out(pan);
+  o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d); o.connect(g);
+  env(g, t, 0.004, vol, d); o.start(t); o.stop(t + d + 0.05);
+}
+function horn(f, d, vol, dt = 0) {
+  const t = AC.currentTime + dt, o = AC.createOscillator(), lp = AC.createBiquadFilter(), g = out(0), lfo = AC.createOscillator(), lg = AC.createGain();
+  o.type = 'sawtooth'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.setValueAtTime(300, t); lp.frequency.linearRampToValueAtTime(900, t + d * 0.4); lp.frequency.linearRampToValueAtTime(400, t + d);
+  lfo.frequency.value = 5.5; lg.gain.value = f * 0.012; lfo.connect(lg); lg.connect(o.frequency);
+  o.connect(lp); lp.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.06); g.gain.setValueAtTime(vol, t + d * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.start(t); lfo.start(t); o.stop(t + d + 0.05); lfo.stop(t + d + 0.05);
+}
+function arp(steps, vol, gap, voice = bell, d = 0.8) { steps.forEach((k, i) => voice(pf(penta(k)), vol, d, 0, i * gap)); }
+// music ducks under big moments so rewards are heard clearly
+function duck(depth = 0.45, hold = 0.9) {
+  if (!musBus) return; const t = AC.currentTime, v = save.music === false ? 0 : save.vol.music;
+  musBus.gain.cancelScheduledValues(t); musBus.gain.setTargetAtTime(v * depth, t, 0.04); musBus.gain.setTargetAtTime(v, t + hold, 0.35);
+}
+const SYN = {
+  shoot: [(s, p) => whoosh(2600, 900, 0.1, 0.05, p), 0.45],
+  throw2: [(s, p) => whoosh(3400, 1300, 0.08, 0.045, p, 1.6), 0.4],
+  throw_magic: [(s, p) => { whoosh(2000, 900, 0.12, 0.04, p); bell(pf(penta(10 + Math.floor(Math.random() * 5))), 0.018, 0.25, p); }, 0.35],
+  throw_fire: [(s, p) => { whoosh(900, 260, 0.2, 0.07, p, 0.8); }, 0.5],
+  hit: [(s, p) => thump(190, 70, 0.07, 0.07, p), 1], hit2: [(s, p) => thump(220, 80, 0.06, 0.06, p), 1], hit3: [(s, p) => thump(200, 75, 0.06, 0.06, p), 1],
+  hit_ice: [(s, p) => bell(pf(penta(12)), 0.02, 0.2, p), 0.9], hit_fire: [(s, p) => thump(150, 50, 0.1, 0.07, p), 1],
+  kill: [(s, p) => { pluck(pf(s - 12), 0.09, 0.32, p); thump(130, 50, 0.08, 0.05, p); }, 0.45],   // s = streak step: the combo plays a melody
+  coin: [() => {}, 0.6],
+  tick: [(s, p) => bell(pf(s - 5), 0.022, 0.16, p, 0, 2), 0],
+  gem: [() => { bell(pf(12), 0.07, 0.9); bell(pf(19), 0.05, 0.9, 0, 0.07); duck(0.7, 0.4); }, 0],
+  buy: [(s) => { pluck(pf(penta(Math.floor(s / 2.4))), 0.08, 0.22); thump(400, 200, 0.03, 0.03); }, 0],
+  no: [() => { pluck(pf(-12 + 3), 0.06, 0.12); pluck(pf(-12), 0.06, 0.2, 0, 0.08); }, 0],
+  click: [() => { pluck(pf(0) * 2, 0.035, 0.05); }, 0],
+  open: [() => { pluck(pf(0), 0.05, 0.12); pluck(pf(7), 0.05, 0.18, 0, 0.05); }, 0],
+  close: [() => { pluck(pf(7), 0.045, 0.1); pluck(pf(0), 0.045, 0.16, 0, 0.05); }, 0],
+  accept: [() => { pluck(pf(4), 0.06, 0.2); pluck(pf(9), 0.06, 0.3, 0, 0.06); }, 0],
+  bonus: [() => { arp([5, 7, 9, 10], 0.05, 0.06); duck(0.6, 0.6); }, 0],
+  stage: [() => { bell(pf(0), 0.04, 0.6); bell(pf(7), 0.035, 0.7, 0, 0.09); }, 0],
+  treasure: [() => { arp([5, 6, 7, 8, 9, 10, 12], 0.04, 0.045, bell, 0.5); }, 0.5],
+  win: [() => { duck(0.35, 1.6); thump(110, 45, 0.35, 0.12); [0, 4, 7, 12].forEach((st, i) => bell(pf(st), 0.07, 1.4, (i - 1.5) * 0.2, i * 0.09)); pluck(pf(-12), 0.08, 1.2, 0, 0.36); pluck(pf(-5), 0.06, 1.2, 0, 0.36); }, 0],
+  fail: [() => { duck(0.5, 1.2); [7, 3, 0].forEach((st, i) => pluck(pf(st - 12), 0.07, 0.5, 0, i * 0.16)); thump(90, 40, 0.4, 0.07, 0, 0.32); }, 0],
+  boss: [() => { duck(0.4, 1.4); thump(85, 38, 0.6, 0.16); thump(85, 38, 0.6, 0.12, 0, 0.32); bell(110, 0.06, 2.2, 0, 0, 1.4); horn(73.4, 1.1, 0.05, 0.1); }, 0.5],
+  elite: [() => { horn(146.8, 0.45, 0.04); }, 0.4],
+  skill: [() => { arp([7, 9, 12, 14], 0.035, 0.05, bell, 0.6); whoosh(600, 3000, 0.4, 0.05); }, 0.5],
+  magic: [(s, p) => { bell(pf(penta(8 + Math.floor(Math.random() * 6)) + s * 0), 0.025, 0.4, p); }, 0.6],
+  gold: [() => { arp([0, 2, 4, 5, 7], 0.04, 0.04, bell, 0.45); }, 0.5],
+  boom: [(s, p) => thump(120, 35, 0.25, 0.1, p), 0.8],
+};
 // soft synthesized footstep (filtered noise tap) for the march
 function step(x) {
   if (!AC || save.sound === false || !noiseBuf) return;
@@ -375,7 +461,7 @@ MODS.hp.push(() => 1 + 0.04 * (hlv(0) - 1));
 const critChance = () => 0.1 + (save.team >= 5 ? 0.06 + 0.005 * (hlv(4) - 1) : 0) + modAdd('crit');
 const sqMaxHp = () => Math.round((100 + 12 * (save.stage - 1)) * (1 + 0.1 * (save.team - 1)) * modMul('hp'));
 const hpBase = () => 100 + 12 * (save.stage - 1);
-function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 70 * U, s[0] * F.pathW * 0.4); }
+function slotPos(i, p) { const s = SLOTS[i]; return along(p, s[1] * 84 * U, s[0] * F.pathW * 0.46); }
 function setupHeroes() {
   const hb = heroBox();
   if (!R.sq) { const mh = sqMaxHp(); R.sq = { x: F.S.x, y: F.S.y, vx: 0, vy: 0, hp: mh, maxHp: mh, lag: mh, ko: 0, inv: 0, hit: 0, calm: 9 }; }
@@ -562,7 +648,7 @@ function kill(e) {
   R.combo = R.comboT > 0 ? R.combo + 1 : 0; R.comboT = 1.5; R.comboPop = 0.18;
   addMoney(reward() * 0.5 * (e.gold || 1) * moneyMul() * (1 + Math.min(R.combo, 50) * 0.01), e.x, e.y - 10 * P, e.treasure ? 14 : e.elite ? 6 : 2);
   if (R.combo === 10 || R.combo === 25 || R.combo === 50 || (R.combo > 50 && R.combo % 50 === 0)) { banner2(`KOMBO x${R.combo}!`); sfx('bonus', 0); R.shake = Math.max(R.shake, 3); for (const h of R.heroes) vfx('burst', 'gold', h.x, h.y - 10 * P, 0.5, 0.3); }
-  sfx('kill', 0, e.x, PENTA[Math.min(R.combo, PENTA.length - 1)]);
+  sfx('kill', 0, e.x, penta(R.combo % 10));
   if (e.elite || e.treasure) R.stop = 0.07;
   if (e.elite && Math.random() < 0.04) giveScroll(1, e.x, e.y - 24 * P);
   if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
@@ -570,7 +656,7 @@ function kill(e) {
     save.kills++;
     if (save.kills >= KILLS_PER_SUB) {
       if (save.sub < SUBS) { save.sub++; save.kills = 0; toast(`Aşama ${save.stage}-${save.sub}`); sfx('stage', 0); runHooks('stage'); }
-      else { save.kills = KILLS_PER_SUB; save.bossReady = true; R.retryT = 0; if (!save.auto) toast('Boss hazır!'); }
+      else { save.kills = KILLS_PER_SUB; save.bossReady = true; R.retryT = 0; }
     }
   }
 }
@@ -638,12 +724,16 @@ function nearestTarget(h) {
 }
 const aimY = t => t === R.boss ? t.y - bossH(t) * 0.5 : t.y - 8 * P * (t.sc || 1) - (t.d && t.d.fly ? 5 * P : 0);
 // hand position (art-pixel offsets from the feet) for each facing
-const HAND = { u: [6, -9], d: [-4, -6], l: [-7, -8], r: [7, -8] };
-const handPos = h => { const o = HAND[h.dir] || HAND.u; return { x: h.x + o[0] * P, y: h.y + o[1] * P }; };
+// heroes are drawn at 1.5x (still whole canvas pixels: 3 per art pixel) so the squad reads clearly on a phone
+const HS = 1.5;
+// hand anchors measured on the pack's ninja frames, in art pixels from the feet: idle (sleeve) and attack (arm out)
+const HAND = { u: [-3.5, -15], d: [5, -5], l: [-7, -4], r: [6.5, -4] };
+const HAND_IDLE = { u: [7, -7], d: [5, -5], l: [-4, -5], r: [4, -5] };
+const handPos = h => { const o = HAND[h.dir] || HAND.u; return { x: h.x + o[0] * P * HS, y: h.y + o[1] * P * HS }; };
 // wind-up: the ninja turns, raises the weapon for a moment, then releases it
 function fire(h, tgt) {
   h.pt = tgt;
-  const hx = h.x, hy = h.y - 9 * P;
+  const hx = h.x, hy = h.y - 12 * P;
   h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx); h.dir = dirOf(Math.cos(h.ang), Math.sin(h.ang));
   h.atk = 0.2; h.wind = 0.07;
 }
@@ -651,7 +741,7 @@ function throwNow(h) {
   let t = h.pt;
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
-  h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09;
+  h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09; h.empty = 0.16;
   const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * heroMul(h.i) * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
   let tg = [t];
   if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > enemyBox().y0 - 10 * U).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
@@ -1030,7 +1120,7 @@ function updateSquad(dt) {
       const wf = Math.floor(h.walk); h.walk += dt * 8; if (h.i === 0 && Math.floor(h.walk) !== wf && Math.floor(h.walk) % 2 === 0) step(h.x);
       if (h.atk <= 0) h.dir = h.spd > 30 * U ? dirOf(h.x - ox, h.y - oy) : 'u';
       h.dust = (h.dust || 0) - dt;
-      if (h.dust <= 0) { h.dust = 0.32; part({ k: 'anim', a: 'fx_smoke', x: h.x, y: h.y + 2 * P, s: 0.5, life: 0.3, max: 0.3, ay: 1, alpha: 0.45 }); }
+      if (h.dust <= 0) { h.dust = 0.45; part({ k: 'anim', a: 'fx_smoke', x: h.x, y: h.y + 2 * P, s: 0.5, life: 0.3, max: 0.3, ay: 1, alpha: 0.25 }); }
     } else if (h.atk <= 0 && R.phase === 'advance') h.dir = 'u';
   }
 }
@@ -1140,7 +1230,7 @@ function updateEnemyShots(dt) {
     } else if (p.k === 'orb') {
       p.life -= dt; p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt;
       if (p.life <= 0 || p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) p.dead = true;
-      else for (const h of hs) if (Math.hypot(h.x - p.x, h.y - 8 * P - p.y) < p.r + 5 * P) { if (hurtSquad(p.dmg, p.x, p.y)) p.dead = true; break; }
+      else for (const h of hs) if (Math.hypot(h.x - p.x, h.y - 12 * P - p.y) < p.r + 5 * P) { if (hurtSquad(p.dmg, p.x, p.y)) p.dead = true; break; }
     } else if (p.k === 'beam') {
       p.t += dt; if (p.t >= p.T) p.dead = true;
       if (!p.hit) for (const h of hs) if (Math.abs(h.x - p.x) < p.w / 2 + 6 * U && h.y > p.y0) { p.hit = true; hurtSquad(p.dmg, h.x, h.y - 8 * P); break; }
@@ -1175,7 +1265,7 @@ function update(dt) {
       for (const dc of R.decals) dc.y += d;
       for (const p of R.parts) if (p.k === 'bit' || p.k === 'anim') p.y += d;
       if (R.advLeft <= 0) {
-        if (save.bossReady && save.auto && R.retryT <= 0 && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
+        if (save.bossReady && R.retryT <= 0 && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
@@ -1237,7 +1327,7 @@ function update(dt) {
   if (R.leavingBoss) { const lb = R.leavingBoss; lb.leaving += dt; lb.x += F.dir.x * 300 * U * dt; lb.y += F.dir.y * 300 * U * dt; if (lb.leaving > 2) R.leavingBoss = null; }
   const rate = fireRate();
   for (const h of R.heroes) {
-    h.fireT -= dt; if (h.recoil > 0) h.recoil -= dt;
+    h.fireT -= dt; if (h.recoil > 0) h.recoil -= dt; if (h.empty > 0) h.empty -= dt;
     if (h.wind > 0) { h.wind -= dt; if (h.wind <= 0 && !ko) throwNow(h); }
     const tgt = ko ? null : nearestTarget(h);
     if (tgt && h.fireT <= 0 && !(h.wind > 0)) { h.fireT = 1 / rate; fire(h, tgt); }
@@ -1257,7 +1347,7 @@ function update(dt) {
       q.dist += q.sp * dt;
       if (!q.back && (q.dist > 330 * U || (!alive && q.dist > 120 * U))) { q.back = true; q.hits.clear(); }
       if (q.back) {
-        const h = q.from, dx = h.x - q.x, dy = h.y - 9 * P - q.y;
+        const h = q.from, dx = h.x - q.x, dy = h.y - 12 * P - q.y;
         // turn harder the closer it gets, so a returning blade lands in the hand instead of orbiting the squad
         const dd = Math.hypot(dx, dy);
         q.a = turn(q.a, Math.atan2(dy, dx), dt * (9 + 40 * Math.max(0, 1 - dd / (160 * U)))); q.sp = Math.min(q.sp * (1 + dt * 1.5), 1100 * U);
@@ -1322,7 +1412,7 @@ function render() {
   drawGround(t);
   for (const d of R.decals) { ctx.globalAlpha = Math.min(1, d.life * 2); spr(d.f, d.x, d.y, d.sc, 0.5, 0.5, false, d.rot); }
   ctx.globalAlpha = 1;
-  for (const g of R.ghosts) { ctx.globalAlpha = g.life / 0.18 * 0.35; spr(g.n, g.x, g.y, 1, 0.5, 1, false, 0, '#fce2ca'); }
+  for (const g of R.ghosts) { ctx.globalAlpha = g.life / 0.18 * 0.35; spr(g.n, g.x, g.y, HS, 0.5, 1, false, 0, '#fce2ca'); }
   for (const c of R.corpses) {   // white pop, then a rising fade
     const k = c.t / 0.28; ctx.globalAlpha = c.t < 0.06 ? 1 : 1 - k;
     spr(c.n, c.x, c.y - k * 10 * P, c.sc, 0.5, 1, false, 0, c.t < 0.06 ? '#ffffff' : '#fce2ca');
@@ -1340,7 +1430,7 @@ function render() {
       const o = it.o, f = AF[`b_${o.key}_0`], w = (f ? f[2] : 50) * P * 0.36 * (1 - Math.min(0.5, (o.z || 0) / (180 * U)));
       ctx.fillStyle = 'rgba(19,27,27,0.22)'; ellipse(snap(o.x), snap(o.y + P), w, w * 0.32); ctx.fill();
       ctx.fillStyle = 'rgba(19,27,27,0.25)'; ellipse(snap(o.x), snap(o.y + P), w * 0.72, w * 0.22); ctx.fill();
-    } else spr('shadow', it.o.x, it.o.y + P, it.o.sc || 1, 0.5, 0.5);
+    } else spr('shadow', it.o.x, it.o.y + P, it.k === 2 ? HS : it.o.sc || 1, 0.5, 0.5);
   }
   ctx.globalAlpha = 1;
   for (const it of list) {
@@ -1374,16 +1464,18 @@ function render() {
       const fr = o.atk > 0 ? 'a' : hop ? 'j' : o.moving ? String(Math.floor(o.walk) % 4) : '0';
       const name = `h_${o.id}_${R.cheerT > 0 && o.atk <= 0 ? 'd' : o.dir}${fr}`;
       const idle = fr === '0' && R.cheerT <= 0;
-      const lift = hop ? Math.round(Math.abs(Math.sin(t * 7 + o.ph)) * 6) * P : idle && Math.floor(t * 1.6 + o.ph) % 2 ? P : 0;
+      const lift = hop ? Math.round(Math.abs(Math.sin(t * 7 + o.ph)) * 6) * P : idle && Math.floor(t * 1.6 + o.ph) % 2 ? P * HS : 0;
       // recoil: one art pixel back, away from the throw
-      const rx = o.recoil > 0 ? -Math.round(Math.cos(o.ang)) * P : 0, ry = o.recoil > 0 ? -Math.round(Math.sin(o.ang)) * P : 0;
+      const rx = o.recoil > 0 ? -Math.round(Math.cos(o.ang)) * P * HS : 0, ry = o.recoil > 0 ? -Math.round(Math.sin(o.ang)) * P * HS : 0;
       const hx = o.x + rx, hy = o.y + ry - lift;
       ctx.globalAlpha = ko ? 0.4 : (sq.inv > 0 && Math.floor(t * 14) % 2 === 0) ? 0.5 : 1;
       const g0 = GUNS[save.gun], rim = ko ? null : R.ultT > 0 ? (Math.floor(t * 10 + o.i) % 2 ? '#ffe18d' : '#ff9554') : evolved() ? TRAIL_COL[g0.glow] : (o.i === 0 && R.manual) ? '#fce2ca' : null;
-      if (rim) outline(name, hx, hy, rim, 1, R.ultT > 0 ? 1 : 0.8);
-      spr(name, hx, hy);
-      if (sq.hit > 0 && !ko) spr(name, hx, hy, 1, 0.5, 1, false, 0, '#ffffff');
-      drawHeld(o, hx, hy);
+      const behind = false;   // weapons are always drawn in front so they stay visible (the squad mostly faces up)
+      if (behind) drawHeld(o, hx, hy);
+      if (rim) outline(name, hx, hy, rim, HS, R.ultT > 0 ? 1 : 0.8);
+      spr(name, hx, hy, HS);
+      if (sq.hit > 0 && !ko) spr(name, hx, hy, HS, 0.5, 1, false, 0, '#ffffff');
+      if (!behind) drawHeld(o, hx, hy);
       ctx.globalAlpha = 1;
     }
   }
@@ -1469,17 +1561,28 @@ function grade() {
   [[0, 0.06], [12, 0.14], [24, 0.24]].forEach(([o, a]) => prect(0, b0 + o, W, 12, `rgba(19,27,27,${a})`));
   prect(0, b0 + 36, W, H - b0 - 36, 'rgba(19,27,27,0.32)');
 }
-// weapon in hand: held weapons (bow / wand / book) always, thrown ones only during the wind-up
+// weapon in hand, always: bow / wand / book, or the blade that is thrown next (it leaves the hand on the throw
+// and a fresh one is drawn a moment later). Idle: held at the sleeve pointing down / forward; attack: in the
+// outstretched hand, pointing at the target (snapped to 45° so the pixels stay clean).
 const HELD_ROT = { d: 0, u: Math.PI, l: Math.PI / 2, r: -Math.PI / 2 };
 const FACE_ANG = { u: -Math.PI / 2, d: Math.PI / 2, l: Math.PI, r: 0 };
+const HOLD = { Shuriken: 1, Kunai: 1, BigKunai: 0.5 };   // in-hand size of thrown weapons
 function drawHeld(o, x, y) {
   if (R.sq.ko > 0) return;
-  const g = GUNS[save.gun], o2 = HAND[o.dir] || HAND.u, push = o.atk > 0 ? 1 : 0;
-  const ux = o.dir === 'l' ? -1 : o.dir === 'r' ? 1 : 0, uy = o.dir === 'u' ? -1 : o.dir === 'd' ? 1 : 0;
-  let px = x + (o2[0] + ux * push) * P, py = y + (o2[1] + uy * push + (o.atk > 0 ? 0 : 2)) * P;
-  if (g.held === 'wh_Bow' && o.dir === 'u') { px = x; py = y - (17 + push) * P; }   // bow raised above the head when shooting up
-  if (g.held) spr(g.held, px, py, 1, 0.5, 0.5, false, g.held === 'wh_Book' ? 0 : (HELD_ROT[o.dir] || 0));
-  else if (o.wind > 0) spr(`p_${g.spr}_0`, px, py, 0.5, 0.5, 0.5, false, g.spin ? 0 : (FACE_ANG[o.dir] || 0) - (g.ori || 0));
+  const g = GUNS[save.gun], atk = o.atk > 0, a = (atk ? HAND : HAND_IDLE)[o.dir] || HAND_IDLE.d;
+  const px = x + a[0] * P * HS, py = y + a[1] * P * HS;
+  if (g.held) {
+    let rot = g.held === 'wh_Book' ? 0 : (HELD_ROT[o.dir] || 0);
+    if (g.held === 'wh_Bow' && o.dir === 'u' && atk) { spr(g.held, x, y - 27 * P, 1, 0.5, 0.5); return; }   // bow raised over the head to shoot
+    if (g.held === 'wh_Wand' && !atk) rot = o.dir === 'l' ? -0.4 : 0.4;   // wand rests tilted, tip up
+    if (g.held === 'wh_Bow' && !atk) rot = o.dir === 'l' ? -Math.PI / 2 : Math.PI / 2;   // bow carried upright at the side
+    spr(g.held, px, py, g.held === 'wh_Wand' ? 1.5 : 1, 0.5, g.held === 'wh_Wand' && !atk ? 0.9 : 0.5, false, rot);
+    return;
+  }
+  if (o.empty > 0) return;
+  const sc = HOLD[g.spr] || 0.5, snap45 = v => Math.round(v / (Math.PI / 4)) * (Math.PI / 4);
+  const ang = atk ? snap45(o.ang) : o.dir === 'l' ? Math.PI * 0.75 : o.dir === 'r' ? Math.PI * 0.25 : o.dir === 'u' ? -Math.PI / 2 : Math.PI / 2;
+  spr(`p_${g.spr}_0`, px, py, sc, 0.5, 0.5, false, g.spin ? 0 : ang - (g.ori || 0));
 }
 function drawBar(cx, y, w, f, col = '#e0394c', lag = 0) {
   const pw = w * P, x = cx - pw / 2;
@@ -1567,7 +1670,7 @@ function drawShots(t) {
 }
 function drawSquadHp() {
   const sq = R.sq, L0 = R.heroes[0]; if (!L0) return;
-  const w = 22, x = clamp(L0.x, 16 * P, W - 14 * P), y = L0.y - 22 * P;
+  const w = 22, x = clamp(L0.x, 16 * P, W - 14 * P), y = L0.y - 29 * P;
   const f = clamp(sq.hp / sq.maxHp, 0, 1);
   drawBar(x + 3 * P, y, w, f, sq.ko > 0 ? '#8e7c73' : f > 0.5 ? '#74a334' : f > 0.25 ? '#f1c471' : '#e0394c', clamp(sq.lag / sq.maxHp, 0, 1));
   spr('heart', x - w / 2 * P + P, y + 2 * P, 0.5, 0.5, 0.5);
@@ -1589,7 +1692,7 @@ function drawJoystick() {
 // ================================================================ HUD & UI
 const cards = Array.from(document.querySelectorAll('.ucard'));
 let uiKey = '', uiT = 0;
-function ctrlBadge() {
+function ctrlBadge() {   // the Otomatik badge was removed: the squad just follows your finger and walks on its own
   const c = $('ctrl'); if (!c) return;
   c.classList.toggle('manual', R.manual);
   c.querySelector('span').textContent = R.manual ? 'Kontrol sende' : 'Otomatik';
@@ -1621,7 +1724,6 @@ function updateUI(dt) {
   const bb = $('bossBtn');
   bb.classList.toggle('ready', save.bossReady && !R.boss); bb.classList.toggle('locked', !save.bossReady);
   $('bossBtnImg').src = `assets/ui/boss_${bossKey()}.png`;
-  $('autoBtn').classList.toggle('on', save.auto);
   if (R.boss) {
     $('bossFill').style.width = Math.max(0, R.boss.hp / R.boss.maxHp * 100) + '%';
     $('bossHpTxt').textContent = fmt(Math.max(0, R.boss.hp));
@@ -1629,8 +1731,6 @@ function updateUI(dt) {
   }
   const gi = document.querySelector('.gunico'); if (gi) gi.src = `assets/ui/wi_${GUNS[save.gun].spr}.png`;
   // ultimate meter
-  $('hint').style.visibility = R.boss ? 'hidden' : '';
-  if (R.t > 20 && !$('hint').classList.contains('gone')) { $('hint').classList.add('gone'); try { localStorage.setItem('ss_hint', '1'); } catch (e) { /* ignore */ } }
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
   note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
@@ -1661,7 +1761,6 @@ cards.forEach(c => {
   c.addEventListener('contextmenu', e => e.preventDefault());
 });
 $('bossBtn').onclick = () => { audioInit(); if (save.bossReady && !R.boss) startBoss(); else if (!save.bossReady) toast(`Önce ${SUBS} aşamayı bitir`); };
-$('autoBtn').onclick = () => { audioInit(); save.auto = !save.auto; sfx('click'); toast(save.auto ? 'Otomatik boss: AÇIK' : 'Otomatik boss: KAPALI'); uiKey = ''; persist(); };
 function banner(text, sub = '') { const b = $('banner'); b.innerHTML = text + (sub ? `<small>${sub}</small>` : ''); b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
 function toast(text) { const t = $('toast'); t.textContent = text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
 
@@ -1862,7 +1961,6 @@ const fontReady = document.fonts && document.fonts.load ? Promise.all([document.
 Promise.all([atlasReady, Promise.race([fontReady, new Promise(r => setTimeout(r, 1500))])]).then(() => {
   resize();
   $('loading').classList.add('hidden');
-  try { if (localStorage.getItem('ss_hint')) $('hint').classList.add('gone'); } catch (e) { /* ignore */ }
   ctrlBadge();
   offlineReward();
   requestAnimationFrame(frame);
@@ -1906,6 +2004,7 @@ window.SS = {
   save, R, F, GUNS, TEAM, giveScroll, hlv, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
+  get _audio() { return { AC, master, sfxBus }; },
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
   get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; }, get P() { return P; },
   refreshUI() { uiKey = ''; }, get sounds() { return Object.keys(SND); }, get music() { return musicKey; },
