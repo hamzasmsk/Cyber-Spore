@@ -771,7 +771,10 @@ const handPos = h => { const o = HAND[h.dir] || HAND.u; return { x: h.x + o[0] *
 function fire(h, tgt) {
   h.pt = tgt;
   const hx = h.x, hy = h.y - 12 * P;
-  h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx); h.dir = dirOf(Math.cos(h.ang), Math.sin(h.ang));
+  h.ang = Math.atan2(aimY(tgt) - hy, tgt.x - hx);
+  // fighting ninjas turn sideways toward the target: the side frames show the face and the throwing arm
+  // (the back view read as a faceless blob). A target straight above keeps the side the ninja already faces.
+  const dx = tgt.x - hx; h.dir = Math.abs(dx) < 6 * P && (h.dir === 'l' || h.dir === 'r') ? h.dir : dx < 0 ? 'l' : 'r';
   h.atk = 0.2; h.wind = 0.07;
 }
 function throwNow(h) {
@@ -1162,6 +1165,7 @@ function updateSquad(dt) {
       h.dust = (h.dust || 0) - dt;
       if (h.dust <= 0) { h.dust = 0.45; part({ k: 'anim', a: 'fx_smoke', x: h.x, y: h.y + 2 * P, s: 0.5, life: 0.3, max: 0.3, ay: 1, alpha: 0.25 }); }
     } else if (h.atk <= 0 && R.phase === 'advance') h.dir = 'u';
+    else if (h.atk <= 0 && (h.dir === 'u' || h.dir === 'd') && R.phase !== 'advance') h.dir = h.x < W / 2 ? 'r' : 'l';   // standing: guard stance, facing the middle
   }
 }
 
@@ -1635,12 +1639,23 @@ function drawHeld(o, x, y) {
     if (g.held === 'wh_Wand' && !atk) rot = o.dir === 'l' ? -0.4 : 0.4;   // wand rests tilted, tip up
     if (g.held === 'wh_Bow' && !atk) rot = o.dir === 'l' ? -Math.PI / 2 : Math.PI / 2;   // bow carried upright at the side
     spr(g.held, px, py, g.held === 'wh_Wand' ? 1.5 : 1, 0.5, g.held === 'wh_Wand' && !atk ? 0.9 : 0.5, false, rot);
+    if (g.held !== 'wh_Book') drawFist(px, py);
     return;
   }
   if (o.empty > 0) return;
   const sc = HOLD[g.spr] || 0.5, snap45 = v => Math.round(v / (Math.PI / 4)) * (Math.PI / 4);
-  const ang = atk ? snap45(o.ang) : o.dir === 'l' ? Math.PI * 0.75 : o.dir === 'r' ? Math.PI * 0.25 : o.dir === 'u' ? -Math.PI / 2 : Math.PI / 2;
-  spr(`p_${g.spr}_0`, px, py, sc, 0.5, 0.5, false, g.spin ? 0 : ang - (g.ori || 0));
+  // idle: guard stance, blade raised forward; attack: pointing at the target
+  const ang = atk ? snap45(o.ang) : o.dir === 'l' ? -Math.PI * 0.75 : o.dir === 'r' ? -Math.PI * 0.25 : o.dir === 'u' ? -Math.PI / 2 : Math.PI / 2;
+  const f = AF[`p_${g.spr}_0`], len = f ? f[2] * sc : 8, grip = g.spin ? 0 : len * 0.32;   // the hand holds the handle end
+  const cx = px + Math.cos(ang) * grip * P, cy = py + Math.sin(ang) * grip * P;
+  spr(`p_${g.spr}_0`, cx, cy, sc, 0.5, 0.5, false, g.spin ? 0 : ang - (g.ori || 0));
+  drawFist(px, py);
+}
+// a small gloved fist (3x3 art px, ink outline) so every weapon is visibly held, not floating beside the body
+function drawFist(x, y) {
+  const q = P * HS * 0.8, x0 = snap(x - 1.5 * q), y0 = snap(y - 1.5 * q);
+  prect(x0 - P, y0, 3 * q + 2 * P, 3 * q, INK); prect(x0, y0 - P, 3 * q, 3 * q + 2 * P, INK);
+  prect(x0, y0, 3 * q, 3 * q, '#3d3247'); prect(x0, y0, 2 * q, q, '#5e5070');
 }
 function drawBar(cx, y, w, f, col = '#e0394c', lag = 0) {
   const pw = w * P, x = cx - pw / 2;

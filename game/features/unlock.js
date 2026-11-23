@@ -1,7 +1,7 @@
 /* Shuriken Squad — menus unlock step by step (loads after layout.js).
    A new player starts with the three upgrade cards, the boss button and nothing else; each menu appears when it
    becomes useful (best stage reached), with a short introduction card the first time. Locked menus stay on screen
-   greyed out with the stage they open at. Players already past a step (older saves) simply have it open. The Görev panel's Kule / Başarım tabs follow the same rule. */
+   greyed out with the stage they open at; apart from Silah and Takım they only show up 2 stages before. Players already past a step (older saves) simply have it open. The Görev panel's Kule / Başarım tabs follow the same rule. */
 'use strict';
 (() => {
   const SS = window.SS;
@@ -32,13 +32,22 @@
   const on = k => !!U[k];
   SS.unlocked = k => { const s = STEPS.find(x => x[0] === k); return s ? on(k) : TABS[k] ? (save.best || 1) >= TABS[k] : true; };
 
-  // locked menus stay visible (greyed, padlock, "Bölüm N") so a new player sees what is coming
+  // locked menus show greyed, with a padlock and "Bölüm N", so a new player sees what is coming next
+  // core menus (weapons, team) are on screen from the start; the others appear (locked) only when their stage is
+  // 2 or fewer stages away, and open when it is reached
+  const CORE = ['guns', 'team'], NEAR = 2;
+  const seen = new Set();
   function paint() {
+    const best = save.best || 1;
     for (const [k, lv] of STEPS) {
       const b = el(k); if (!b) continue;
-      b.style.display = ''; b.classList.toggle('m-lock', !on(k)); b.classList.toggle('is-new', U[k] === 1);
+      const vis = on(k) || CORE.includes(k) || best >= lv - NEAR;
+      b.style.display = vis ? '' : 'none';
+      if (vis && !seen.has(k)) { if (paint.ran) { b.classList.add('un-pop'); setTimeout(() => b.classList.remove('un-pop'), 900); } seen.add(k); }
+      b.classList.toggle('m-lock', !on(k)); b.classList.toggle('is-new', U[k] === 1);
       if (!on(k)) b.dataset.lv = SS.t ? SS.t('Bölüm ' + lv) : 'Bölüm ' + lv; else delete b.dataset.lv;
     }
+    paint.ran = true;
   }
   // a tap on a locked menu explains when it opens instead of opening it
   document.addEventListener('click', e => {
@@ -70,6 +79,8 @@
     const best = save.best || 1; let ch = false;
     for (const s of STEPS) if (!U[s[0]] && best >= s[1]) { U[s[0]] = 1; queue.push(s); ch = true; }
     if (ch) { SS.persist(); paint(); next(); }
+    else if (best !== check.best) paint();   // a new record can bring the next locked menu into view
+    check.best = best;
   }
   // a menu stays marked "new" until it is opened once
   for (const [k] of STEPS) { const b = el(k); if (b) b.addEventListener('click', () => { if (U[k] === 1) { U[k] = 2; SS.persist(); paint(); } }); }
