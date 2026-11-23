@@ -32,10 +32,9 @@
     const first = save.stage >= (save.best || 1);   // hooks run before the stage advances
     if (!first && Math.random() > 0.25) return;
     const tier = Math.max(1, Math.min(4, 1 + Math.floor((save.stage - 1) / 15))), k = rnd();
-    setTimeout(() => {
-      if (SS.flow) SS.flow.request('charm', () => chest([{ icon: SLOTS.find(s => s.k === k).icon, label: `${SLOTS.find(s => s.k === k).name} ${tier}`, apply: () => give(k, tier) }], 'Boss sandığı'), 2, false);
-      else give(k, tier);
-    }, 2600);
+    // no chest popup after bosses (the skill-card choice is already the boss reward moment): the charm is added
+    // quietly with a short toast; the Takım button shows when a merge is possible
+    setTimeout(() => { give(k, tier); SS.toast(`+${SLOTS.find(s => s.k === k).name} ${tier}`); }, 3200);
   });
   SS.HOOKS.tower && SS.HOOKS.tower.push(f => {
     const tier = Math.max(1, Math.min(6, 1 + Math.floor(f / 8))), k = rnd(), n = f % 10 === 0 ? 2 : 1;
@@ -79,7 +78,7 @@
         const tiers = counts.map((n, t) => t >= 1 && n > 0 ? `<span class="cm-t ${t === b ? 'on' : ''}"><i>${t}</i>×${n}</span>` : '').join('');
         const canMerge = counts.findIndex((n, t) => t >= 1 && t < MAX && n >= 3);
         const r = SS.el(`<div class="row-card cm-row ${s.col}"><div class="ico tile"><img src="assets/ui/${s.icon}.png" alt="">${b ? `<span class="hl-lv">Sv.${b}</span>` : ''}</div>
-          <div class="info"><h4>${s.name}</h4><p>${b ? 'Takılı: <b>' + s.fx(b) + '</b>' : 'Henüz yok'}</p><div class="cm-tiers">${tiers || '<small>Boss ve Kule sandıklarından düşer</small>'}</div></div>
+          <div class="info"><h4>${s.name}</h4><p>${b ? 'Takılı: <b>' + s.fx(b) + '</b>' : 'Henüz yok'}</p><div class="cm-tiers">${tiers || '<small>Bosslardan ve Kule sandıklarından düşer</small>'}</div></div>
           <button class="btn ${canMerge > 0 ? 'green' : 'grey off'}">BİRLEŞTİR</button></div>`);
         if (canMerge > 0) r.querySelector('.btn').onclick = () => {
           counts[canMerge] -= 3; counts[canMerge + 1]++; SS.persist(); SS.refreshUI();
