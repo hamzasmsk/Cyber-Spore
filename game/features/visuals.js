@@ -22,29 +22,32 @@
   };
   const LIGHT_COL = { fire: '#ff9554', magic: '#d3a2c0', ice: '#8feff1', gold: '#ffe18d', leaf: '#adbc3a', ink: '#8d977f' };
   const lc = document.createElement('canvas'), lx = lc.getContext('2d');
+  // one soft light sprite, drawn scaled for every light (cheaper than a gradient per light per frame)
+  const LIGHT = document.createElement('canvas'); LIGHT.width = LIGHT.height = 64;
+  { const g = LIGHT.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.55, 'rgba(0,0,0,0.6)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
   const DS = 4;   // light map pixels are 4x4 CSS px
   let clouds = [], weather = null, nextWeather = 25 + Math.random() * 30, drops = [], cine = 0;
   R.flashes = [];   // explosions push short light flashes here (game.js boom)
 
   function lightPass(ctx) {
-    if (save.eco) return;
+    if (save.eco || R.fx >= 2) return;
     const W = SS.W, H = SS.H, b = SS.biome(), look = LOOK[b.ground] || LOOK.forest;
-    const w = Math.ceil(W / DS), h = Math.ceil(H / DS);
+    const ds = R.fx ? DS * 2 : DS, w = Math.ceil(W / ds), h = Math.ceil(H / ds);
     if (lc.width !== w || lc.height !== h) { lc.width = w; lc.height = h; }
     lx.globalCompositeOperation = 'source-over'; lx.clearRect(0, 0, w, h);
     const night = weather && (weather.k === 'fireflies' || weather.k === 'rain') ? 0.12 * weather.fade : weather && weather.k === 'snow' ? 0.06 * weather.fade : 0;
     lx.fillStyle = `rgba(${look[1]},${look[0] + night})`; lx.fillRect(0, 0, w, h);
     // cloud shadows: soft dark blobs drifting down and sideways
-    if (look[2]) {
+    if (look[2] && !R.fx) {
       while (clouds.length < 3) clouds.push({ x: Math.random() * W, y: -200 - Math.random() * H, r: 120 + Math.random() * 120, a: 0.08 + Math.random() * 0.05 });
       for (const c of clouds) {
-        lx.fillStyle = `rgba(${look[1]},${c.a})`; lx.beginPath(); lx.ellipse(c.x / DS, c.y / DS, c.r / DS, c.r * 0.55 / DS, 0, 0, Math.PI * 2); lx.fill();
-        lx.beginPath(); lx.ellipse((c.x + c.r * 0.5) / DS, (c.y + c.r * 0.2) / DS, c.r * 0.6 / DS, c.r * 0.4 / DS, 0, 0, Math.PI * 2); lx.fill();
+        lx.fillStyle = `rgba(${look[1]},${c.a})`; lx.beginPath(); lx.ellipse(c.x / ds, c.y / ds, c.r / ds, c.r * 0.55 / ds, 0, 0, Math.PI * 2); lx.fill();
+        lx.beginPath(); lx.ellipse((c.x + c.r * 0.5) / ds, (c.y + c.r * 0.2) / ds, c.r * 0.6 / ds, c.r * 0.4 / ds, 0, 0, Math.PI * 2); lx.fill();
       }
     }
     // light sources cut the darkness
     lx.globalCompositeOperation = 'destination-out';
-    const hole = (x, y, r, k = 1) => { const g = lx.createRadialGradient(x / DS, y / DS, 0, x / DS, y / DS, r / DS); g.addColorStop(0, `rgba(0,0,0,${k})`); g.addColorStop(0.55, `rgba(0,0,0,${k * 0.6})`); g.addColorStop(1, 'rgba(0,0,0,0)'); lx.fillStyle = g; lx.fillRect((x - r) / DS, (y - r) / DS, 2 * r / DS, 2 * r / DS); };
+    const hole = (x, y, r, k = 1) => { lx.globalAlpha = Math.min(1, k); lx.drawImage(LIGHT, (x - r) / ds, (y - r) / ds, 2 * r / ds, 2 * r / ds); lx.globalAlpha = 1; };
     const U = SS.U, P = SS.P;
     for (const h of R.heroes) hole(h.x, h.y - 8 * P, (h.i === 0 ? 95 : 60) * U, h.i === 0 ? 0.9 : 0.6);
     let n = 0;
@@ -54,8 +57,9 @@
     for (const e of R.en) if (e.treasure || e.type === 'LanternRed' || e.type === 'Flam') hole(e.x, e.y - 8 * P, 55 * U, 0.8);
     for (const f of R.flashes) hole(f.x, f.y, f.r * U * (0.6 + 0.4 * f.life / f.max), f.life / f.max);
     lx.globalCompositeOperation = 'source-over';
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
-    const k = ctx.canvas.width / W; ctx.drawImage(lc, 0, 0, w * DS * k, h * DS * k); ctx.restore();
+    // the light map is drawn smoothed: soft light reads better than 4-px blocks over the pixel art
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true;
+    const k = ctx.canvas.width / W; ctx.drawImage(lc, 0, 0, w * ds * k, h * ds * k); ctx.restore();
     // a warm additive tint where fire lights the ash land
     if (b.ground === 'ash') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.07; for (const h of R.heroes.slice(0, 1)) SS.spr('vx_glow40_fire', h.x, h.y - 8 * P, 2, 0.5, 0.5); ctx.restore(); }
   }
@@ -66,7 +70,7 @@
     weather = { k, t: 0, T: 22 + Math.random() * 14, fade: 0 };
   }
   function weatherPass(ctx) {
-    if (!weather || save.eco) return;
+    if (!weather || save.eco || R.fx) return;
     const W = SS.W, H = SS.H, P = SS.P, U = SS.U, f = weather.fade, k = weather.k;
     const want = { rain: 70, snow: 60, ash: 40, fireflies: 14, dust: 30 }[k] * f;
     while (drops.length < want) drops.push({ x: Math.random() * W, y: Math.random() * H, s: 0.6 + Math.random() * 0.6, ph: Math.random() * 6 });
@@ -124,7 +128,7 @@
   }
   let bitsList = [];
   SS.HOOKS.kill.push(e => {
-    if (!e || save.eco || bitsList.length > 90) return;
+    if (!e || save.eco || R.fx >= 2 || bitsList.length > (R.fx ? 40 : 90)) return;
     let cols; try { cols = colorsOf(`m_${e.type}_d0`); } catch (err) { cols = null; } if (!cols) return;
     const P = SS.P, U = SS.U, n = e.elite ? 14 : 9;
     for (let i = 0; i < n; i++) {

@@ -34,13 +34,15 @@ const cv = $('c');
 const mainCtx = cv.getContext('2d', { alpha: false });
 let ctx = mainCtx;
 let W = 390, H = 844, DPR = 1, U = 1;
-let K = 4, L = 1, P = 2, BW = 0, BH = 0;   // K device px per canvas px, L = CSS px per canvas px, P = CSS px per art px
+let K = 4, L = 1, P = 2, BW = 0, BH = 0;
+// camera distance: device px per canvas px = ZOOM * U * DPR (rounded). 0.95 shows ~30% more field than the old 1.25.
+const ZOOM = 0.95;   // K device px per canvas px, L = CSS px per canvas px, P = CSS px per art px
 const F = {};
 function resize() {
   DPR = window.devicePixelRatio || 1;
   W = window.innerWidth; H = window.innerHeight;
   U = clamp(Math.min(W, H * 0.56) / 390, 0.8, 1.7);
-  K = Math.max(1, Math.round(1.25 * U * DPR)); L = K / DPR; P = 2 * L;
+  K = Math.max(1, Math.round(ZOOM * U * DPR)); L = K / DPR; P = 2 * L;
   BW = Math.ceil(W / L); BH = Math.ceil(H / L);
   cv.width = BW; cv.height = BH;
   cv.style.width = BW * L + 'px'; cv.style.height = BH * L + 'px';
@@ -187,7 +189,7 @@ const TEAM = [
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
 // more, weaker enemies (x0.55 HP, x0.6 gold each, 14 kills per step) keep the time and gold per step about the
 // same as the old 8-kill waves but make every wave a crowd to mow down
-const SUBS = 5, KILLS_PER_SUB = 14, BOSS_TIME = 30, EHP = 0.55, EGOLD = 0.6;
+const SUBS = 5, KILLS_PER_SUB = 20, BOSS_TIME = 30, EHP = 0.4, EGOLD = 0.45;
 
 // ================================================================ save
 const SAVE_KEY = 'swarmsquad_idle_v1';
@@ -452,9 +454,9 @@ function musicTick(dt) {
 }
 
 // ================================================================ runtime state
-const R = { en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
+const R = { fx: 0, en: [], bul: [], eb: [], parts: [], txt: [], coins: [], boss: null, t: 0, shake: 0, flash: 0, hurt: 0, earned: 0, earnT: 0, retryT: 0,
   heroes: [], amb: [], nextId: 1, walletPop: 0, leavingBoss: null, lobGap: 0, sq: null, joy: null,
-  cam: 0, phase: 'advance', advLeft: 120, advSpd: 110, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0, corpses: [], swish: [], ghosts: [], ghostT: 0 };
+  cam: 0, phase: 'advance', advLeft: 120, advSpd: 160, waveT: 0, toSpawn: 0, spawnT: 0, bioEdge: -1e9, oldBio: null, manual: false, ctrlT: 0, hintT: 0, ult: 0, ultT: 0, ultFull: 0, combo: 0, comboT: 0, coinN: 0, coinT: 0, buyN: 0, buyT: 0, bossFails: 0, stepF: 0, stop: 0, bolts: [], decals: [], specs: [], specT: 3, cheerT: 0, corpses: [], swish: [], ghosts: [], ghostT: 0 };
 MODS.rate.push(() => save.team >= 2 ? 1.1 + 0.01 * (hlv(1) - 1) : 1);
 MODS.money.push(() => save.team >= 3 ? 1.2 + 0.02 * (hlv(2) - 1) : 1);
 MODS.hp.push(() => 1 + 0.04 * (hlv(0) - 1));
@@ -535,17 +537,17 @@ function drawGroundTiles() {
   for (let c = c0 - 1; c <= c1; c++) {   // decor (tree crowns may hang over chunk edges)
     const ch = chunks.get(c); if (!ch) continue;
     const y0 = c * CHT + R.cam;
-    for (const d of ch.deco) { const y = y0 + d.y; if (y < -10 || y - 300 > H) continue; if (SWAY.test(d.n) && !save.eco) sway(d, y); else spr(d.n, d.x, y, 1, 0.5, 1, d.flip); }
+    for (const d of ch.deco) { const y = y0 + d.y; if (y < -10 || y - 300 > H) continue; if (SWAY.test(d.n) && !save.eco && !R.fx) sway(d, y); else spr(d.n, d.x, y, 1, 0.5, 1, d.flip); }
   }
 }
 
 // ================================================================ waves: advance (scroll) → fight → advance ...
 function startAdvance(dist, spd) { R.phase = 'advance'; R.advLeft = dist; R.advSpd = spd; }
 function startWave() {
-  R.phase = 'fight';
+  R.phase = 'fight'; R.waveT = 0;
   // every so often a horde: twice the crowd, each one frailer, pouring in fast
   R.horde = save.stage >= 2 && Math.random() < 0.18;
-  R.toSpawn = R.horde ? 13 + Math.floor(Math.random() * 5) : 5 + Math.floor(Math.random() * 3) + Math.min(3, Math.floor(save.stage / 4));
+  R.toSpawn = R.horde ? 20 + Math.floor(Math.random() * 7) : 8 + Math.floor(Math.random() * 4) + Math.min(4, Math.floor(save.stage / 4));
   R.spawnT = 0.1;
   if (R.horde) { banner2('SÜRÜ!'); sfx('elite', 0); R.shake = 3; }
   if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
@@ -578,7 +580,7 @@ function spawnEnemy(forceVr) {
   // variants (from stage 4): shield / splitter / healer / runner — they make weapon choice and target order matter
   const vr = forceVr === 'none' ? null : forceVr || !elite && !R.horde && save.stage >= 4 && Math.random() < 0.2 ? pick(VARIANTS) : null, vd = vr ? VAR[vr] : null;
   const hp = enemyHp() * EHP * hm * (d.hp || 1) * (elite ? 4 : 1) * (vd ? vd.hp : 1);
-  R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 80 * U * (d.spd || 1) * (elite ? 0.8 : 1) * (vd ? vd.spd : 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
+  R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 105 * U * (d.spd || 1) * (elite ? 0.8 : 1) * (vd ? vd.spd : 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
     ranged: !!d.ranged && vr !== 'runner', stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd', elite, sc: elite ? 1.5 : 1, gold: EGOLD * hm * (d.hp || 1) * (elite ? 4 : 1) * (vd ? vd.gold : 1), vr, healT: rand(1, 2) });
   if (elite) sfx('elite', 0, x);
   if (vr && !(save.varSeen || {})[vr]) { save.varSeen = save.varSeen || {}; save.varSeen[vr] = 1; toast(vd.tip); }
@@ -701,7 +703,7 @@ function addMoney(v, x, y, n) {
 function addText(x, y, s, kind) { if (kind === 'dmg' && R.txt.length > 14) return; if (kind === 'crit' && R.txt.filter(t => t.kind === 'crit').length > 4) return; if (R.txt.length > 50) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.0 : 0.7, max: kind === 'money' ? 1.0 : 0.7 }); }
 // particles: anim = pack fx sheet played once; bit = physical chip with gravity; float = drifting trail mote
 const busy = () => Math.min(1, 12 / Math.max(1, R.bul.length)) * Math.min(1, 110 / Math.max(1, R.parts.length));
-function part(p) { if (save.eco && p.k !== 'anim' && Math.random() < 0.6) return; if (p.k !== 'anim' && Math.random() > busy()) return; if (R.parts.length < 200) R.parts.push(p); }
+function part(p) { if ((save.eco || R.fx >= 2) && p.k !== 'anim' && Math.random() < 0.6) return; if (p.k !== 'anim' && Math.random() > busy()) return; if (R.parts.length < 200) R.parts.push(p); }
 let fxGate = 0;
 const gate = (gap) => { if (R.t - fxGate < gap) return false; fxGate = R.t; return true; };
 function puff(x, y, s = 1) { part({ k: 'anim', a: 'fx_smoke', x, y: y + 2 * P, s: s * 0.5, life: 0.4, max: 0.4, ay: 1, alpha: 0.85 }); }
@@ -1303,6 +1305,7 @@ function update(dt) {
   const ko = R.sq.ko > 0;
   if (R.lobGap > 0) R.lobGap -= dt;
   if (R.retryT > 0) R.retryT -= dt;
+  R.waveT += dt;
   if (R.comboT > 0) R.comboT -= dt; if (R.comboPop > 0) R.comboPop -= dt; if (R.coinT > 0) R.coinT -= dt; else R.coinN = 0; if (R.buyT > 0) R.buyT -= dt; else R.buyN = 0;
   if (R.ultT > 0) { R.ultT -= dt; if (Math.random() < 0.5) for (const h of R.heroes) if (Math.random() < 0.3) fx('fx_aura', h.x, h.y, 0.5, 0.3, 1); if (R.ultT <= 0) uiKey = ''; }
   // the march: scroll the world while advancing, then hold for the wave
@@ -1317,8 +1320,8 @@ function update(dt) {
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
-      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { spawnEnemy(); R.toSpawn--; R.spawnT = R.horde ? rand(0.05, 0.12) : rand(0.12, 0.3); } }
-      else if (!R.en.length && !R.eb.length) startAdvance(rand(170, 250) * U, 110 * U);
+      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { spawnEnemy(); R.toSpawn--; R.spawnT = R.horde ? rand(0.04, 0.09) : rand(0.08, 0.2); } }
+      else if (R.en.length <= 2 && !R.eb.length && R.toSpawn <= 0 && (R.en.length === 0 || R.waveT > 4)) startAdvance(rand(110, 170) * U, 160 * U);
     }
   }
   const L0 = R.heroes[0];
@@ -2019,7 +2022,19 @@ function offlineReward() {
 
 // ================================================================ loop
 let last = performance.now(), saveT = 0, popOn = false;
+// adaptive quality: R.fx 0 = full, 1 = lighter (no swaying trees / cloud shadows / weather, coarser light map),
+// 2 = eco. Measured on the real frame time; steps down quickly when a phone struggles, back up slowly.
+let fxEma = 16, fxT = 0, fxGood = 0;
+function adapt(ms) {
+  if (document.hidden || ms > 250) return;
+  fxEma = fxEma * 0.95 + ms * 0.05; fxT += ms;
+  if (fxT < 2500) return; fxT = 0;
+  if (save.gfx === 'high') { R.fx = 0; return; } if (save.gfx === 'low') { R.fx = 2; return; }
+  if (fxEma > 21 && R.fx < 2) { R.fx++; fxGood = 0; }
+  else if (fxEma < 15 && R.fx > 0) { if ((fxGood += 2.5) > 25) { R.fx--; fxGood = 0; } }
+}
 function frame(now) {
+  adapt(now - last);
   let dt = Math.min(1 / 20, (now - last) / 1000); last = now;
   if (R.stop > 0) { R.stop -= dt; dt *= 0.12; }
   if (R.paused) dt = 0;

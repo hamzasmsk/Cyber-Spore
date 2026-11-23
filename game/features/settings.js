@@ -60,6 +60,9 @@
         tg.appendChild(t);
       }
       wrap.appendChild(tg);
+      const gq = SS.el(`<div class="dv-speed"><span>Grafik</span>${[['auto', 'Otomatik'], ['high', 'Yüksek'], ['low', 'Düşük']].map(([k, l]) => `<button class="btn ${(save.gfx || 'auto') === k ? 'purple' : 'grey'}" data-k="${k}">${l}</button>`).join('')}</div>`);
+      gq.querySelectorAll('button').forEach(b => b.onclick = () => { save.gfx = b.dataset.k; SS.R.fx = b.dataset.k === 'low' ? 2 : 0; SS.sfx('click'); SS.persist(); open(confirming); });
+      wrap.appendChild(gq);
       // volume sliders: master / music / effects (0-100), applied live to the audio graph
       if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
       const vols = SS.el('<div class="toggles"></div>');

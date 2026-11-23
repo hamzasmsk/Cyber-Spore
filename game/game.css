@@ -169,7 +169,7 @@ h2,h3,h4{margin:0;font-weight:700}
 .sbtn .dot{position:absolute;top:-3px;right:0;width:11px;height:11px;background:var(--red);box-shadow:inset 0 0 0 2px var(--ink);animation:blink2 1s steps(2) infinite}
 
 /* upgrade tray: three wood-framed parchment cards */
-.cards{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+.cards{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
   padding:8px max(8px,var(--safe-r)) calc(8px + var(--safe-b)) max(8px,var(--safe-l));
   background:rgba(19,27,27,.5);box-shadow:0 -3px 0 rgba(19,27,27,.65)}
 .ucard{display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:2px 2px 3px;border:10px solid transparent;border-image:url(assets/ui/theme/panel.png) 20 / 10px stretch;
@@ -291,3 +291,11 @@ h2,h3,h4{margin:0;font-weight:700}
 @keyframes bossCard{0%{transform:translateX(-120vw)}4%{transform:translateX(-80%)}8%{transform:translateX(-50%)}85%{transform:translateX(-50%)}90%{transform:translateX(-20%)}95%{transform:translateX(60vw)}100%{transform:translateX(150vw)}}
 
 #ultBtn[data-charm]:not([data-charm=""])::after{content:attr(data-charm);position:absolute;top:-4px;right:-2px;min-width:16px;height:16px;padding:0 3px;font-size:11px;line-height:16px;text-align:center;color:var(--cream);background:var(--purple);box-shadow:inset 0 0 0 2px var(--ink);z-index:3}
+/* narrow phones (320–359 px): the three upgrade cards must fit */
+.ucard{min-width:0}
+.ucard .lbl{min-width:0;white-space:nowrap;overflow:hidden}
+@media (max-width:359px){
+  .cards{gap:3px}
+  .ucard .lbl{font-size:13px}.ucard .lbl img{width:18px;height:18px}.ucard .lbl small{font-size:9px}
+  .ucard .val{font-size:17px}.ucard .cost{font-size:13px;height:22px}.ucard .cost img{width:14px;height:14px}
+}
