@@ -25,7 +25,9 @@
   const cap = window.Capacitor;
   const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
   const platform = native ? cap.getPlatform() : 'web';
-  const mode = C.mode === 'auto' ? (native ? 'native' : (C.webMode || 'off')) : C.mode;   // native | test | off
+  const mode = C.mode === 'auto' ? (native ? 'native' : (C.webMode || 'off')) : C.mode;   // native | test | off | free
+  // free: a build with no ads and no purchases (closed tests): ad rewards are simply given, the shop sells nothing
+  if (mode === 'free') document.documentElement.classList.add('mon-free');   // CSS hides the 'watch an ad' play icons
   const P = {}; (C.products || []).forEach(p => { P[p.id] = p; });
   const prices = {};
 
@@ -150,7 +152,7 @@
   // ================================================================ public API
   const Ads = {
     enabled: mode !== 'off',
-    noads: () => !!M.owned.noads,
+    noads: () => !!M.owned.noads || mode === 'free',
     roll() { if (M.ads.day !== today()) { M.ads = { day: today(), n: 0, per: {} }; } },
     remaining(pl) {
       this.roll(); const c = (C.ads.placements || {})[pl]; if (!c || !this.enabled) return 0;
@@ -166,7 +168,7 @@
       SS.audioInit && SS.audioInit();
       const muted = save.music; if (mode === 'native') { save.music = false; SS.musicUpdate && SS.musicUpdate(); }
       try {
-        if (this.noads()) { ok = true; SS.toast('Reklamsız: ödül anında'); }
+        if (this.noads()) { ok = true; SS.toast(mode === 'free' ? 'Ödül alındı' : 'Reklamsız: ödül anında'); }
         else if (mode === 'native') ok = await AdMobN.show();
         else ok = await testAd(label);
       } finally { this.busy = false; if (mode === 'native') { save.music = muted; SS.musicUpdate && SS.musicUpdate(); } }
@@ -177,7 +179,7 @@
   // in the app, purchases stay hidden until a real RevenueCat key is configured (a first release can ship ads-only)
   const rcKey = (C.revenuecat || {})[platform] || '';
   const IAP = {
-    enabled: mode !== 'off' && !(mode === 'native' && (!rcKey || /REPLACE_ME/.test(rcKey))),
+    enabled: mode !== 'off' && mode !== 'free' && !(mode === 'native' && (!rcKey || /REPLACE_ME/.test(rcKey))),
     product: id => P[id],
     price: id => prices[id] || (P[id] && (save.lang === 'en' && P[id].usd ? P[id].usd : P[id].price)) || '',
     owns: id => !!M.owned[id],

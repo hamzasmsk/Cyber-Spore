@@ -94,8 +94,8 @@
     else if (s.how === 'gems') btn = `<button class="btn yellow fx-gem"><img src="assets/ui/gem.png" alt="">${s.cost}</button>`;
     else if (s.how === 'iap' && IAP() && IAP().enabled) btn = `<button class="btn yellow fx-iap">${IAP().price(s.sku)}</button>`;
     else if (s.how === 'event') btn = `<button class="btn red fx-ev"><img src="assets/ui/mon_LanternRed.png" alt="">Festival</button>`;
-    else if (s.how === 'pack') btn = '<button class="btn purple fx-pack">Neo Paketi</button>';
-    else btn = '<button class="btn grey off">—</button>';
+    else if (s.how === 'pack' && IAP() && IAP().enabled) btn = '<button class="btn purple fx-pack">Neo Paketi</button>';
+    else btn = '<button class="btn grey off">Yakında</button>';   // paid skins in a build without purchases
     const r = SS.el(`<div class="row-card fx-row ${eq ? 'cur' : ''}"><div class="ico tile"><img src="assets/ui/fxi_${id}.png" alt=""></div>
       <div class="info"><h4>${s.name}</h4><p>${s.desc}${owned ? ' · takılıyken +%5 altın' : ''}</p></div>
       <div class="fx-btns">${owned ? '' : '<button class="btn blue fx-try">DENE</button>'}${btn}</div></div>`);

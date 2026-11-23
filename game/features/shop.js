@@ -93,8 +93,8 @@ function boot() {
       let adRow = null, mRow = null;
       if (Ads && Ads.enabled) {
         const g = 3;
-        adRow = SS.el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/play.png" alt=""></div>
-          <div class="info"><h4>Reklam izle, elmas al</h4><p class="mz-ad-p"></p></div><button class="btn yellow"><img src="assets/ui/gem.png" alt="">+${g}</button></div>`);
+        adRow = SS.el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/${mon && mon.mode === 'free' ? 'gem_big' : 'play'}.png" alt=""></div>
+          <div class="info"><h4>${mon && mon.mode === 'free' ? 'Ücretsiz elmas' : 'Reklam izle, elmas al'}</h4><p class="mz-ad-p"></p></div><button class="btn yellow"><img src="assets/ui/gem.png" alt="">+${g}</button></div>`);
         adRow.querySelector('.btn').onclick = async () => { if (await Ads.show('freeGems')) { save.gems += g; SS.sfx('gem', 0); SS.toast(`+${g} elmas`); SS.persist(); SS.refreshUI(); } paint(); };
         root.appendChild(adRow);
       }
@@ -166,7 +166,7 @@ function boot() {
         gBtn.className = 'btn ' + (r ? 'green' : 'grey off');
         gBtn.textContent = r ? 'AL' : fmtT(S.daily + DAY - Date.now());
         gift.querySelector('.fb-gift-p').innerHTML = `${dailyGems()} elmas + ${SS.fmt(dailyMoney())} altın${S.streak > 0 ? ` · seri ${S.streak}` : ''}`;
-        if (adRow) { const left = Ads.remaining('freeGems'); adRow.querySelector('.mz-ad-p').textContent = Ads.noads() ? `Reklamsız: anında · bugün ${left} hak` : `Bugün ${left} hak kaldı`; adRow.querySelector('.btn').classList.toggle('off', left <= 0); }
+        if (adRow) { const left = Ads.remaining('freeGems'); adRow.querySelector('.mz-ad-p').textContent = Ads.noads() ? `${mon && mon.mode === 'free' ? 'Anında' : 'Reklamsız: anında'} · bugün ${left} hak` : `Bugün ${left} hak kaldı`; adRow.querySelector('.btn').classList.toggle('off', left <= 0); }
         if (mRow) { const can = mon.monthlyClaimable(), left = Math.ceil((save.mon.monthly.end - Date.now()) / DAY); mRow.querySelector('.mz-m-p').textContent = `${left} gün kaldı · ${can ? 'bugünkü elmasın hazır' : 'yarın tekrar gel'}`; mRow.querySelector('.btn').className = 'btn ' + (can ? 'green' : 'grey off'); }
         packRows.forEach(({ row, p }) => { row.querySelector('.fb-amt').textContent = '+' + SS.fmt(income() * p.min * 60); row.querySelector('.btn').classList.toggle('cant', save.gems < p.gems); });
         exRows.forEach(({ row, x }) => { const c = income() * x.min * 60; row.querySelector('.btn span').textContent = SS.fmt(c); row.querySelector('.btn').classList.toggle('cant', save.money < c); });

@@ -5,6 +5,8 @@
      'auto'  inside the native app (Capacitor) use the real SDKs; in a browser use the test mode below
      'test'  always test mode: purchases and ads are simulated behind a clearly labelled "TEST" dialog
      'off'   no ads, no purchases (for a public web build: nothing is sold or simulated)
+     'free'  no ads, no purchases, but every ad reward is given directly (closed tests: same game balance, nothing
+             sold; the release workflow's "monetization: free" option sets this)
    webMode: what 'auto' does in a browser ('test' while developing, 'off' for a public web release) */
 window.MONETIZE = {
   mode: 'auto',

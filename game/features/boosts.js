@@ -86,7 +86,8 @@
     else if (r) { lbl.textContent = mmss(b.rateEnd - t); lbar.style.width = ((b.rateEnd - t) / RATE_DUR * 100).toFixed(1) + '%'; }
     else if (cd) { lbl.textContent = mmss(b.adCd - t); lbar.style.width = '0%'; }
     else { lbl.textContent = 'Boost'; lbar.style.width = '0%'; }
-    badge.style.display = a || (!cd) ? '' : 'none';
+    const free = SS.mon && SS.mon.mode === 'free';   // closed-test build: no ads, so no AD badge
+    badge.style.display = a || (!cd && !free) ? '' : 'none';
     badge.textContent = a ? 'x2' : 'AD';
     if (refs && refs.wrap.isConnected && !document.getElementById('panel').classList.contains('hidden')) {
       if (refs.state !== stateKey()) open();
@@ -108,7 +109,7 @@
       const ad = SS.el(`<div class="row-card fa-boostrow ${a ? 'fa-active' : ''}">
         <div class="ico fa-x"><img src="assets/ui/ic_boost.png" alt=""><em>x2</em></div>
         <div class="info"><h4>Süper Güç</h4><p></p></div>
-        ${a ? '<button class="btn grey off">AKTİF</button>' : cd ? '<button class="btn grey off">BEKLE</button>' : '<button class="btn green"><img src="assets/ui/play.png" alt="">İZLE</button>'}</div>`);
+        ${a ? '<button class="btn grey off">AKTİF</button>' : cd ? '<button class="btn grey off">BEKLE</button>' : (SS.mon && SS.mon.mode === 'free' ? '<button class="btn green">AL</button>' : '<button class="btn green"><img src="assets/ui/play.png" alt="">İZLE</button>')}</div>`);
       if (!a && !cd) ad.querySelector('.btn').onclick = startAd;
       const canBuy = (save.gems || 0) >= RATE_COST, r = rateOn();
       const rate = SS.el(`<div class="row-card fa-boostrow ${r ? 'fa-active' : ''}">

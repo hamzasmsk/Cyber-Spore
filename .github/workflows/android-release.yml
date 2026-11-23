@@ -22,6 +22,12 @@ on:
         default: 'none'
         type: choice
         options: [none, internal, alpha]
+      monetization:
+        description: '"free" = no ads and no purchases, ad rewards given directly (closed tests); "full" = ads + purchases'
+        required: true
+        default: 'free'
+        type: choice
+        options: [free, full]
 
 jobs:
   bundle:
@@ -54,6 +60,7 @@ jobs:
         run: |
           sed -i "s/devTools: true/devTools: false/" monetize.config.js   # no test panel in the store build
           grep -q "devTools: false" monetize.config.js
+          if [ "${{ github.event.inputs.monetization }}" = "free" ]; then sed -i "s/mode: 'auto'/mode: 'free'/" monetize.config.js; grep -q "mode: 'free'" monetize.config.js; fi
           npm run build
           npx cap sync android
 
