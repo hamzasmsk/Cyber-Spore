@@ -28,7 +28,7 @@
   ];
 
   function resetAll() {
-    const keep = { sound: save.sound, music: save.music, eco: save.eco, vibrate: save.vibrate, vol: save.vol };
+    const keep = { sound: save.sound, music: save.music, eco: save.eco, vibrate: save.vibrate, vol: save.vol, noTrack: save.noTrack, lang: save.lang };
     for (const k of Object.keys(save)) delete save[k];
     Object.assign(save, {
       money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1,

@@ -73,6 +73,7 @@
     'Her {0} düşmanda kumbaraya {1} elmas düşer (en fazla {2}). Kumbara': 'Every {0} enemies drop {1} gem into the piggy bank (max {2}). It breaks for free', 'dolunca': 'when full', 'ya da bir': 'or when you', 'boss yenince': 'beat a boss', 'ücretsiz kırılır.': '.',
     '{0} elmasta açılır': 'opens at {0} gems', 'Kır · {s}': 'Break · {s}', 'KIR VE AL': 'BREAK & CLAIM', 'KUMBARA BOŞ': 'PIGGY EMPTY', 'KİLİTLİ': 'LOCKED', 'Sonraki elmas: {0} düşman': 'Next gem: {0} enemies',
     '{s} — her yıldız kalıcı +%{0} altın.': '{s} — every star is a permanent +{0}% gold.', 'Kır': 'Break', '+{0} sn ya da +{1} Kule hakkı': '+{0} s or +{1} Tower try', '{s} ★{0}': '{s} ★{0}', '{s} ({0})': '{s} ({0})', '+{s} {0}': '+{s} {0}', 'Sonraki elmas: {0}': 'Next gem: {0}', 'Dolu: {0}': 'Full in {0}',
+    'Anonim kullanım verisi': 'Anonymous usage data', 'Oyunu geliştirmemize yardım eder': 'Helps us improve the game', 'kişisel veri yok': 'no personal data', 'Oyunu geliştirmemize yardım eder · kişisel veri yok': 'Helps us improve the game · no personal data',
     // Neo Ninja + effect skins + offers
     'NEO NİNJA': 'NEO NINJA', 'Plazma Shuriken': 'Plasma Shuriken', 'Lazer Kunai': 'Laser Kunai', 'Enerji Katana': 'Energy Katana', 'Ray Yay': 'Rail Bow', 'Drone Kunai': 'Drone Kunai',
     'Plazma Kasırgası': 'Plasma Storm', 'Lazer Yağmuru': 'Laser Rain', 'Kılıç Hattı': 'Blade Line', 'Ray Yağmuru': 'Rail Rain', 'Sürü Protokolü': 'Swarm Protocol',

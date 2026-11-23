@@ -158,6 +158,9 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
   - *Uygulama etkinliği → Uygulama etkileşimleri* (reklam etkileşimi) — AdMob, reklam amaçlı.
   - *Uygulama bilgileri ve performansı → Kilitlenme günlükleri / tanılama* — AdMob SDK, analiz.
   - *Finansal bilgi → Satın alma geçmişi* — yalnızca satın almalar açıksa (RevenueCat), uygulama işlevi.
+  - *Uygulama etkinliği → Uygulama etkileşimleri* ve *Cihaz veya diğer kimlikler* (rastgele kurulum kimliği) —
+    **GameAnalytics**, amaç **Analiz**, **isteğe bağlı** (oyuncu Ayarlar'dan kapatabilir), paylaşılmaz, anonim.
+  - *Uygulama bilgileri ve performansı → Diğer performans verileri* (FPS / bellek özeti) — GameAnalytics, analiz.
 - Konum, kişiler, fotoğraf, mesaj, e-posta, ad **toplanmaz**.
 
 ## İçerik derecelendirmesi (IARC anketi) — önerilen cevaplar

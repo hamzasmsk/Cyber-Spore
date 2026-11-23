@@ -87,6 +87,8 @@ GLYPHS = {
                             'owyyyyyywo', 'oyyyyyyyyo', 'oooooooooo'], {'o': INK, 'y': Y, 'w': W}),
     'ic_timeup': ('#56864c', ['oooooooooo....', 'oyyyyyyyyo....', '.owwwwwwo.....', '..owyywo...oo.', '...oyyo...oggo', '...owwo..ooggoo', '..owwwwo.ogggggo',
                               '.owwyywwooooggoo', 'owyyyyyywo.oggo.', 'oyyyyyyyyo..oo..', 'oooooooooo......'], {'o': INK, 'y': Y, 'w': W, 'g': G}),
+    'ic_chart': ('#2d4f8c', ['..........oo', '..........oo', '......oo.owo', '......owoowo', '..oo..owoowo', '..owo.owoowo', '..owoowoowoo', 'oo.owoowoowo',
+                             'owooowoowoowo', 'owoowoowoowo', 'oooooooooooo'], {'o': INK, 'w': Y}),
     'ic_bell': ('#3a6a8c', ['.....oo.....', '....oyyo....', '...oyyyyo...', '..oyyyyyyo..', '..oyyyyyyo..', '..oyywyyyo..', '.oyywyyyyyo.',
                             '.oyyyyyyyyo.', 'oyyyyyyyyyyo', 'oooooooooooo', '....oyyo....', '.....oo.....'], {'o': INK, 'y': Y, 'w': W}),
     'ic_goal': ('#56864c', ['oo..........', 'orroooo.....', 'orrrrrroooo.', 'orrrrrrrrrro', 'orwrrrrrrro.', 'orrrrrroo...', 'orroooo.....', 'oo..........',
