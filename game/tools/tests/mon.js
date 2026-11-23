@@ -5,7 +5,7 @@ const { chromium, devices } = require('playwright');
   const errs = []; page.on('pageerror', e => { errs.push(e.message); console.log('ERR', e.message, (e.stack || '').split('\n')[1]); });
   await page.addInitScript(() => localStorage.clear());
   await page.goto('file://' + require('path').resolve(__dirname, '../../index.html'));
-  await page.waitForFunction(() => window.SS && SS.R.heroes.length > 0); await page.evaluate(() => SS.unlock && SS.unlock.all());
+  await page.waitForFunction(() => window.SS && SS.R.heroes.length > 0); await page.evaluate(() => { SS.unlock && SS.unlock.all(); const d = new Date(); SS.save.login.last = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; });
   await page.waitForTimeout(1500);
   console.log('mode', await page.evaluate(() => SS.mon.mode));
   await page.screenshot({ path: `${S}/01-field.png` });

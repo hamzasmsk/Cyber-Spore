@@ -2063,7 +2063,9 @@ function snapImg(im) {
   if (!im || !im.naturalWidth || im.dataset.px || !/assets\/ui\//.test(im.src) || /\/theme\//.test(im.src)) return;
   const f = /\/(face|mon|boss)_/.test(im.src) ? 3 : /lever/.test(im.src) ? 2 : 4, aw = im.naturalWidth / f, ah = im.naturalHeight / f;
   const rr = im.dataset.r ? im.dataset.r.split(',').map(Number) : null, r = rr ? { width: rr[0], height: rr[1] } : im.getBoundingClientRect(); if (!r.width) return;
-  const want = Math.max(r.width / aw, r.height / ah), dev = window.devicePixelRatio || 1;
+  // the HUD and panels may be scaled as a whole on tablets (html.uiz, features/layout.js): measure in layout px
+  const z = document.documentElement.classList.contains('uiz') && im.closest('#ui,#panel') ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--uiz')) || 1) : 1;
+  const want = Math.max(r.width / z / aw, r.height / z / ah), dev = (window.devicePixelRatio || 1) * z;
   const k = Math.max(1, Math.round(want * dev)) / dev;   // whole device pixels per art pixel
   im.style.width = aw * k + 'px'; im.style.height = ah * k + 'px'; im.style.maxWidth = 'none'; im.style.maxHeight = 'none'; im.style.objectFit = 'fill';
   im.dataset.px = '1';

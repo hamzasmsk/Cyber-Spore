@@ -119,7 +119,7 @@ h2,h3,h4{margin:0;font-weight:700}
 #banner.warn{color:var(--gold)}
 @keyframes banner{0%{opacity:1}85%{opacity:1}100%{opacity:0}}
 @keyframes bannerIn{0%{transform:scale(1.5)}100%{transform:scale(1)}}
-#toast{position:absolute;left:50%;top:calc(164px + var(--safe-t));z-index:5;transform:translateX(-50%);padding:5px 14px 7px;background:rgba(19,27,27,.85);clip-path:var(--notch);font-size:16px;color:var(--cream);opacity:0;white-space:nowrap}
+#toast{position:absolute;left:50%;top:calc(164px + var(--safe-t));z-index:5;transform:translateX(-50%);padding:5px 14px 7px;background:rgba(19,27,27,.85);clip-path:var(--notch);font-size:16px;line-height:1.2;color:var(--cream);opacity:0;width:max-content;max-width:calc(100vw - 24px);text-align:center}
 #toast.show{animation:toast 1.6s steps(1,end) forwards}
 @keyframes toast{0%{opacity:1}85%{opacity:1}100%{opacity:0}}
 
@@ -294,8 +294,19 @@ h2,h3,h4{margin:0;font-weight:700}
 /* narrow phones (320–359 px): the three upgrade cards must fit */
 .ucard{min-width:0}
 .ucard .lbl{min-width:0;white-space:nowrap;overflow:hidden}
+/* level tag sits on the card's top edge so the name never gets cut */
+.ucard{position:relative}
+.ucard .lbl span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ucard .lbl small{position:absolute;top:-11px;right:-5px;margin:0;padding:0 3px;font-size:10px;line-height:13px;color:var(--cream);background:var(--ink);box-shadow:0 0 0 1px var(--ink2)}
+.ucard .lbl small b{color:var(--gold2)}
+.ucard .val{font-size:min(21px,5.3vw);white-space:nowrap;overflow:hidden}
 @media (max-width:359px){
   .cards{gap:3px}
   .ucard .lbl{font-size:13px}.ucard .lbl img{width:18px;height:18px}.ucard .lbl small{font-size:9px}
   .ucard .val{font-size:17px}.ucard .cost{font-size:13px;height:22px}.ucard .cost img{width:14px;height:14px}
 }
+/* tablets: HUD and panels scale up as a whole (--uiz set in features/layout.js) */
+html.uiz #ui,html.uiz #panel{right:auto;bottom:auto;width:var(--uiw);height:var(--uih);transform:scale(var(--uiz));transform-origin:0 0}
+html.uiz #panel .panel.pop{max-height:calc(var(--uih) * .84);width:min(440px,calc(var(--uiw) * .94))}
+html.uiz #pBody{max-height:calc(var(--uih) * .68)}
+html.uiz .ps-list{max-height:calc(var(--uih) * .42)}

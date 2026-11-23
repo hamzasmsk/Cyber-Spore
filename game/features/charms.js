@@ -95,7 +95,7 @@
     if (document.getElementById('pTitle').dataset.k !== 'Takım') return;
     const body = document.getElementById('pBody'); if (body.querySelector('.cm-entry')) return;
     const n = SLOTS.reduce((a, s) => a + best(s.k), 0);
-    const e = SS.el(`<button class="row-card cm-entry"><div class="ico tile"><img src="assets/ui/ic_amulet.png" alt=""></div><div class="info"><h4>Tılsımlar ${mergeable() ? '<span class="cm-new">birleştir!</span>' : ''}</h4><p>${SLOTS.map(s => `${s.name.split(' ')[0]} ${best(s.k) || '–'}`).join(' · ')}</p></div><span class="btn purple">AÇ</span></button>`);
+    const e = SS.el(`<button class="row-card cm-entry"><div class="ico tile"><img src="assets/ui/ic_amulet.png" alt=""></div><div class="info"><h4>Tılsımlar ${mergeable() ? '<span class="cm-new">birleştir!</span>' : ''}</h4><p>${SLOTS.map(s => `${s.name.split(' ')[0]} ${best(s.k)}`).join(' · ')}</p></div><span class="btn purple">AÇ</span></button>`);
     e.onclick = () => { SS.sfx('click'); open(); };
     body.insertBefore(e, body.children[1] || null);
   }).observe(document.getElementById('pBody'), { childList: true });

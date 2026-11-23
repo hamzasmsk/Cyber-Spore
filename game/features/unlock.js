@@ -37,7 +37,7 @@
     for (const [k, lv] of STEPS) {
       const b = el(k); if (!b) continue;
       b.style.display = ''; b.classList.toggle('m-lock', !on(k)); b.classList.toggle('is-new', U[k] === 1);
-      if (!on(k)) b.dataset.lv = 'Bölüm ' + lv; else delete b.dataset.lv;
+      if (!on(k)) b.dataset.lv = SS.t ? SS.t('Bölüm ' + lv) : 'Bölüm ' + lv; else delete b.dataset.lv;
     }
   }
   // a tap on a locked menu explains when it opens instead of opening it

@@ -59,6 +59,20 @@
     'Hedef tamam! +{0} elmas': 'Goal done! +{0} gems', 'Savaşmaya devam et: takım kendi ilerler': 'Keep fighting: the squad moves on its own', 'İPUCU': 'TIP', 'Takıldın mı? Doğuş zamanı': 'Stuck? Time to Rebirth', 'DOĞUŞ': 'REBIRTH', 'İlk Doğuş hediyesi: +3 ruh': 'First Rebirth gift: +3 souls', "Ruh Ağacı'na bak": 'check the Soul Tree',
     'YENİ MENÜ': 'NEW MENU', '{0} {1}. bölümde açılır': '{0} unlocks at stage {1}', 'Bölüm {0}': 'Stage {0}', 'YENİ': 'NEW',
     'Bosslardan düşen elmaslarla yeni silahlar aç ve yıldızlarını yükselt.': 'Unlock new weapons with gems from bosses and upgrade their stars.', 'Her gün uğra, 7 günde büyüyen ödülleri topla.': 'Drop by every day for rewards that grow over 7 days.', 'Altınla yeni ninjalar kat: her biri bir atıcı ve bir yetenek daha.': 'Recruit ninjas with gold: each adds a thrower and a perk.', 'Günlük görevleri bitir, elmas kazan.': 'Finish daily quests, earn gems.', 'Paketler, ücretsiz elmas ve takviyeler.': 'Packs, free gems and boosts.', 'Kısa süreli x2 güç ve altın.': 'Short x2 power and gold.', 'Sen yokken bile elmas üretir. Sık sık topla!': 'Makes gems even while you are away. Collect often!', 'Kaptanın görünümünü değiştir; her kostümün bir bonusu var.': "Change the captain's look; every outfit has a bonus.", 'Oynadıkça XP topla, sezon ödüllerini aç.': 'Earn XP as you play and unlock season rewards.', 'Takıldığında baştan başla: kalıcı güç ve Ruh Ağacı için ruh kazan.': 'Start over when stuck: gain permanent power and Soul Tree souls.', 'Yendiğin her canavar ve boss burada kayıtlı.': 'Every monster and boss you beat is recorded here.', 'Düşmanlar kumbaraya elmas biriktirir.': 'Enemies drop gems into the piggy bank.',
+    // audit additions
+    'TEST PANELİ': 'TEST PANEL', 'İZLE': 'WATCH', 'AKTİF': 'ACTIVE', 'BEKLE': 'WAIT', 'Koruma': 'Guard', 'Saldırı {0}': 'Attack {0}', 'Servet {0}': 'Wealth {0}', 'Koruma {0}': 'Guard {0}',
+    'Mantarcık': 'Mushling', 'Kappa': 'Kappa', 'Kertenkele': 'Lizard', 'Sürüngen': 'Reptile', 'Aksolotl': 'Axolotl', 'Buz Ahtapotu': 'Ice Octopus', 'Alev': 'Flame', 'Kor Ruhu': 'Ember Spirit', 'Tepegöz': 'Cyclops', 'Kara Canavar': 'Dark Beast',
+    'Yeni: {s}! +{0} elmas': 'New: {s}! +{0} gem', 'Yeni yoldaş: {s}! (Kostüm panelinde)': 'New companion: {s}! (in the Outfit panel)',
+    'Boss yıldızları: 1 · 5 · 20 zafer': 'Boss stars: 1 · 5 · 20 wins', 'Canavar yıldızları: 10 · 100 · 1000 yenme': 'Monster stars: 10 · 100 · 1000 kills',
+    'Bonus x{0} → x{1}': 'Bonus x{0} → x{1}', 'Ruh Ağacı için {0} ruh. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.': '{0} souls for the Soul Tree. Stage, levels and gold reset; gems, weapons, team and Soul Tree stay.',
+    'elmas. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.': 'gems. Stage, levels and gold reset; gems, weapons, team and Soul Tree stay.',
+    '+{0} elmas. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.': '+{0} gems. Stage, levels and gold reset; gems, weapons, team and Soul Tree stay.',
+    '{0}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.': 'Unlocks at stage {0}. Points grow 18% per stage: the further you go, the more it is worth.',
+    'Bitişe {0} {1}': 'Ends in {0} {1}', 'Bitişe {0}': 'Ends in {0}', 'Can {0}': 'HP {0}', '{0} sa içinde yenilenir': 'refreshes in {0} h', '{0} dk gelir': 'arrives in {0} min', '{0} sa gelir': 'arrives in {0} h', '{0} fener': '{0} lanterns',
+    'Her {0} düşmanda kumbaraya {1} elmas düşer (en fazla {2}). En az {3} elmas olunca tek seferlik ödemeyle kırılır — fiyat sabit, kumbara ne kadar doluysa o kadar kârlı.': 'Every {0} enemies drop {1} gem into the piggy bank (max {2}). From {3} gems it can be broken with a one-time purchase — fixed price, so the fuller it is, the better the deal.',
+    'Her {0} düşmanda kumbaraya {1} elmas düşer (en fazla {2}). Kumbara': 'Every {0} enemies drop {1} gem into the piggy bank (max {2}). It breaks for free', 'dolunca': 'when full', 'ya da bir': 'or when you', 'boss yenince': 'beat a boss', 'ücretsiz kırılır.': '.',
+    '{0} elmasta açılır': 'opens at {0} gems', 'Kır · {s}': 'Break · {s}', 'KIR VE AL': 'BREAK & CLAIM', 'KUMBARA BOŞ': 'PIGGY EMPTY', 'KİLİTLİ': 'LOCKED', 'Sonraki elmas: {0} düşman': 'Next gem: {0} enemies',
+    '{s} — her yıldız kalıcı +%{0} altın.': '{s} — every star is a permanent +{0}% gold.', 'Kır': 'Break', 'Sonraki elmas: {0}': 'Next gem: {0}', 'Dolu: {0}': 'Full in {0}',
     // daily, reminders, festival
     'Her gün gir, ödülün büyüsün. Kaçırdığın gün sıfırlamaz, seni bekler.': 'Come every day and the reward grows. A missed day does not reset, it waits for you.', '{0}. gün': 'Day {0}', '{0}. GÜN': 'DAY {0}', 'Hafta sandığı': 'Week chest', '{0} Yıldız Taşı': '{0} Star Stone', '{0} dk hızlı ateş': '{0} min rapid fire', '{0} Boss Bileti': '{0} Boss Ticket', '{0} sa x2 güç': '{0} h x2 power', '{0} dk altın': '{0} min of gold',
     'Hatırlatıcılar': 'Reminders', 'Ödül hazır, maden dolu… (günde en fazla 2)': 'Reward ready, mine full… (max 2 a day)', 'Hatırlatıcılar açık': 'Reminders on', 'Maden doldu': 'Mine is full', 'Deponda elmaslar seni bekliyor. Toplamazsan üretim durur.': 'Gems are waiting in storage. Production stops until you collect.', 'Takımın yoruldu': 'Your squad is tired', 'Günlük ödülün hazır': 'Your daily reward is ready', '7. gün sandığı seni bekliyor!': 'The day 7 chest is waiting!', '{0}. gün ödülünü almayı unutma.': "Don't forget your day {0} reward.", 'Ninja Yolu bitiyor': 'Ninja Path is ending', 'Sezon yarın bitiyor: ödüllerini topla.': 'The season ends tomorrow: collect your rewards.',
@@ -123,18 +137,26 @@
   const NAMES = Object.entries(EN).filter(([k]) => /^[A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ']*( [A-ZÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ']*)+$/.test(k)).sort((a, b) => b[0].length - a[0].length);
   const WORDS = { elmas: 'gems', altın: 'gold', ruh: 'souls', parşömen: 'scrolls', saniye: 'seconds', saat: 'hours', gün: 'days', hasar: 'damage', bölüm: 'stage', kat: 'floor', düşman: 'enemies', ninja: 'ninja', 'kalıcı': 'permanent', 'boss': 'boss' };
 
-  const NUM = /\d+(?:[.,]\d+)*(?:Mr|[KMT]|[a-z]{2}(?![a-zçğıöşü]))?/g;
+  const NUM = /\d+(?:[.,]\d+)*(?:Mr|[KMT]|[a-z]{2}(?![a-zçğıöşü])|g(?![a-zçğıöşü]))?/g;
+  const UNIT = { Mr: 'b', sa: 'h', dk: 'm', sn: 's', g: 'd' };
+  const num = m => m.replace(/(\d)(Mr|sa|dk|sn|g)$/, (_, d, u) => d + UNIT[u]);
   const cache = new Map();
+  // sentences with a name inside: '{s}' matches any text (translated on its own)
+  const esc = x => x.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+  const PAT = Object.entries(EN).filter(([k]) => k.includes('{s}')).map(([k, v]) => { const order = []; const src = esc(k).replace(/\\?\{(s|\d)\\?\}/g, (_, o) => { order.push(o === 's' ? 's' : +o); return o === 's' ? '(.+?)' : '(' + NUM.source + ')'; }); return [new RegExp('^' + src + '$'), v, order]; });
   function trOne(s) {
     if (EN[s] !== undefined) return EN[s];
     const nums = []; const key = s.replace(NUM, m => { nums.push(m); return `{${nums.length - 1}}`; });
-    if (nums.length && EN[key] !== undefined) return EN[key].replace(/\{(\d)\}/g, (_, i) => nums[+i] !== undefined ? nums[+i].replace(/Mr$/, 'B') : '');
+    for (const [re, v, order] of PAT) { const m = s.match(re); if (m) { const got = order.map((o, i) => o === 's' ? tr(m[i + 1]) : num(m[i + 1])); let k = 0; return v.replace(/\{(s|\d)\}/g, (_, o) => o === 's' ? got[order.indexOf('s')] : got[order.indexOf(+o)] ?? ''); } }
+    if (nums.length && EN[key] !== undefined) return EN[key].replace(/\{(\d)\}/g, (_, i) => nums[+i] !== undefined ? num(nums[+i]) : '');
     return null;
   }
   function tr(text) {
     if (save.lang !== 'en' || !text || !/[A-Za-zçğıöşüÇĞİÖŞÜ]{2}/.test(text)) return text;
     if (cache.has(text)) return cache.get(text);
     const lead = text.match(/^\s*/)[0], tail = text.match(/\s*$/)[0], core = text.trim();
+    const sep = core.match(/^(·\s+)?([\s\S]*?)(\s+·)?$/);
+    if ((sep[1] || sep[3]) && sep[2]) { const r = lead + (sep[1] || '') + tr(sep[2]) + (sep[3] || '') + tail; cache.set(text, r); return r; }
     let out = trOne(core);
     if (out === null && core.includes(' · ')) out = core.split(' · ').map(p => tr(p)).join(' · ');
     if (out === null && core.includes(' + ')) out = core.split(' + ').map(p => tr(p)).join(' + ');
@@ -143,7 +165,7 @@
       let s2 = core; for (const [k, v] of NAMES) if (s2.includes(k)) s2 = s2.split(k).join(v);
       out = s2 !== core ? s2 : null;
     }
-    if (out === null) out = core.replace(NUM, m => m.replace(/Mr$/, 'B'));
+    if (out === null) out = core.replace(NUM, num);
     const r = lead + out + tail; if (cache.size > 4000) cache.clear(); cache.set(text, r); return r;
   }
   SS.t = tr;
