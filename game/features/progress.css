@@ -209,3 +209,35 @@
 .dv-speed{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);font-size:16px;color:var(--dark)}
 .dv-speed span{flex:1}
 .dv-speed .btn{min-height:34px;min-width:46px;font-size:14px;padding:0 6px 3px}
+
+/* Sandık anı */
+.ch-ov{position:absolute;inset:0;z-index:26;display:grid;place-items:center;background:rgba(19,27,27,.78);pointer-events:auto;animation:fadeIn .15s}
+.ch-ov.out{animation:unOut .22s ease-in forwards}
+.ch-box{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(320px,86vw)}
+.ch-title{font-size:26px;color:var(--gold2);text-shadow:var(--o)}
+.ch-chest{width:128px;height:128px;display:grid;place-items:center;cursor:pointer}
+.ch-chest img{width:112px;height:auto}
+.ch-chest.shake{animation:chShake .62s steps(10)}
+.ch-chest.burst img{animation:chBurst .4s steps(4)}
+@keyframes chShake{0%,100%{transform:none}10%{transform:translateX(-4px) rotate(-4deg)}30%{transform:translateX(4px) rotate(4deg)}50%{transform:translateX(-6px) rotate(-6deg)}70%{transform:translateX(6px) rotate(6deg)}90%{transform:scale(1.1)}}
+@keyframes chBurst{0%{transform:scale(1.3);filter:brightness(2)}100%{transform:none;filter:none}}
+.ch-items{display:flex;flex-direction:column;gap:6px;align-self:stretch}
+.ch-item{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 5px var(--gold);color:var(--ink);font-size:16px;animation:pkIn .3s cubic-bezier(.2,.9,.3,1.3) both}
+.ch-item img{width:32px;height:32px}
+.ch-ok{opacity:0;pointer-events:none;min-width:140px}
+.ch-ok.show{opacity:1;pointer-events:auto;transition:opacity .2s}
+.ch-hint{font-size:13px;color:var(--cream);animation:blink3 1s steps(2) infinite}
+
+/* Tılsımlar */
+.cm-entry{width:100%;border:0;cursor:pointer;font-family:inherit;text-align:left}
+.cm-entry .btn{min-width:56px;min-height:36px;font-size:14px}
+.cm-new{font-size:11px;padding:0 4px;color:var(--cream);background:var(--green)}
+.cm-row .ico{position:relative}
+.cm-row p{margin:1px 0 3px;font-size:12px}
+.cm-row p b{color:var(--green)}
+.cm-tiers{display:flex;flex-wrap:wrap;gap:4px}
+.cm-tiers small{font-size:11px;color:var(--muted)}
+.cm-t{display:flex;align-items:center;gap:2px;font-size:11px;padding:0 4px 0 0;background:#e8d6c0;color:var(--ink)}
+.cm-t i{font-style:normal;padding:0 4px;color:var(--cream);background:var(--ink2)}
+.cm-t.on{background:var(--gold2)}
+.cm-t.on i{background:var(--purple)}

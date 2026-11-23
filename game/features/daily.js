@@ -40,7 +40,8 @@
     if (!ready()) return;
     const r = scaled(DAYS[L.day]);
     give(r); L.last = today();
-    SS.sfx(r.chest ? 'win' : 'bonus', 0); SS.banner(r.chest ? 'HAFTA TAMAM!' : `${L.day + 1}. GÜN`, parts(r).map(p => p[0]).join(' · '));
+    if (r.chest && SS.chest) setTimeout(() => SS.chest(parts(r).map(p => ({ icon: p[1], label: p[0] })), 'Hafta sandığı'), 300);
+    else { SS.sfx('bonus', 0); SS.banner(`${L.day + 1}. GÜN`, parts(r).map(p => p[0]).join(' · ')); }
     L.day++; if (L.day >= DAYS.length) { L.day = 0; L.week++; }
     SS.persist(); SS.refreshUI(); paint();
     SS.closePanel();
