@@ -22,9 +22,9 @@
 
   const ITEMS = [
     { key: 'sound', label: 'Efektler', icon: 'assets/ui/ic_sound_on.png', iconOff: 'assets/ui/ic_sound_off.png', note: 'Atış, para ve boss sesleri' },
-    { key: 'music', label: 'Müzik', icon: 'assets/ui/ic_book.png', note: 'Bölge müzikleri' },
-    { key: 'eco', label: 'Eko mod', icon: 'assets/ui/ic_vision.png', note: 'Az efekt, az pil' },
-    { key: 'vibrate', label: 'Titreşim', icon: 'assets/ui/ic_boot.png', note: 'Önemli anlarda titret' },
+    { key: 'music', label: 'Müzik', icon: 'assets/ui/ic_music.png', note: 'Bölge müzikleri' },
+    { key: 'eco', label: 'Eko mod', icon: 'assets/ui/ic_eco.png', note: 'Az efekt, az pil' },
+    { key: 'vibrate', label: 'Titreşim', icon: 'assets/ui/ic_vibrate.png', note: 'Önemli anlarda titret' },
   ];
 
   function resetAll() {
@@ -66,7 +66,7 @@
       // volume sliders: master / music / effects (0-100), applied live to the audio graph
       if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
       const vols = SS.el('<div class="toggles"></div>');
-      [['master', 'Genel', 'ic_sun'], ['music', 'Müzik', 'ic_book'], ['sfx', 'Efekt', 'ic_sound_on']].forEach(([k, label, ic]) => {
+      [['master', 'Genel', 'ic_volume'], ['music', 'Müzik', 'ic_music'], ['sfx', 'Efekt', 'ic_sound_on']].forEach(([k, label, ic]) => {
         const row = SS.el(`<div class="vol"><img src="assets/ui/${ic}.png" alt=""><label>${label}</label><input type="range" min="0" max="100" step="5" value="${Math.round((save.vol[k] ?? 0.7) * 100)}"><em>${Math.round((save.vol[k] ?? 0.7) * 100)}</em></div>`);
         const inp = row.querySelector('input'), out = row.querySelector('em');
         inp.addEventListener('input', () => { save.vol[k] = inp.value / 100; out.textContent = inp.value; SS.applyVol && SS.applyVol(); });
@@ -100,7 +100,7 @@
       wrap.appendChild(code);
       const zone = SS.el('<div class="fa-danger"></div>');
       if (!confirming) {
-        const r = SS.el(`<div class="fa-resetrow"><img src="assets/ui/ic_rebirth.png" alt="">
+        const r = SS.el(`<div class="fa-resetrow"><img src="assets/ui/ic_down.png" alt="">
           <span>İlerleme<small>Her şeye baştan başla</small></span><button class="btn red fa-reset">SIFIRLA</button></div>`);
         r.querySelector('.btn').onclick = () => { SS.sfx('no'); open(true); };
         zone.appendChild(r);

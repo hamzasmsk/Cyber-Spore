@@ -23,10 +23,11 @@
   function sync() { const w = cur(); if (E.key !== w.key) { E.key = w.key; E.bought = {}; } }
   const ITEMS = [
     { id: 'skin', name: 'Fener Prensesi', txt: 'Festivale özel kostüm · +%6 hasar · +%6 altın', img: 'face_Princess', cost: 400, stock: 1, give: () => { const K = save.skins; K.owned.Princess = true; SS.banner('YENİ KOSTÜM!', 'Fener Prensesi'); } },
+    { id: 'moon', name: 'Gece Hilali', txt: 'Festivale özel efekt kaplaması · her silahta', img: 'fxi_moon', cost: 300, stock: 1, give: () => SS.fxskins && SS.fxskins.give('moon') },
     { id: 'star', name: 'Yıldız Taşı', txt: 'Silah yıldızı için', img: 'ic_luck', cost: 60, stock: 3, give: () => { save.inv.star = (save.inv.star || 0) + 1; } },
-    { id: 'scroll', name: '2 Parşömen', txt: 'Rastgele bir ninjaya', img: 'ic_book', cost: 40, stock: 5, give: () => SS.giveScroll(2) },
-    { id: 'rapid', name: '30 dk Hızlı Ateş', txt: 'Takım daha hızlı atar', img: 'ic_rate', cost: 30, stock: 5, give: () => { const b = save.boost = save.boost || {}; b.rateEnd = Math.max(Date.now(), b.rateEnd || 0) + 30 * 60000; } },
-    { id: 'ticket', name: 'Boss Bileti', txt: '+15 sn ya da +1 Kule hakkı', img: 'ic_shield', cost: 30, stock: 5, give: () => { save.inv.ticket = (save.inv.ticket || 0) + 1; } },
+    { id: 'scroll', name: '2 Parşömen', txt: 'Rastgele bir ninjaya', img: 'ic_scroll', cost: 40, stock: 5, give: () => SS.giveScroll(2) },
+    { id: 'rapid', name: '30 dk Hızlı Ateş', txt: 'Takım daha hızlı atar', img: 'ic_rapid', cost: 30, stock: 5, give: () => { const b = save.boost = save.boost || {}; b.rateEnd = Math.max(Date.now(), b.rateEnd || 0) + 30 * 60000; } },
+    { id: 'ticket', name: 'Boss Bileti', txt: '+15 sn ya da +1 Kule hakkı', img: 'ic_ticket', cost: 30, stock: 5, give: () => { save.inv.ticket = (save.inv.ticket || 0) + 1; } },
     { id: 'gems', name: '40 Elmas', txt: '', img: 'gem_big', cost: 80, stock: 3, give: () => { save.gems += 40; } },
   ];
   if (SS.skins && !SS.skins.byId('Princess')) SS.skins.SKINS.push({ id: 'Princess', name: 'Fener Prensesi', cost: 0, event: 'Fener Festivali mağazası', bonus: { dmg: 1.06, money: 1.06 }, desc: '+%6 hasar · +%6 altın' });
@@ -57,7 +58,7 @@
       tabs(body, 'ev');
       body.appendChild(SS.el(`<div class="ev-head"><img src="${ICON}" alt=""><div><b>${E.fen} fener</b><span>Bitişe ${left()} · düşmanlar, elitler, hazine ve bosslar fener düşürür</span></div></div>`));
       for (const it of ITEMS) {
-        const got = E.bought[it.id] || 0, out = got >= it.stock || (it.id === 'skin' && save.skins && save.skins.owned && save.skins.owned.Princess), can = !out && E.fen >= it.cost;
+        const got = E.bought[it.id] || 0, out = got >= it.stock || (it.id === 'skin' && save.skins && save.skins.owned && save.skins.owned.Princess) || (it.id === 'moon' && SS.fxskins && SS.fxskins.owned('moon')), can = !out && E.fen >= it.cost;
         const r = SS.el(`<div class="row-card ev-row ${it.id === 'skin' ? 'mz-hero' : ''}"><div class="ico ${it.id === 'skin' ? 'face' : 'tile'}"><img src="assets/ui/${it.img}.png" alt=""></div>
           <div class="info"><h4>${it.name}</h4><p>${it.txt}${it.txt ? ' · ' : ''}${out ? 'Tükendi' : `Kalan ${it.stock - got}`}</p></div>
           <button class="btn ${out ? 'grey off' : can ? 'red' : 'grey off'}"><img src="${ICON}" alt="">${it.cost}</button></div>`);

@@ -56,7 +56,7 @@
   new MutationObserver(() => {
     if (document.getElementById('pTitle').dataset.k !== 'Kostüm') return;
     const root = document.querySelector('#pBody .fb-skins'); if (!root || root.querySelector('.pt-sec')) return;
-    root.appendChild(SS.el('<h3 class="fb-sec pt-sec"><img src="assets/ui/ic_heal.png" alt="">Yoldaşlar</h3>'));
+    root.appendChild(SS.el('<h3 class="fb-sec pt-sec"><img src="assets/ui/ic_paw.png" alt="">Yoldaşlar</h3>'));
     for (const p of PETS) {
       const got = p.ok(), on = PT.on === p.id && got;
       const r = SS.el(`<div class="row-card ${on ? 'cur' : ''} ${got ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/mon_${p.id}.png" alt=""></div><div class="info"><h4>${p.name}</h4><p>${p.txt} · saldırır${got ? '' : ` · <b>${p.need}</b>`}</p></div>
@@ -88,7 +88,7 @@
     const hp = 10 * Math.pow(1.3, ((save.best || 1) - 1) * 5 + 4) * 22 * r.hp;
     SS.startBoss({ key, hp, time: r.time || 40, rage: !!r.rage, spd: r.spd || 1, sig: r.sig || null, sub: `Haftalık · ${r.name}`, done: won => {
       glass = false;
-      if (won) { w.done = true; SS.chest([{ icon: 'gem', label: '40 elmas', apply: () => { save.gems += 40; } }, { icon: 'ic_amulet', label: 'Tılsım Sv.2', apply: () => SS.charms && SS.charms.give(['atk', 'gold', 'guard'][weekNo() % 3], 2) }, { icon: 'ic_book', label: '4 parşömen', apply: () => SS.giveScroll(4) }], 'Haftalık sandık'); }
+      if (won) { w.done = true; SS.chest([{ icon: 'gem', label: '40 elmas', apply: () => { save.gems += 40; } }, { icon: 'ic_amulet', label: 'Tılsım Sv.2', apply: () => SS.charms && SS.charms.give(['atk', 'gold', 'guard'][weekNo() % 3], 2) }, { icon: 'ic_scroll', label: '4 parşömen', apply: () => SS.giveScroll(4) }], 'Haftalık sandık'); }
       else SS.banner('MEYDAN OKUMA', `${3 - w.tries} hak kaldı`);
       SS.persist();
     } });
@@ -99,7 +99,7 @@
     if (document.getElementById('pTitle').dataset.k !== 'Arena') return;
     const body = document.getElementById('pBody'); if (body.querySelector('.wk-card')) return;
     const w = WK(), r = rule();
-    const c = SS.el(`<div class="row-card wk-card ${w.done ? 'done' : ''}"><div class="ico tile"><img src="assets/ui/ic_sun.png" alt=""></div><div class="info"><h4>Haftalık: ${r.name}</h4><p>${r.txt} · ${w.done ? '<b>Tamamlandı</b>' : `${3 - w.tries} hak`}</p></div><button class="btn ${w.done || w.tries >= 3 ? 'grey off' : 'yellow'}">${w.done ? '✓' : 'SAVAŞ'}</button></div>`);
+    const c = SS.el(`<div class="row-card wk-card ${w.done ? 'done' : ''}"><div class="ico tile"><img src="assets/ui/ic_week.png" alt=""></div><div class="info"><h4>Haftalık: ${r.name}</h4><p>${r.txt} · ${w.done ? '<b>Tamamlandı</b>' : `${3 - w.tries} hak`}</p></div><button class="btn ${w.done || w.tries >= 3 ? 'grey off' : 'yellow'}">${w.done ? '✓' : 'SAVAŞ'}</button></div>`);
     c.querySelector('.btn').onclick = () => { if (!w.done && w.tries < 3) weeklyFight(); };
     body.appendChild(c);
   }).observe(document.getElementById('pBody'), { childList: true });

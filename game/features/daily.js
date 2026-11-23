@@ -25,8 +25,8 @@
   const scaled = r => Object.assign({}, r, r.gems ? { gems: Math.round(r.gems * wk()) } : {});
   const ready = () => L.last !== today();
   const parts = r => [
-    r.gems && [`${r.gems} elmas`, 'gem'], r.star && [`${r.star} Yıldız Taşı`, 'ic_luck'], r.rapidMin && [`${r.rapidMin} dk hızlı ateş`, 'ic_rate'],
-    r.ticket && [`${r.ticket} Boss Bileti`, 'ic_shield'], r.boostMin && [`${r.boostMin / 60} sa x2 güç`, 'ic_boost'], r.goldMin && [`${r.goldMin} dk altın`, 'coin'],
+    r.gems && [`${r.gems} elmas`, 'gem'], r.star && [`${r.star} Yıldız Taşı`, 'ic_luck'], r.rapidMin && [`${r.rapidMin} dk hızlı ateş`, 'ic_rapid'],
+    r.ticket && [`${r.ticket} Boss Bileti`, 'ic_ticket'], r.boostMin && [`${r.boostMin / 60} sa x2 güç`, 'ic_boost'], r.goldMin && [`${r.goldMin} dk altın`, 'coin'],
   ].filter(Boolean);
   function give(r) {
     const inv = save.inv = save.inv || {}, b = save.boost = save.boost || {}, now = Date.now();
@@ -63,7 +63,7 @@
       const b = SS.el(`<button class="btn ${ready() ? 'green' : 'grey off'} wide">${ready() ? 'ÖDÜLÜ AL' : 'Yarın tekrar gel'}</button>`);
       b.onclick = claim; body.appendChild(b);
       if (Notif.native) {
-        const t = SS.el(`<button class="toggle ${save.notify ? 'on' : ''}"><img src="assets/ui/ic_missions.png" alt=""><span>Hatırlatıcılar<small>Ödül hazır, maden dolu… (günde en fazla 2)</small></span><em>${save.notify ? 'AÇIK' : 'KAPALI'}</em><b></b></button>`);
+        const t = SS.el(`<button class="toggle ${save.notify ? 'on' : ''}"><img src="assets/ui/ic_bell.png" alt=""><span>Hatırlatıcılar<small>Ödül hazır, maden dolu… (günde en fazla 2)</small></span><em>${save.notify ? 'AÇIK' : 'KAPALI'}</em><b></b></button>`);
         t.onclick = async () => { if (save.notify) { save.notify = false; Notif.cancel(); } else await Notif.enable(); SS.persist(); open(); };
         body.appendChild(t);
       }

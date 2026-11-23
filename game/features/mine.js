@@ -59,7 +59,7 @@ function boot() {
       body.appendChild(wrap);
       body.appendChild(SS.el('<p class="big-note">Maden sen oyunda olmasan da elmas kazar. Depo dolunca üretim durur, sık sık topla!</p>'));
       const collect = SS.el('<button class="btn green wide"><img src="assets/ui/gem.png" alt="">TOPLA</button>');
-      const up = SS.el('<div class="row-card fb-up"><div class="ico"><img src="assets/ui/ic_boost.png" alt=""></div><div class="info"><h4>Madeni Geliştir</h4><p class="fb-upinfo"></p></div><button class="btn yellow"><img src="assets/ui/coin.png" alt=""><span>0</span></button></div>');
+      const up = SS.el('<div class="row-card fb-up"><div class="ico"><img src="assets/ui/ic_settings.png" alt=""></div><div class="info"><h4>Madeni Geliştir</h4><p class="fb-upinfo"></p></div><button class="btn yellow"><img src="assets/ui/coin.png" alt=""><span>0</span></button></div>');
       body.appendChild(collect); body.appendChild(up);
       const upBtn = up.querySelector('.btn');
       collect.onclick = () => {

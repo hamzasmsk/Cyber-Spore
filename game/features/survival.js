@@ -14,12 +14,12 @@
   const S = save.surv;
   const free = () => S.day !== today();
   const BOOSTS = [
-    { id: 'dmg', name: 'Öfke', txt: '+%40 hasar', icon: 'ic_power' },
-    { id: 'rate', name: 'Çeviklik', txt: '+%30 atış hızı', icon: 'ic_rate' },
+    { id: 'dmg', name: 'Öfke', txt: '+%40 hasar', icon: 'ic_axe' },
+    { id: 'rate', name: 'Çeviklik', txt: '+%30 atış hızı', icon: 'ic_agile' },
     { id: 'heal', name: 'Nefes', txt: 'Takımı tamamen iyileştir', icon: 'ic_heal' },
-    { id: 'nova', name: 'Şok Dalgası', txt: 'Her 6 sn çevreye patlama', icon: 'ic_explosion' },
-    { id: 'pierce', name: 'Delici Uç', txt: 'Atışlar +1 deler', icon: 'ic_book' },
-    { id: 'slow', name: 'Ağır Hava', txt: 'Düşmanlar %25 yavaş', icon: 'ic_moon' },
+    { id: 'nova', name: 'Şok Dalgası', txt: 'Her 6 sn çevreye patlama', icon: 'ic_wave' },
+    { id: 'pierce', name: 'Delici Uç', txt: 'Atışlar +1 deler', icon: 'ic_fork' },
+    { id: 'slow', name: 'Ağır Hava', txt: 'Düşmanlar %25 yavaş', icon: 'ic_rain' },
   ];
   let run = null;
   const prevBusy = SS.busy; SS.busy = () => !!run || (prevBusy ? prevBusy() : false);

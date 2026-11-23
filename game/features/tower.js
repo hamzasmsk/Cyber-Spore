@@ -14,20 +14,20 @@
   const attempts = () => { if (T.day !== today()) { T.day = today(); T.used = 0; } return Math.max(0, TRIES - T.used); };
   const KEYS = Object.keys(SS.BOSSES);
   const RULES = [
-    { id: 'normal', name: 'Sınav', txt: 'Kuralsız dövüş', icon: 'ic_weapon' },
-    { id: 'rage', name: 'Öfke', txt: 'Boss baştan öfkeli', icon: 'ic_fire', rage: 1 },
-    { id: 'fast', name: 'Çeviklik', txt: 'Boss %40 hızlı saldırır · can -%20', icon: 'ic_rate', spd: 1.4, hp: 0.8 },
-    { id: 'horde', name: 'Kalabalık', txt: 'Boss sürekli asker çağırır', icon: 'ic_team', sig: ['summon', 'rain'] },
-    { id: 'clock', name: 'Zamana Karşı', txt: '20 saniye · can -%30', icon: 'ic_moon', time: 20, hp: 0.7 },
-    { id: 'giant', name: 'Dev', txt: 'Can +%60 · 40 saniye', icon: 'ic_shield', time: 40, hp: 1.6 },
+    { id: 'normal', name: 'Sınav', txt: 'Kuralsız dövüş', icon: 'ic_trial' },
+    { id: 'rage', name: 'Öfke', txt: 'Boss baştan öfkeli', icon: 'ic_angry', rage: 1 },
+    { id: 'fast', name: 'Çeviklik', txt: 'Boss %40 hızlı saldırır · can -%20', icon: 'ic_ninjaku', spd: 1.4, hp: 0.8 },
+    { id: 'horde', name: 'Kalabalık', txt: 'Boss sürekli asker çağırır', icon: 'ic_summon', sig: ['summon', 'rain'] },
+    { id: 'clock', name: 'Zamana Karşı', txt: '20 saniye · can -%30', icon: 'ic_clock', time: 20, hp: 0.7 },
+    { id: 'giant', name: 'Dev', txt: 'Can +%60 · 40 saniye', icon: 'ic_giant', time: 40, hp: 1.6 },
   ];
-  const GUARD = { id: 'guard', name: 'Muhafız', txt: 'Can x2 · öfkeli · 45 saniye', icon: 'ic_death', time: 45, hp: 2, rage: 1, spd: 1.15 };
+  const GUARD = { id: 'guard', name: 'Muhafız', txt: 'Can x2 · öfkeli · 45 saniye', icon: 'ic_helmet', time: 45, hp: 2, rage: 1, spd: 1.15 };
   const rule = f => f % 10 === 0 ? GUARD : RULES[(f - 1) % RULES.length];
   const keyOf = f => KEYS[(f * 7 + Math.floor(f / 10) * 3) % KEYS.length];
   const hpOf = f => 10 * Math.pow(1.3, 3 * (f - 1)) * 22 * (rule(f).hp || 1);
   const rewardOf = f => ({ gems: 2 + Math.floor(f / 5) + (f % 10 === 0 ? 10 : 0), star: f % 10 === 0 ? 2 : f % 5 === 0 ? 1 : 0, ticket: f % 20 === 0 ? 1 : 0 });
   const rewTxt = r => [r.gems && `<span><img src="assets/ui/gem.png" alt="">${r.gems}</span>`, r.star && `<span><img src="assets/ui/ic_luck.png" alt="">${r.star}</span>`,
-r.ticket && `<span><img src="assets/ui/ic_shield.png" alt="">${r.ticket}</span>`].filter(Boolean).join('');
+r.ticket && `<span><img src="assets/ui/ic_ticket.png" alt="">${r.ticket}</span>`].filter(Boolean).join('');
   // rough difficulty from the squad's damage per second against the floor's HP and time limit
   const diff = f => { const dps = SS.dmgPerShot() * SS.fireRate() * Math.max(1, save.team) * SS.modMul('boss'), k = hpOf(f) / dps / (rule(f).time || 30);
     return k < 0.35 ? { t: 'Kolay', c: 'ez' } : k < 0.8 ? { t: 'Zorlu', c: 'md' } : k < 1.4 ? { t: 'Çok zor', c: 'hd' } : { t: 'İmkânsız gibi', c: 'no' }; };

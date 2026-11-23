@@ -72,7 +72,25 @@
     'Her {0} düşmanda kumbaraya {1} elmas düşer (en fazla {2}). En az {3} elmas olunca tek seferlik ödemeyle kırılır — fiyat sabit, kumbara ne kadar doluysa o kadar kârlı.': 'Every {0} enemies drop {1} gem into the piggy bank (max {2}). From {3} gems it can be broken with a one-time purchase — fixed price, so the fuller it is, the better the deal.',
     'Her {0} düşmanda kumbaraya {1} elmas düşer (en fazla {2}). Kumbara': 'Every {0} enemies drop {1} gem into the piggy bank (max {2}). It breaks for free', 'dolunca': 'when full', 'ya da bir': 'or when you', 'boss yenince': 'beat a boss', 'ücretsiz kırılır.': '.',
     '{0} elmasta açılır': 'opens at {0} gems', 'Kır · {s}': 'Break · {s}', 'KIR VE AL': 'BREAK & CLAIM', 'KUMBARA BOŞ': 'PIGGY EMPTY', 'KİLİTLİ': 'LOCKED', 'Sonraki elmas: {0} düşman': 'Next gem: {0} enemies',
-    '{s} — her yıldız kalıcı +%{0} altın.': '{s} — every star is a permanent +{0}% gold.', 'Kır': 'Break', 'Sonraki elmas: {0}': 'Next gem: {0}', 'Dolu: {0}': 'Full in {0}',
+    '{s} — her yıldız kalıcı +%{0} altın.': '{s} — every star is a permanent +{0}% gold.', 'Kır': 'Break', '+{0} sn ya da +{1} Kule hakkı': '+{0} s or +{1} Tower try', '{s} ★{0}': '{s} ★{0}', '{s} ({0})': '{s} ({0})', '+{s} {0}': '+{s} {0}', 'Sonraki elmas: {0}': 'Next gem: {0}', 'Dolu: {0}': 'Full in {0}',
+    // Neo Ninja + effect skins + offers
+    'NEO NİNJA': 'NEO NINJA', 'Plazma Shuriken': 'Plasma Shuriken', 'Lazer Kunai': 'Laser Kunai', 'Enerji Katana': 'Energy Katana', 'Ray Yay': 'Rail Bow', 'Drone Kunai': 'Drone Kunai',
+    'Plazma Kasırgası': 'Plasma Storm', 'Lazer Yağmuru': 'Laser Rain', 'Kılıç Hattı': 'Blade Line', 'Ray Yağmuru': 'Rail Rain', 'Sürü Protokolü': 'Swarm Protocol',
+    'Etrafında dönen plazma yıldızları': 'Plasma stars circling you', 'Gökten lazer kunai yağar': 'Laser kunai rain from the sky', 'Ekranı boydan yaran enerji kesiği': 'An energy slash that splits the screen',
+    'Gökten düşen enerji okları': 'Energy arrows falling from the sky', 'Üç dev drone hedef avlar': 'Three giant drones hunt targets',
+    '2 yıldız': '2 stars', 'İki kez seker': 'Bounces twice', 'Işık hızında': 'Light speed', '5 düşman deler': 'Pierces 5 enemies', 'Enerji dalgası': 'Energy wave', '7 düşman deler': 'Pierces 7 enemies',
+    'Zincir şimşek x2': 'Chain lightning x2', '2 drone': '2 drones', 'Hedef avlar': 'Hunts targets',
+    'Efekt Kaplamaları': 'Effect Skins', 'Ejder Alevi': 'Dragon Flame', 'Yıldırım Lotus': 'Thunder Lotus', 'Sakura Fırtınası': 'Sakura Storm', 'Gece Hilali': 'Night Crescent', 'Neo Devre': 'Neo Circuit',
+    'Alev kuyruğu': 'Flame tail', 'kor patlaması': 'ember burst', 'ateş çemberi': 'ring of fire', 'Elektrik izi': 'Electric trail', 'dallanan şimşek': 'forking lightning', 'ışık halkası': 'ring of light',
+    'Yaprak izi': 'Petal trail', 'çiçek patlaması': 'blossom burst', 'süzülen yapraklar': 'drifting petals', 'Ay ışığı izi': 'Moonlight trail', 'hilal kesik': 'crescent slash', 'gölge yankısı': 'shadow echo',
+    'Dijital iz': 'Digital trail', 'devre kıvılcımı': 'circuit sparks', 'piksel dağılması': 'pixel scatter', 'takılıyken +%5 altın': '+5% gold while equipped',
+    'Her silahta çalışır: atış parlaması, iz, isabet ve yok etme efekti değişir. Güç vermez; takılı olan': 'Works on every weapon: changes the throw flash, trail, hit and defeat effects. No power; the equipped one gives', '+%5 altın': '+5% gold', 'verir.': '.',
+    'Kaplamayı çıkar': 'Remove skin', 'DENE': 'TRY', 'Neo Paketi': 'Neo Pack', 'GÖR': 'VIEW', 'YENİ KAPLAMA!': 'NEW SKIN!', 'Deneme: {s} · {0} sn': 'Trying: {s} · {0} s', 'Fener Festivali her hafta sonu gelir': 'The Lantern Festival comes every weekend',
+    '{0} kaplama · her silahta çalışır · önce {1} sn dene': '{0} skins · work on every weapon · try for {1} s first',
+    'Festivale özel efekt kaplaması': 'Festival-only effect skin', 'her silahta': 'every weapon', 'Festivale özel efekt kaplaması · her silahta': 'Festival-only effect skin · every weapon', 'Efekt kaplaması: alev kuyruğu, kor patlaması, ateş çemberi · her silahta': 'Effect skin: flame tail, ember burst, ring of fire · every weapon',
+    'Efekt kaplaması: elektrik izi, dallanan şimşek, ışık halkası · her silahta': 'Effect skin: electric trail, forking lightning, ring of light · every weapon',
+    'Neo Ninja Paketi': 'Neo Ninja Pack', 'Doğuş Paketi': 'Rebirth Pack', 'Ejder Alevi + Yıldırım Lotus + pakete özel Neo Devre kaplaması + {0} elmas': 'Dragon Flame + Thunder Lotus + pack-only Neo Circuit skin + {0} gems',
+    '{0} elmas · {1} ruh (Ruh Ağacı) · {2} saat x2 güç — ilk Doğuşa özel, {3} saat': '{0} gems · {1} souls (Soul Tree) · {2} h x2 power — first Rebirth only, {3} h',
     // daily, reminders, festival
     'Her gün gir, ödülün büyüsün. Kaçırdığın gün sıfırlamaz, seni bekler.': 'Come every day and the reward grows. A missed day does not reset, it waits for you.', '{0}. gün': 'Day {0}', '{0}. GÜN': 'DAY {0}', 'Hafta sandığı': 'Week chest', '{0} Yıldız Taşı': '{0} Star Stone', '{0} dk hızlı ateş': '{0} min rapid fire', '{0} Boss Bileti': '{0} Boss Ticket', '{0} sa x2 güç': '{0} h x2 power', '{0} dk altın': '{0} min of gold',
     'Hatırlatıcılar': 'Reminders', 'Ödül hazır, maden dolu… (günde en fazla 2)': 'Reward ready, mine full… (max 2 a day)', 'Hatırlatıcılar açık': 'Reminders on', 'Maden doldu': 'Mine is full', 'Deponda elmaslar seni bekliyor. Toplamazsan üretim durur.': 'Gems are waiting in storage. Production stops until you collect.', 'Takımın yoruldu': 'Your squad is tired', 'Günlük ödülün hazır': 'Your daily reward is ready', '7. gün sandığı seni bekliyor!': 'The day 7 chest is waiting!', '{0}. gün ödülünü almayı unutma.': "Don't forget your day {0} reward.", 'Ninja Yolu bitiyor': 'Ninja Path is ending', 'Sezon yarın bitiyor: ödüllerini topla.': 'The season ends tomorrow: collect your rewards.',
@@ -147,7 +165,7 @@
   function trOne(s) {
     if (EN[s] !== undefined) return EN[s];
     const nums = []; const key = s.replace(NUM, m => { nums.push(m); return `{${nums.length - 1}}`; });
-    for (const [re, v, order] of PAT) { const m = s.match(re); if (m) { const got = order.map((o, i) => o === 's' ? tr(m[i + 1]) : num(m[i + 1])); let k = 0; return v.replace(/\{(s|\d)\}/g, (_, o) => o === 's' ? got[order.indexOf('s')] : got[order.indexOf(+o)] ?? ''); } }
+    for (const [re, v, order] of PAT) { const m = s.match(re); if (m) { const got = order.map((o, i) => o === 's' ? tr(m[i + 1]) : num(m[i + 1])); if (order.some((o, i) => o === 's' && got[i] === m[i + 1] && /[a-zçğıöşü]{3}/i.test(m[i + 1]))) continue; let k = 0; return v.replace(/\{(s|\d)\}/g, (_, o) => o === 's' ? got[order.indexOf('s')] : got[order.indexOf(+o)] ?? ''); } }
     if (nums.length && EN[key] !== undefined) return EN[key].replace(/\{(\d)\}/g, (_, i) => nums[+i] !== undefined ? num(nums[+i]) : '');
     return null;
   }

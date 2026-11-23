@@ -47,3 +47,6 @@ ajanların ortak kurallarıdır; her çalıştırmada önce bu dosya, sonra `BAC
 11. **İki dil:** oyun global (Türkçe + İngilizce). Ekrana yeni Türkçe metin eklersen `features/i18n.js` sözlüğüne
     İngilizcesini de ekle; İngilizce modda paneli açıp Türkçe kalan metin olmadığını kontrol et.
 12. Bir şey belirsizse veya riskliyse yapma; LOG'a "karar bekliyor" diye yaz.
+
+12. **Bir simge = bir anlam.** Yeni bir şeye mevcut bir simgeyi verme; `tools/build_icons.py`'ye yeni simge ekle
+    (paketin kullanılmamış simgeleri, eşya çizimleri ya da piksel glifler). `tools/tests/icons.js` kontrol eder.

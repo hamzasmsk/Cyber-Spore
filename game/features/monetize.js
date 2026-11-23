@@ -179,7 +179,7 @@
   const IAP = {
     enabled: mode !== 'off' && !(mode === 'native' && (!rcKey || /REPLACE_ME/.test(rcKey))),
     product: id => P[id],
-    price: id => prices[id] || (P[id] && P[id].price) || '',
+    price: id => prices[id] || (P[id] && (save.lang === 'en' && P[id].usd ? P[id].usd : P[id].price)) || '',
     owns: id => !!M.owned[id],
     async buy(id) {
       const p = P[id]; if (!p || !this.enabled) return false;
@@ -235,7 +235,7 @@
       body.appendChild(SS.el(`<div class="big-num">+15 sn</div>`));
       const tk = tickets(), ad = Ads.available('continue');
       body.appendChild(SS.el(`<p class="big-note">Boss kaçmak üzere. ${tk ? `Boss Bileti kullan (${tk} adet)` : 'Bir reklam izle'}, 15 saniye daha savaş.</p>`));
-      const row = SS.el(`<div class="btnrow"><button class="btn grey">Vazgeç</button>${tk ? '<button class="btn yellow tk"><img src="assets/ui/ic_shield.png" alt="">Bilet</button>' : ''}${ad ? `<button class="btn green ad"><img src="assets/ui/play.png" alt="">${Ads.noads() ? 'Devam' : 'İzle'}</button>` : ''}</div>`);
+      const row = SS.el(`<div class="btnrow"><button class="btn grey">Vazgeç</button>${tk ? '<button class="btn yellow tk"><img src="assets/ui/ic_ticket.png" alt="">Bilet</button>' : ''}${ad ? `<button class="btn green ad"><img src="assets/ui/play.png" alt="">${Ads.noads() ? 'Devam' : 'İzle'}</button>` : ''}</div>`);
       let done = false; const fin = v => { if (done) return; done = true; SS.closePanel(); cb(v); };
       row.children[0].onclick = () => fin(false);
       const tb = row.querySelector('.tk'), ab = row.querySelector('.ad');

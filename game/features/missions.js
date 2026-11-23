@@ -25,7 +25,7 @@
       text: m => `${m.goal} düşman yok et`,
     },
     buy: {
-      icon: 'assets/ui/ic_power.png',
+      icon: 'assets/ui/ic_upq.png',
       make: () => { const n = pickOf([10, 15, 25, 40]); return { goal: n, gems: n >= 25 ? 4 : 3, cash: 0 }; },
       text: m => `${m.goal} yükseltme satın al`,
     },
@@ -35,7 +35,7 @@
       text: m => m.goal > 1 ? `${m.goal} boss yen` : 'Bir boss yen',
     },
     stage: {
-      icon: 'assets/ui/ic_missions.png',
+      icon: 'assets/ui/ic_stamp.png',
       make: () => { const add = pickOf([1, 1, 2]); return { goal: (save.stage || 1) + add, base: save.stage || 1, gems: 4 + add * 2, cash: 0 }; },
       text: m => `Bölüm ${m.goal}'e ulaş`,
     },
@@ -155,7 +155,7 @@
       const rows = {};
       const wrap = SS.el('<div class="fa-mwrap"></div>');
       const head = SS.el(`<div class="fa-mhead"><div><b>Günlük görevler</b><small>Tamamla, elmas kazan!</small></div>
-        <div class="fa-timer"><img src="assets/ui/ic_moon.png" alt=""><span></span></div></div>`);
+        <div class="fa-timer"><img src="assets/ui/ic_time.png" alt=""><span></span></div></div>`);
       wrap.appendChild(head);
       // claimable first
       const list = s.list.slice().sort((a, b) => (isDone(b) ? 1 : 0) - (isDone(a) ? 1 : 0));

@@ -9,7 +9,7 @@
   const save = SS.save;
   // [element id or data-open key, best stage needed, title, one-line introduction, icon]
   const STEPS = [
-    ['guns', 2, 'Silahlar', 'Bosslardan düşen elmaslarla yeni silahlar aç ve yıldızlarını yükselt.', 'ic_weapon'],
+    ['guns', 2, 'Silahlar', 'Bosslardan düşen elmaslarla yeni silahlar aç ve yıldızlarını yükselt.', 'wi_Shuriken'],
     ['dailyBtn', 2, 'Günlük Ödül', 'Her gün uğra, 7 günde büyüyen ödülleri topla.', 'ic_daily'],
     ['team', 3, 'Takım', 'Altınla yeni ninjalar kat: her biri bir atıcı ve bir yetenek daha.', 'ic_team'],
     ['missionsBtn', 3, 'Görevler', 'Günlük görevleri bitir, elmas kazan.', 'ic_missions'],

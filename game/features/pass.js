@@ -71,11 +71,11 @@
     ['skin', r => SKINS[r.skin] ? SKINS[r.skin].name : 'Kostüm', r => `face_${r.skin}.png`, 'epic'],
     ['trail', r => TRAILS[r.trail].name, () => 'ic_magic.png', 'rare'],
     ['star', r => `${r.star} Yıldız Taşı`, () => 'ic_luck.png', 'rare'],
-    ['ticket', r => `${r.ticket} Boss Bileti`, () => 'ic_shield.png', ''],
+    ['ticket', r => `${r.ticket} Boss Bileti`, () => 'ic_ticket.png', ''],
     ['gems', r => `${r.gems} elmas`, () => 'gem.png', ''],
     ['boostMin', r => `${r.boostMin >= 60 ? r.boostMin / 60 + ' sa' : r.boostMin + ' dk'} x2 güç`, () => 'ic_boost.png', ''],
-    ['rapidMin', r => `${r.rapidMin} dk hızlı ateş`, () => 'ic_rate.png', ''],
-    ['treasureMin', r => `${r.treasureMin} dk hazine avcısı`, () => 'ic_vision.png', ''],
+    ['rapidMin', r => `${r.rapidMin} dk hızlı ateş`, () => 'ic_rapid.png', ''],
+    ['treasureMin', r => `${r.treasureMin} dk hazine avcısı`, () => 'ic_treasure.png', ''],
     ['mineH', r => `${r.mineH} sa maden sandığı`, () => 'ic_mine.png', ''],
     ['goldMin', r => `${r.goldMin} dk altın`, () => 'coin.png', ''],
   ];
@@ -142,7 +142,7 @@
   const bonusChests = () => { const s = st(); return Math.max(0, Math.floor((s.xp - LEVELS * XP_PER) / BONUS_XP)) - (s.bonus || 0); };
   const tasksReady = () => { const s = st(); return s.tasks.list.concat(s.week.list).filter(t => !t.done && t.n >= def(t.id).goal).length; };
   const claimable = () => { const s = st(), L = level(); let n = bonusChests(); for (let l = 1; l <= L; l++) { if (!s.free[l]) n++; if (s.premium && !s.prem[l]) n++; } return n + tasksReady(); };
-  const btn = SS.addSideButton({ side: 'left', label: 'Ninja Yolu', icon: 'assets/ui/ic_orb.png', color: 'purple', id: 'passBtn', onClick: () => open() });
+  const btn = SS.addSideButton({ side: 'left', label: 'Ninja Yolu', icon: 'assets/ui/ic_sun.png', color: 'purple', id: 'passBtn', onClick: () => open() });
   function paintDot() { btn.classList.toggle('notify', claimable() > 0); }
 
   function claimLevel(l, prem) {
@@ -186,7 +186,7 @@
         <div class="ps-info"><b>Sezon ${s.season} · ${th.name}</b><span>Bitiş: <em>${timeLeft()}</em>${s.premium ? ' · <i class="ps-prem">PREMIUM</i>' : ''}</span>
         <div class="pbar"><i style="width:${pct}%"></i><span>${L >= LEVELS ? `Bonus sandık: ${(s.xp - LEVELS * XP_PER) % BONUS_XP} / ${BONUS_XP} XP` : `${into} / ${XP_PER} XP`}</span></div></div></div>`));
       // inventory strip
-      body.appendChild(SS.el(`<div class="ps-inv"><span><img src="assets/ui/ic_luck.png" alt="">Yıldız Taşı <b>${save.inv.star}</b></span><span><img src="assets/ui/ic_shield.png" alt="">Bilet <b>${save.inv.ticket}</b></span></div>`));
+      body.appendChild(SS.el(`<div class="ps-inv"><span><img src="assets/ui/ic_luck.png" alt="">Yıldız Taşı <b>${save.inv.star}</b></span><span><img src="assets/ui/ic_ticket.png" alt="">Bilet <b>${save.inv.ticket}</b></span></div>`));
       // season showcase
       const sh = SS.el(`<div class="ps-show"><b>Bu sezona özel</b><div class="ps-show-row">
         ${th.skins.map((id, i) => `<div class="ps-sk"><img src="assets/ui/face_${id}.png" alt=""><span>${SKINS[id].name}</span><small>Premium ${i ? 30 : 15}. seviye</small></div>`).join('')}

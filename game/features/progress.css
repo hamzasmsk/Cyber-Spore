@@ -281,3 +281,11 @@
 .wk-card.done{opacity:.6}
 /* English badges (CSS text is not reached by the translator) */
 html[lang=en] .dex-card.new::after,html[lang=en] .sbtn.is-new::before{content:"NEW"}
+/* Efekt Kaplamaları (fxskins.js) + Neo Ninja */
+.fx-row .fx-btns{display:flex;flex-direction:column;gap:4px;flex:none}
+.fx-row .fx-btns .btn{min-width:74px}
+.fx-row .fx-try{height:24px;font-size:11px;padding:0 6px}
+.fx-row .ico img,.fx-link .ico img,.neo-sec img{image-rendering:pixelated}
+.fx-link{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.neo-sec{color:#3fd0e8}
+.neo-pack{box-shadow:inset 0 0 0 2px #3fd0e8}

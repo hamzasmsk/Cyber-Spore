@@ -48,7 +48,7 @@ function boot() {
         const off = mon.activeOffer();
         if (off) {
           const p = IAP.product(off);
-          root.appendChild(SS.el(`<div class="row-card mz-hero mz-offer-row"><div class="ico tile"><img src="assets/ui/ic_power.png" alt=""></div>
+          root.appendChild(SS.el(`<div class="row-card mz-hero mz-offer-row"><div class="ico tile"><img src="assets/ui/ic_boost.png" alt=""></div>
             <div class="info"><h4>${p.title}<em class="fb-tag">SÜRELİ</em></h4><p>${p.desc}</p><p class="mz-timer"><b data-until="${save.mon.offers[off].until}"></b></p></div>${buyBtn(off)}</div>`));
         }
         if (!IAP.owns('ss_starter')) {
@@ -56,6 +56,24 @@ function boot() {
           root.appendChild(SS.el(`<div class="row-card mz-hero"><div class="ico face"><img src="assets/ui/face_KnightGold.png" alt=""></div>
             <div class="info"><h4>${p.title}<em class="fb-tag">x4 DEĞER</em></h4><p>${p.desc}</p><p class="mz-once">Tek seferlik</p></div>${buyBtn('ss_starter')}</div>`));
         }
+        // Doğuş Paketi (24 h after the first Rebirth) and Neo Ninja Paketi (features/fxskins.js)
+        const rb = SS.fxskins && SS.fxskins.rebirthOffer();
+        if (rb) {
+          const p = IAP.product('ss_rebirth_pack');
+          root.appendChild(SS.el(`<div class="row-card mz-hero mz-offer-row"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div>
+            <div class="info"><h4>${p.title}<em class="fb-tag">SÜRELİ</em></h4><p>${p.desc}</p><p class="mz-timer"><b data-until="${rb}"></b></p></div>${buyBtn('ss_rebirth_pack')}</div>`));
+        }
+        if (IAP.product('ss_neo_pack') && !IAP.owns('ss_neo_pack')) {
+          const p = IAP.product('ss_neo_pack');
+          root.appendChild(SS.el(`<div class="row-card mz-hero neo-pack"><div class="ico tile"><img src="assets/ui/ic_neo.png" alt=""></div>
+            <div class="info"><h4>${p.title}<em class="fb-tag">-%45</em></h4><p>${p.desc}</p><p class="mz-once">Tek seferlik</p></div>${buyBtn('ss_neo_pack')}</div>`));
+        }
+      }
+      if (SS.fxskins) {
+        const fxr = SS.el(`<button class="row-card fx-link"><div class="ico tile"><img src="assets/ui/fxi_all.png" alt=""></div>
+          <div class="info"><h4>Efekt Kaplamaları</h4><p>5 kaplama · her silahta çalışır · önce 10 sn dene</p></div><span class="btn purple">GÖR</span></button>`);
+        fxr.onclick = () => { SS.sfx('click'); if (SS.skins) SS.skins.open(); setTimeout(() => { const h = document.querySelector('#pBody .fx-sec'); if (h) h.scrollIntoView({ block: 'start' }); }, 60); };
+        root.appendChild(fxr);
       }
 
       // free things
@@ -102,9 +120,9 @@ function boot() {
         }
         if (!IAP.owns('ss_noads')) {
           const p = IAP.product('ss_noads');
-          root.appendChild(SS.el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_vision.png" alt=""></div>
+          root.appendChild(SS.el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_noads.png" alt=""></div>
             <div class="info"><h4>${p.title}</h4><p>${p.desc}</p><p class="mz-once">Kalıcı</p></div>${buyBtn('ss_noads')}</div>`));
-        } else root.appendChild(SS.el('<div class="row-card cur"><div class="ico tile"><img src="assets/ui/ic_vision.png" alt=""></div><div class="info"><h4>Reklamsız</h4><p>Aktif · ödüller anında · +%10 altın</p></div></div>'));
+        } else root.appendChild(SS.el('<div class="row-card cur"><div class="ico tile"><img src="assets/ui/ic_noads.png" alt=""></div><div class="info"><h4>Reklamsız</h4><p>Aktif · ödüller anında · +%10 altın</p></div></div>'));
       }
 
       // in-game exchanges

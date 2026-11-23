@@ -176,8 +176,19 @@ const GUNS = [
     trail: 'fire', hit: 'fire', snd: 'throw_fire', hsnd: 'hit_fire', tags: ['Patlar', 'Yakar'] },
   { name: 'Ruh Küresi', glow: 'ice',   evo: { name: 'Gök Gürültüsü',   sp: 'thunder', desc: 'Gökten inen zincir şimşekler' },    mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
     trail: 'aura', hit: 'thunder', snd: 'throw_magic', hsnd: 'magic', tags: ['Zincir şimşek x3', 'Patlar'] },
+  // Neo Ninja: the late-game line (energy weapons, original art from tools/build_neo.py)
+  { name: 'Plazma Shuriken', neo: 1, glow: 'neon', evo: { name: 'Plazma Kasırgası', sp: 'orbit', desc: 'Etrafında dönen plazma yıldızları' }, mult: 2500, cost: 3200, spr: 'Plasma', spin: 1, sc: 1, shots: 2, spread: 0.3, sp: 900, curve: 0.4, bounce: 2,
+    trail: 'neon', hit: 'plasma', snd: 'throw_magic', hsnd: 'magic', tags: ['2 yıldız', 'İki kez seker'] },
+  { name: 'Lazer Kunai', neo: 1, glow: 'laser', evo: { name: 'Lazer Yağmuru', sp: 'rain', desc: 'Gökten lazer kunai yağar' }, mult: 7000, cost: 7000, spr: 'Laser', ori: 0, sc: 1, shots: 1, sp: 1700, pierce: 4,
+    trail: 'line', hit: 'laser', snd: 'throw2', hsnd: 'hit2', tags: ['Işık hızında', '5 düşman deler'] },
+  { name: 'Enerji Katana', neo: 1, glow: 'neon', evo: { name: 'Kılıç Hattı', sp: 'column', desc: 'Ekranı boydan yaran enerji kesiği' }, mult: 20000, cost: 15000, spr: 'Katana', ori: 0, sc: 1, shots: 1, sp: 950, pierce: 6, push: 1, held: 'wh_Katana',
+    trail: 'neon', hit: 'wave', snd: 'shoot', hsnd: 'hit2', tags: ['Enerji dalgası', '7 düşman deler', 'İter'] },
+  { name: 'Ray Yay', neo: 1, glow: 'neon', evo: { name: 'Ray Yağmuru', sp: 'volley', desc: 'Gökten düşen enerji okları' }, mult: 56000, cost: 32000, spr: 'Rail', ori: 0, sc: 1, shots: 3, spread: 0.2, sp: 1500, chain: 2, held: 'wh_NeoBow',
+    trail: 'line', hit: 'plasma', snd: 'throw2', hsnd: 'hit3', tags: ['3 ok', 'Zincir şimşek x2'] },
+  { name: 'Drone Kunai', neo: 1, glow: 'laser', evo: { name: 'Sürü Protokolü', sp: 'galaxy', desc: 'Üç dev drone hedef avlar' }, mult: 160000, cost: 70000, spr: 'Drone', spin: 1, sc: 1, shots: 2, spread: 0.5, sp: 650, curve: 0.9, boom: 1,
+    trail: 'neon', hit: 'drone', snd: 'throw_magic', hsnd: 'magic', tags: ['2 drone', 'Hedef avlar', 'Patlar'] },
 ];
-const TRAIL_COL = { gold: '#ffe18d', magic: '#d3a2c0', fire: '#ff9554', ice: '#8feff1', leaf: '#adbc3a', ink: '#8d977f' };
+const TRAIL_COL = { gold: '#ffe18d', magic: '#d3a2c0', fire: '#ff9554', ice: '#8feff1', leaf: '#adbc3a', ink: '#8d977f', neon: '#3fd0e8', laser: '#ff4fb0', dragon: '#ff7a2e', lotus: '#6fb6ff', sakura: '#f9a3c8', moon: '#b9b4e6' };
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
   { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
@@ -731,6 +742,10 @@ function hitFx(q, t) {
     case 'ice': fx('fx_ice', x, y, 0.5, 0.4); bits(x, y, 'q_Snow', 3); break;
     case 'fire': fx('fx_flam', x, y, 0.5, 0.3); break;
     case 'thunder': fx('fx_thunder', x, y, 0.5, 0.3); fx('fx_circlew', x, y, 1, 0.25); break;
+    case 'plasma': if (gate(0.05)) vfx('burst', 'neon', x, y, 0.5, 0.2); bits(x, y, 'fxp_bit', 2); break;
+    case 'laser': fx('fx_cut', x, y); if (gate(0.06)) vfx('burst', 'laser', x, y, 0.5, 0.18); break;
+    case 'wave': fx('vx_slash_neon', x, y, 0.75, 0.25); bits(x, y, 'fxp_bit', 2); break;
+    case 'drone': vfx('ring', 'laser', x, y, 0.5, 0.25); break;
     default: fx('fx_spark', x, y);
   }
   if (g.bits) bits(x, y, g.bits, 2);
@@ -867,17 +882,17 @@ function castSpecial() {
   banner2(g.evo.name);
   if (sp === 'orbit') {
     const tgt = densest(90 * U) || pick(T);
-    R.specs.push({ k: 'orbit', x: L0.x, y: L0.y - 10 * P, sx: L0.x, sy: L0.y - 10 * P, tx: tgt.x, ty: aimY(tgt), t: 0, T: 3.2, hit: new Map(), dmg: specDmg(0.22) });
+    R.specs.push({ k: 'orbit', spr: g.neo ? g.spr : 'Shuriken', glow: g.neo ? g.glow : 'gold', x: L0.x, y: L0.y - 10 * P, sx: L0.x, sy: L0.y - 10 * P, tx: tgt.x, ty: aimY(tgt), t: 0, T: 3.2, hit: new Map(), dmg: specDmg(0.22) });
     sfx('throw_magic', 0); sfx('skill', 0);
   } else if (sp === 'rain') {
-    for (let i = 0; i < 16; i++) { const e = pick(T); R.specs.push({ k: 'drop', spr: 'p_Kunai_0', ori: 0, sc: 1, x: e.x + rand(-30, 30) * U, y: (e === R.boss ? e.y : e.y) + rand(-10, 10) * U, z: 320 * U, vz: 1100 * U, delay: i * 0.07, r: 26 * U, dmg: specDmg(0.18), land: 'cut', stick: 1 }); }
+    for (let i = 0; i < 16; i++) { const e = pick(T); R.specs.push({ k: 'drop', spr: g.neo ? `p_${g.spr}_0` : 'p_Kunai_0', ori: 0, sc: 1, x: e.x + rand(-30, 30) * U, y: (e === R.boss ? e.y : e.y) + rand(-10, 10) * U, z: 320 * U, vz: 1100 * U, delay: i * 0.07, r: 26 * U, dmg: specDmg(0.18), land: 'cut', stick: 1 }); }
     sfx('throw2', 0);
   } else if (sp === 'volley') {
-    for (let i = 0; i < 14; i++) { const e = pick(T), h = pick(R.heroes); R.specs.push({ k: 'arc', spr: 'p_Arrow_0', sx: h.x, sy: h.y - 10 * P, tx: e.x + rand(-26, 26) * U, ty: e.y + rand(-8, 8) * U, t: -i * 0.05, T: 0.85, hgt: 240 * U, dmg: specDmg(0.18), r: 28 * U }); }
+    for (let i = 0; i < 14; i++) { const e = pick(T), h = pick(R.heroes); R.specs.push({ k: 'arc', spr: g.neo ? `p_${g.spr}_0` : 'p_Arrow_0', sx: h.x, sy: h.y - 10 * P, tx: e.x + rand(-26, 26) * U, ty: e.y + rand(-8, 8) * U, t: -i * 0.05, T: 0.85, hgt: 240 * U, dmg: specDmg(0.18), r: 28 * U }); }
     sfx('throw2', 0);
   } else if (sp === 'column') {
     const e = densest(40 * U) || pick(T);
-    R.specs.push({ k: 'column', x: e.x, t: 0, tele: 0.35, y: H, hit: new Set(), dmg: specDmg(0.9) });
+    R.specs.push({ k: 'column', spr: g.neo ? `p_${g.spr}_0` : 'p_BigKunai_0', col: g.neo ? TRAIL_COL[g.glow] : '#d3a2c0', x: e.x, t: 0, tele: 0.35, y: H, hit: new Set(), dmg: specDmg(0.9) });
     sfx('elite', 0);
   } else if (sp === 'galaxy') {
     for (let i = 0; i < 3; i++) {
@@ -955,11 +970,11 @@ function drawSpecs(t) {
   for (const sp of R.specs) {
     if (sp.k === 'orbit') {
       const n = 6;
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.22; spr('vx_glow40_gold', sp.x, sp.y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.22; spr(`vx_glow40_${sp.glow || 'gold'}`, sp.x, sp.y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
       for (let i = 0; i < n; i++) {
         const a = sp.t * 7 + i / n * TAU, x = sp.x + Math.cos(a) * sp.rad, y = sp.y + Math.sin(a) * sp.rad * 0.7;
-        for (let k = 1; k <= 2; k++) { const a2 = a - k * 0.25; ctx.globalAlpha = 0.35 / k; spr('p_Shuriken_0', sp.x + Math.cos(a2) * sp.rad, sp.y + Math.sin(a2) * sp.rad * 0.7, 1, 0.5, 0.5, false, 0, '#fce2ca'); }
-        ctx.globalAlpha = 1; spr(`p_Shuriken_${Math.floor(t * 20 + i) % 2}`, x, y, 1, 0.5, 0.5);
+        for (let k = 1; k <= 2; k++) { const a2 = a - k * 0.25; ctx.globalAlpha = 0.35 / k; spr(`p_${sp.spr || 'Shuriken'}_0`, sp.x + Math.cos(a2) * sp.rad, sp.y + Math.sin(a2) * sp.rad * 0.7, 1, 0.5, 0.5, false, 0, '#fce2ca'); }
+        ctx.globalAlpha = 1; spr(`p_${sp.spr || 'Shuriken'}_${Math.floor(t * 20 + i) % 2}`, x, y, 1, 0.5, 0.5);
       }
     } else if (sp.k === 'drop') {
       if (sp.t < sp.delay) { ctx.globalAlpha = 0.5; ellipse(sp.x, sp.y, 7 * P, 3 * P); ctx.fillStyle = 'rgba(19,27,27,0.35)'; ctx.fill(); ctx.globalAlpha = 1; continue; }
@@ -974,12 +989,12 @@ function drawSpecs(t) {
       spr(sp.spr, x, y, 1, 0.5, 0.5, false, Math.round(Math.atan2(y2 - y, x2 - x) / (Math.PI / 8)) * (Math.PI / 8));
     } else if (sp.k === 'column') {
       if (sp.t < sp.tele) {   // telegraph: thin blinking guide line
-        if (Math.floor(t * 20) % 2) for (let y = 140; y < H - 170; y += 4 * P) prect(sp.x - P / 2, y, P, 2 * P, '#d3a2c0');
+        if (Math.floor(t * 20) % 2) for (let y = 140; y < H - 170; y += 4 * P) prect(sp.x - P / 2, y, P, 2 * P, sp.col || '#d3a2c0');
         continue;
       }
       const a = clamp(1 - (sp.life || 0) / 0.5, 0, 1);
-      ctx.globalAlpha = a * 0.55; prect(sp.x - 9 * P, sp.y, 18 * P, H - sp.y, '#d3a2c0'); ctx.globalAlpha = a; prect(sp.x - 3 * P, sp.y, 6 * P, H - sp.y, '#ffffff'); ctx.globalAlpha = 1;
-      spr('p_BigKunai_0', sp.x, sp.y, 1, 0.5, 0.5, false, -Math.PI / 2);
+      ctx.globalAlpha = a * 0.55; prect(sp.x - 9 * P, sp.y, 18 * P, H - sp.y, sp.col || '#d3a2c0'); ctx.globalAlpha = a; prect(sp.x - 3 * P, sp.y, 6 * P, H - sp.y, '#ffffff'); ctx.globalAlpha = 1;
+      spr(sp.spr || 'p_BigKunai_0', sp.x, sp.y, 1, 0.5, 0.5, false, -Math.PI / 2);
     } else if (sp.k === 'bloom') {
       if (sp.t < sp.tele) { const k = sp.t / sp.tele; ctx.lineWidth = P; ctx.strokeStyle = Math.floor(t * 20) % 2 ? '#8feff1' : '#ffffff'; ellipse(sp.x, sp.y, 95 * U * k, 50 * U * k); ctx.stroke(); }
     } else if (sp.k === 'meteor') {
@@ -1396,7 +1411,7 @@ function update(dt) {
     if (q.tt <= 0) {   // trail: ghost copies + element motes
       q.tt = 0.03; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > (g.trail === 'line' ? 5 : 3)) q.trail.pop();
       if (!save.eco && g.trail !== 'ghost' && g.trail !== 'line' && Math.random() < (g.trail === 'spark' ? 0.25 : 0.5)) {
-        const set = g.trail === 'snow' ? 'q_Snow' : g.trail === 'fire' ? 'q_Fire' : 'q_Spark', m = AN[set] || 1;
+        const set = g.trail === 'snow' ? 'q_Snow' : g.trail === 'fire' ? 'q_Fire' : g.trail === 'neon' ? 'fxp_bit' : 'q_Spark', m = AN[set] || 1;
         part({ k: 'float', f: `${set}_${Math.floor(Math.random() * m)}`, x: q.x + rand(-4, 4) * U, y: q.y + rand(-4, 4) * U, vx: rand(-20, 20) * U, vy: rand(-20, 20) * U, life: 0.35, max: 0.35 });
       }
     }
@@ -1635,10 +1650,12 @@ function drawHeld(o, x, y) {
   const px = x + a[0] * P * HS, py = y + a[1] * P * HS;
   if (g.held) {
     let rot = g.held === 'wh_Book' ? 0 : (HELD_ROT[o.dir] || 0);
-    if (g.held === 'wh_Bow' && o.dir === 'u' && atk) { spr(g.held, x, y - 23 * P, 1, 0.5, 0.5); return; }   // bow raised over the head to shoot
-    if (g.held === 'wh_Wand' && !atk) rot = o.dir === 'l' ? -0.4 : 0.4;   // wand rests tilted, tip up
-    if (g.held === 'wh_Bow' && !atk) rot = o.dir === 'l' ? -Math.PI / 2 : Math.PI / 2;   // bow carried upright at the side
-    spr(g.held, px, py, g.held === 'wh_Wand' ? 1.5 : 1, 0.5, g.held === 'wh_Wand' && !atk ? 0.9 : 0.5, false, rot);
+    const bow = /Bow$/.test(g.held), stick = g.held === 'wh_Wand' || g.held === 'wh_Katana';
+    if (bow && o.dir === 'u' && atk) { spr(g.held, x, y - 23 * P, 1, 0.5, 0.5); return; }   // bow raised over the head to shoot
+    if (stick && !atk) rot = o.dir === 'l' ? -0.4 : 0.4;   // wand / katana rests tilted, tip up
+    if (g.held === 'wh_Katana' && atk) rot = Math.round((o.ang + Math.PI / 2) / (Math.PI / 4)) * (Math.PI / 4);   // katana swings toward the target
+    if (bow && !atk) rot = o.dir === 'l' ? -Math.PI / 2 : Math.PI / 2;   // bow carried upright at the side
+    spr(g.held, px, py, g.held === 'wh_Wand' ? 1.5 : 1, 0.5, stick && !atk ? 0.9 : 0.5, false, rot);
     if (g.held !== 'wh_Book') drawFist(px, py);
     return;
   }
@@ -1963,6 +1980,7 @@ const PANELS = {
         if (save.gems < g.cost) { sfx('no'); toast('Yeterli elmas yok'); return; }
         save.gems -= g.cost; save.wbest = i; save.gun = i; persist(); uiKey = ''; closePanel(); unlockMoment(g);
       };
+      if (g.neo && !GUNS[i - 1].neo) body.appendChild(el('<h3 class="fb-sec neo-sec"><img src="assets/ui/ic_neo.png" alt="">NEO NİNJA</h3>'));
       body.appendChild(row);
     });
   }),
@@ -1971,7 +1989,7 @@ const PANELS = {
     body.appendChild(el('<p class="big-note">Her ninja takıma bir atıcı ve bir yetenek ekler. Bosslardan düşen <b>parşömenlerle</b> seviye atlarlar (Doğuşta sıfırlanmaz).</p>'));
     TEAM.forEach((h, i) => {
       const owned = i < save.team, next = i === save.team, lv = hlv(i), sc2 = save.scrolls[i] || 0, need = scrollNeed(lv), max = lv >= HERO_MAX, cost = heroCost(lv), can = owned && !max && sc2 >= need;
-      const bar = owned && !max ? `<div class="hl-bar ${sc2 >= need ? 'full' : ''}"><i style="width:${Math.min(100, sc2 / need * 100)}%"></i><span><img src="assets/ui/ic_book.png" alt="">${sc2} / ${need}</span></div>` : '';
+      const bar = owned && !max ? `<div class="hl-bar ${sc2 >= need ? 'full' : ''}"><i style="width:${Math.min(100, sc2 / need * 100)}%"></i><span><img src="assets/ui/ic_scroll.png" alt="">${sc2} / ${need}</span></div>` : '';
       const row = el(`<div class="row-card hl-row ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt="">${owned ? `<span class="hl-lv">${max ? 'MAKS' : 'Sv.' + lv}</span>` : ''}</div>
         <div class="info"><h4>${h.name}</h4><p>${owned ? PERK_TXT[i](lv) : h.perk}${owned && lv > 1 ? ` · <b>+%${Math.round((heroMul(i) - 1) * 100)} hasar</b>` : ''}</p>${bar}</div>
         ${owned ? (max ? '<button class="btn grey off">MAKS</button>' : `<button class="btn ${can ? 'green' : 'grey off'} up"><img src="assets/ui/coin.png" alt="">${fmt(cost)}</button>`)

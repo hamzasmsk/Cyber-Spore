@@ -106,13 +106,13 @@
       wrap.appendChild(SS.el('<p class="big-note">Kısa süreli güçlendirmelerle bölümleri hızla geç!</p>'));
       const a = adOn(), cd = adCooling();
       const ad = SS.el(`<div class="row-card fa-boostrow ${a ? 'fa-active' : ''}">
-        <div class="ico fa-x"><img src="assets/ui/ic_power.png" alt=""><em>x2</em></div>
+        <div class="ico fa-x"><img src="assets/ui/ic_boost.png" alt=""><em>x2</em></div>
         <div class="info"><h4>Süper Güç</h4><p></p></div>
         ${a ? '<button class="btn grey off">AKTİF</button>' : cd ? '<button class="btn grey off">BEKLE</button>' : '<button class="btn green"><img src="assets/ui/play.png" alt="">İZLE</button>'}</div>`);
       if (!a && !cd) ad.querySelector('.btn').onclick = startAd;
       const canBuy = (save.gems || 0) >= RATE_COST, r = rateOn();
       const rate = SS.el(`<div class="row-card fa-boostrow ${r ? 'fa-active' : ''}">
-        <div class="ico fa-x"><img src="assets/ui/ic_rate.png" alt=""><em>x1.5</em></div>
+        <div class="ico fa-x"><img src="assets/ui/ic_rapid.png" alt=""><em>x1.5</em></div>
         <div class="info"><h4>Hızlı Ateş</h4><p></p></div>
         ${r ? '<button class="btn grey off">AKTİF</button>' : `<button class="btn yellow ${canBuy ? '' : 'fa-poor'}"><img src="assets/ui/gem.png" alt="">${RATE_COST}</button>`}</div>`);
       if (!r) rate.querySelector('.btn').onclick = buyRate;

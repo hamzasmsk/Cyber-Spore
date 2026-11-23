@@ -85,7 +85,18 @@ RevenueCat anahtarı girilmeden uygulama içi satın almalar **otomatik gizlenir
 çıkarabilirsin. Satın alma açmak için:
 1. Play Console → **Ödeme profili** (vergi/banka bilgileri).
 2. **Para kazanma → Ürünler → Uygulama içi ürünler:** `monetize.config.js`'teki kimliklerle ürünleri oluştur
-   (`ss_gems_1` … `ss_offer_power`; `ss_starter` ve `ss_noads` tek seferlik, diğerleri tüketilebilir).
+   (`ss_gems_1` … `ss_rebirth_pack`). Tek seferlik (non-consumable): `ss_starter`, `ss_noads`, `ss_fx_dragon`,
+   `ss_fx_lotus`, `ss_neo_pack`, `ss_rebirth_pack`; diğerleri tüketilebilir.
+   **Fiyat:** her ürünün ana fiyatını `usd` alanındaki dolar kademesinden gir (ör. $2.99); Play diğer ülkelerin
+   para birimine ve yerel fiyat kademesine kendisi çevirir. Türkiye fiyatını `price` alanındaki değerle elle
+   düzeltebilirsin. Oyun her zaman mağazanın gösterdiği yerel fiyatı yazar.
+
+   | Kimlik | Tür | Dolar kademesi | İçerik |
+   |---|---|---|---|
+   | ss_fx_dragon | tek seferlik | $2.99 | Ejder Alevi efekt kaplaması |
+   | ss_fx_lotus | tek seferlik | $2.99 | Yıldırım Lotus efekt kaplaması |
+   | ss_neo_pack | tek seferlik | $4.99 | Ejder + Lotus + Neo Devre kaplaması + 800 elmas |
+   | ss_rebirth_pack | tek seferlik | $1.99 | 600 elmas, 10 ruh, 2 sa x2 güç (ilk Doğuştan sonra 24 saat gösterilir) |
 3. <https://www.revenuecat.com> → proje → Android uygulaması (Play hizmet hesabı bağlanır) → ürünleri içe aktar.
 4. `monetize.config.js` → `revenuecat.android` = `goog_...` anahtarı. Yeni bir `.aab` derle.
 

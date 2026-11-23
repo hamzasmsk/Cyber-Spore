@@ -10,19 +10,19 @@
   const save = SS.save, RESPEC_GEMS = 50;
   const pct = v => '%' + Math.round(v * 100);
   const NODES = [
-    { id: 'blade', b: 0, r: 0, name: 'Keskin Bıçak', icon: 'ic_power', max: 10, fx: l => `+${pct(0.15 * l)} hasar` },
-    { id: 'hand', b: 0, r: 1, name: 'Hızlı El', icon: 'ic_rate', max: 5, fx: l => `+${pct(0.05 * l)} atış hızı` },
+    { id: 'blade', b: 0, r: 0, name: 'Keskin Bıçak', icon: 'ic_blade', max: 10, fx: l => `+${pct(0.15 * l)} hasar` },
+    { id: 'hand', b: 0, r: 1, name: 'Hızlı El', icon: 'ic_speed', max: 5, fx: l => `+${pct(0.05 * l)} atış hızı` },
     { id: 'eye', b: 0, r: 2, name: 'Kartal Gözü', icon: 'ic_vision', max: 5, fx: l => `+${pct(0.02 * l)} kritik şansı` },
-    { id: 'fatal', b: 0, r: 3, name: 'Ölümcül Vuruş', icon: 'ic_death', max: 4, fx: l => `Kritik hasarı x${(3 + 0.5 * l).toFixed(1).replace('.0', '')}` },
-    { id: 'gold', b: 1, r: 0, name: 'Altın Ruh', icon: 'ic_money', max: 10, fx: l => `+${pct(0.15 * l)} altın` },
-    { id: 'hunt', b: 1, r: 1, name: 'Hazine Avcısı', icon: 'ic_luck', max: 3, fx: l => `+${pct(0.02 * l)} hazine canavarı şansı` },
-    { id: 'sleep', b: 1, r: 2, name: 'Derin Uyku', icon: 'ic_moon', max: 4, fx: l => `Çevrimdışı kazanç sınırı +${2 * l} saat` },
+    { id: 'fatal', b: 0, r: 3, name: 'Ölümcül Vuruş', icon: 'ic_fatal', max: 4, fx: l => `Kritik hasarı x${(3 + 0.5 * l).toFixed(1).replace('.0', '')}` },
+    { id: 'gold', b: 1, r: 0, name: 'Altın Ruh', icon: 'ic_goldsoul', max: 10, fx: l => `+${pct(0.15 * l)} altın` },
+    { id: 'hunt', b: 1, r: 1, name: 'Hazine Avcısı', icon: 'ic_treasure', max: 3, fx: l => `+${pct(0.02 * l)} hazine canavarı şansı` },
+    { id: 'sleep', b: 1, r: 2, name: 'Derin Uyku', icon: 'ic_sleep', max: 4, fx: l => `Çevrimdışı kazanç sınırı +${2 * l} saat` },
     { id: 'gemsoul', b: 1, r: 3, name: 'Elmas Ruhu', icon: 'gem', max: 5, fx: l => `+${pct(0.2 * l)} Doğuş elması` },
-    { id: 'body', b: 2, r: 0, name: 'Demir Beden', icon: 'ic_heal', max: 5, fx: l => `+${pct(0.15 * l)} takım canı` },
-    { id: 'time', b: 2, r: 1, name: 'Zaman Ustası', icon: 'ic_sun', max: 5, fx: l => `Boss süresi +${3 * l} saniye` },
+    { id: 'body', b: 2, r: 0, name: 'Demir Beden', icon: 'ic_armor', max: 5, fx: l => `+${pct(0.15 * l)} takım canı` },
+    { id: 'time', b: 2, r: 1, name: 'Zaman Ustası', icon: 'ic_timeup', max: 5, fx: l => `Boss süresi +${3 * l} saniye` },
     { id: 'armor', b: 2, r: 2, name: 'Çelik Zırh', icon: 'ic_shield', max: 4, fx: l => `Takım -${pct(0.08 * l)} hasar alır` },
-    { id: 'slayer', b: 2, r: 3, name: 'Boss Avcısı', icon: 'ic_weapon', max: 5, fx: l => `Bosslara +${pct(0.1 * l)} hasar` },
-    { id: 'shadow', b: 1, r: 4, name: 'Gölge Yolu', icon: 'ic_boot', max: 4, cap: true, fx: l => `Doğuş sonrası ilk ${5 * l} bölüm: düşman canı yarı` },
+    { id: 'slayer', b: 2, r: 3, name: 'Boss Avcısı', icon: 'ic_bosshunt', max: 5, fx: l => `Bosslara +${pct(0.1 * l)} hasar` },
+    { id: 'shadow', b: 1, r: 4, name: 'Gölge Yolu', icon: 'ic_shadow', max: 4, cap: true, fx: l => `Doğuş sonrası ilk ${5 * l} bölüm: düşman canı yarı` },
   ];
   const BR = [{ name: 'Saldırı', col: 'red' }, { name: 'Servet', col: 'yellow' }, { name: 'Ustalık', col: 'blue' }];
 
@@ -57,7 +57,7 @@
   let sel = 'blade';
   function build(body) {
     const n = NODES.find(o => o.id === sel) || NODES[0], l = lv(n.id), op = open(n), mx = l >= n.max, c = cost(n);
-    body.appendChild(SS.el(`<div class="tr-head"><img src="assets/ui/ic_rebirth.png" alt=""><div><b>${points()} ruh</b><span>${soulGain() ? `Şimdi doğarsan +${soulGain()} ruh` : `Doğuş ruh verir (${SS.REBIRTH_MIN}. bölümden)`} · her 5 bölüm +1</span></div></div>`));
+    body.appendChild(SS.el(`<div class="tr-head"><img src="assets/ui/ic_soul.png" alt=""><div><b>${points()} ruh</b><span>${soulGain() ? `Şimdi doğarsan +${soulGain()} ruh` : `Doğuş ruh verir (${SS.REBIRTH_MIN}. bölümden)`} · her 5 bölüm +1</span></div></div>`));
     // detail of the selected node
     const lockTxt = n.cap ? 'Üç dalın son düğümü açılınca' : 'Üstteki düğüm açılınca';
     const d = SS.el(`<div class="tr-detail ${BR[n.b].col}"><div class="ico tile"><img src="assets/ui/${n.icon}.png" alt=""></div><div class="info">

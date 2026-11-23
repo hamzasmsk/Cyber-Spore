@@ -9,9 +9,9 @@
   if (!SS) return;
   const save = SS.save, MAX = 10;
   const SLOTS = [
-    { k: 'atk', name: 'Saldırı Tılsımı', icon: 'ic_power', col: 'red', fx: t => `+%${12 * t} hasar` },
-    { k: 'gold', name: 'Servet Tılsımı', icon: 'ic_money', col: 'yellow', fx: t => `+%${12 * t} altın` },
-    { k: 'guard', name: 'Koruma Tılsımı', icon: 'ic_shield', col: 'blue', fx: t => `-%${4 * t} alınan hasar · +%${8 * t} can` },
+    { k: 'atk', name: 'Saldırı Tılsımı', icon: 'ic_charm_atk', col: 'red', fx: t => `+%${12 * t} hasar` },
+    { k: 'gold', name: 'Servet Tılsımı', icon: 'ic_charm_gold', col: 'yellow', fx: t => `+%${12 * t} altın` },
+    { k: 'guard', name: 'Koruma Tılsımı', icon: 'ic_charm_guard', col: 'blue', fx: t => `-%${4 * t} alınan hasar · +%${8 * t} can` },
   ];
   if (!save.charm || typeof save.charm !== 'object') save.charm = {};
   for (const s of SLOTS) if (!Array.isArray(save.charm[s.k])) save.charm[s.k] = Array(MAX + 1).fill(0);

@@ -528,4 +528,7 @@ with open(os.path.join(OUT, 'LICENSE-ASSETS.txt'), 'w') as f:
             '(https://pixel-boy.itch.io/ninja-adventure-asset-pack), Creative Commons Zero (CC0).\n'
             'Number font: NormalFont from the same pack (CC0).\n'
             'Font: Pixelify Sans by Stefie Justprince, SIL Open Font License 1.1 (via @fontsource/pixelify-sans).\n')
+# extra art drawn on the pixel grid: Neo Ninja weapons + effect skins (atlas), one-icon-per-meaning set (ui)
+subprocess.run([sys.executable, os.path.join(HERE, 'build_neo.py')], check=True)
+subprocess.run([sys.executable, os.path.join(HERE, 'build_icons.py'), NA], check=True)
 print('done')

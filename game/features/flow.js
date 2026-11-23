@@ -62,7 +62,7 @@
     { id: 'tower', txt: 'Kule\'de 3. katı geç', ok: () => ((save.tower && save.tower.best) || 0) >= 3, gems: 6, when: () => (save.best || 1) >= 12, act: () => SS.tower && SS.tower.open() },
   ];
   const current = () => GOALS.find(g => !G.done[g.id] && (!g.when || g.when()));
-  const chip = SS.el('<button id="goal" class="goal"><img src="assets/ui/ic_missions.png" alt=""><span></span><b></b></button>');
+  const chip = SS.el('<button id="goal" class="goal"><img src="assets/ui/ic_goal.png" alt=""><span></span><b></b></button>');
   document.getElementById('ui').appendChild(chip);
   let shown = null, foldT = 0;
   // the full text stays a few seconds, then folds to the icon so the top of the field stays clear

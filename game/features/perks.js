@@ -10,19 +10,19 @@
   const save = SS.save, AUTO_S = 12, REROLL_GEMS = 5;
   // r: rarity (c common, r rare, e epic) · max stacks · glow: projectile glow colour while the perk is active
   const PERKS = [
-    { id: 'sharp', r: 'c', max: 5, name: 'Keskin Uç', icon: 'ic_power', txt: '+%25 hasar' },
-    { id: 'quick', r: 'c', max: 5, name: 'Seri Atış', icon: 'ic_rate', txt: '+%12 atış hızı' },
-    { id: 'greed', r: 'c', max: 5, name: 'Altın Yağmuru', icon: 'ic_money', txt: '+%25 altın' },
-    { id: 'crit', r: 'c', max: 4, name: 'Zayıf Nokta', icon: 'ic_vision', txt: '+%5 kritik şansı' },
-    { id: 'leech', r: 'c', max: 3, name: 'Can Çalma', icon: 'ic_heal', txt: 'Her düşman takıma %2 can verir' },
-    { id: 'slayer', r: 'c', max: 3, name: 'Boss Kırıcı', icon: 'ic_weapon', txt: '+%20 boss hasarı' },
-    { id: 'guard', r: 'c', max: 3, name: 'Kalkan', icon: 'ic_shield', txt: '-%12 alınan hasar' },
-    { id: 'pierce', r: 'r', max: 2, name: 'Delici', icon: 'ic_book', txt: 'Atışlar +1 düşmanı deler' },
+    { id: 'sharp', r: 'c', max: 5, name: 'Keskin Uç', icon: 'ic_spike', txt: '+%25 hasar' },
+    { id: 'quick', r: 'c', max: 5, name: 'Seri Atış', icon: 'ic_wind', txt: '+%12 atış hızı' },
+    { id: 'greed', r: 'c', max: 5, name: 'Altın Yağmuru', icon: 'ic_goldrain', txt: '+%25 altın' },
+    { id: 'crit', r: 'c', max: 4, name: 'Zayıf Nokta', icon: 'ic_crit', txt: '+%5 kritik şansı' },
+    { id: 'leech', r: 'c', max: 3, name: 'Can Çalma', icon: 'ic_lifesteal', txt: 'Her düşman takıma %2 can verir' },
+    { id: 'slayer', r: 'c', max: 3, name: 'Boss Kırıcı', icon: 'ic_punch', txt: '+%20 boss hasarı' },
+    { id: 'guard', r: 'c', max: 3, name: 'Kalkan', icon: 'ic_guard', txt: '-%12 alınan hasar' },
+    { id: 'pierce', r: 'r', max: 2, name: 'Delici', icon: 'ic_pierce', txt: 'Atışlar +1 düşmanı deler' },
     { id: 'bounce', r: 'r', max: 2, name: 'Sekme', icon: 'ic_ring', txt: 'Atışlar +1 kez seker' },
-    { id: 'frost', r: 'r', max: 3, name: 'Buz Dokunuşu', icon: 'wi_IceSpike', txt: '%20 şansla dondurur', glow: 'ice' },
-    { id: 'flame', r: 'r', max: 3, name: 'Alev Dokunuşu', icon: 'wi_Fireball', txt: 'Vurulan düşman yanar', glow: 'fire' },
-    { id: 'multi', r: 'e', max: 2, name: 'Çifte Bıçak', icon: 'shuriken', txt: '+1 atış (tam hasar)' },
-    { id: 'chain', r: 'e', max: 3, name: 'Şimşek Zinciri', icon: 'ic_magic', txt: '%15 şansla zincir şimşek', glow: 'magic' },
+    { id: 'frost', r: 'r', max: 3, name: 'Buz Dokunuşu', icon: 'ic_frost', txt: '%20 şansla dondurur', glow: 'ice' },
+    { id: 'flame', r: 'r', max: 3, name: 'Alev Dokunuşu', icon: 'ic_flame', txt: 'Vurulan düşman yanar', glow: 'fire' },
+    { id: 'multi', r: 'e', max: 2, name: 'Çifte Bıçak', icon: 'ic_auto', txt: '+1 atış (tam hasar)' },
+    { id: 'chain', r: 'e', max: 3, name: 'Şimşek Zinciri', icon: 'ic_chain', txt: '%15 şansla zincir şimşek', glow: 'magic' },
     { id: 'blast', r: 'e', max: 3, name: 'Patlayan Uç', icon: 'ic_explosion', txt: '%15 şansla alan patlaması', glow: 'gold' },
   ];
   const W8 = { c: 6, r: 3, e: 1.5 }, RNAME = { c: 'Sıradan', r: 'Nadir', e: 'Destansı' };
