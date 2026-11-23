@@ -42,4 +42,6 @@ ajanların ortak kurallarıdır; her çalıştırmada önce bu dosya, sonra `BAC
 9. **Web sürümü:** gönderdikten sonra Artifact aracı varsa `game/index.html`'i
    https://claude.ai/artifact/1RZeKYt3MajpjDvNTAewNb adresine yeniden yayınla (root = `game`, değişen dosyaları
    `files` ile). Araç yoksa bu adımı atla.
-10. Bir şey belirsizse veya riskliyse yapma; LOG'a "karar bekliyor" diye yaz.
+10. **Test Paneli:** yeni bir özellik/olay eklersen `features/devtools.js`'e onu anında denemeye yarayan bir düğme
+    ekle (oyun sahibi seviye kasmadan test edebilmeli).
+11. Bir şey belirsizse veya riskliyse yapma; LOG'a "karar bekliyor" diye yaz.
