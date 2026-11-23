@@ -45,7 +45,7 @@
     SS.persist(); SS.refreshUI(); paint(); open();
   }
   function open() {
-    const sc = document.getElementById('pBody').scrollTop, same = document.getElementById('pTitle').textContent === 'Başarımlar';
+    const sc = document.getElementById('pBody').scrollTop, same = document.getElementById('pTitle').dataset.k === 'Başarımlar';
     SS.openPanel('Başarımlar', 'purple', body => {
       if (SS.hub) SS.hub.tabs(body, 'ach');
       body.appendChild(SS.el(`<div class="ac-head"><img src="assets/ui/cup.png" alt=""><div><b>+%${2 * tiersClaimed()} kalıcı hasar</b><span>Her başarım kademesi: elmas + %2 hasar</span></div></div>`));

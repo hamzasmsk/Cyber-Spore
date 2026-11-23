@@ -1843,7 +1843,7 @@ function toast(text) { const t = $('toast'); t.textContent = text; t.classList.r
 // ---------------- panels (weapons, team, rebirth, offline)
 function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 function openPanel(title, color, build) {
-  $('pTitle').textContent = title; $('pTitle').className = 'ribbon ' + (color || '');
+  $('pTitle').textContent = title; $('pTitle').dataset.k = title; $('pTitle').className = 'ribbon ' + (color || '');   // data-k keeps the untranslated title for features
   const body = $('pBody'); body.innerHTML = ''; build(body);
   if ($('panel').classList.contains('hidden')) sfx('open', 0);
   $('panel').classList.remove('hidden');

@@ -114,7 +114,7 @@
   }
   // entry at the top of Ayarlar (added whenever that panel is built)
   new MutationObserver(() => {
-    if (document.getElementById('pTitle').textContent !== 'Ayarlar') return;
+    if (document.getElementById('pTitle').dataset.k !== 'Ayarlar') return;
     const w = document.querySelector('#pBody .fa-mwrap'); if (!w || w.querySelector('.dv-open')) return;
     const b = SS.el('<button class="btn purple wide dv-open">TEST PANELİ</button>'); b.onclick = () => { SS.sfx('click'); open(); }; w.insertBefore(b, w.firstChild);
   }).observe(document.getElementById('pBody'), { childList: true });

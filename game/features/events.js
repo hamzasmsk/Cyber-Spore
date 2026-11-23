@@ -52,7 +52,7 @@
   }
   function open() {
     sync();
-    const sc = document.getElementById('pTitle').textContent === 'Fener Festivali' ? document.getElementById('pBody').scrollTop : 0;
+    const sc = document.getElementById('pTitle').dataset.k === 'Fener Festivali' ? document.getElementById('pBody').scrollTop : 0;
     SS.openPanel('Fener Festivali', 'red', body => {
       tabs(body, 'ev');
       body.appendChild(SS.el(`<div class="ev-head"><img src="${ICON}" alt=""><div><b>${E.fen} fener</b><span>Bitişe ${left()} · düşmanlar, elitler, hazine ve bosslar fener düşürür</span></div></div>`));

@@ -44,4 +44,6 @@ ajanların ortak kurallarıdır; her çalıştırmada önce bu dosya, sonra `BAC
    `files` ile). Araç yoksa bu adımı atla.
 10. **Test Paneli:** yeni bir özellik/olay eklersen `features/devtools.js`'e onu anında denemeye yarayan bir düğme
     ekle (oyun sahibi seviye kasmadan test edebilmeli).
-11. Bir şey belirsizse veya riskliyse yapma; LOG'a "karar bekliyor" diye yaz.
+11. **İki dil:** oyun global (Türkçe + İngilizce). Ekrana yeni Türkçe metin eklersen `features/i18n.js` sözlüğüne
+    İngilizcesini de ekle; İngilizce modda paneli açıp Türkçe kalan metin olmadığını kontrol et.
+12. Bir şey belirsizse veya riskliyse yapma; LOG'a "karar bekliyor" diye yaz.

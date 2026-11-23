@@ -54,7 +54,7 @@
   });
   // pets section inside the Kostüm panel
   new MutationObserver(() => {
-    if (document.getElementById('pTitle').textContent !== 'Kostüm') return;
+    if (document.getElementById('pTitle').dataset.k !== 'Kostüm') return;
     const root = document.querySelector('#pBody .fb-skins'); if (!root || root.querySelector('.pt-sec')) return;
     root.appendChild(SS.el('<h3 class="fb-sec pt-sec"><img src="assets/ui/ic_heal.png" alt="">Yoldaşlar</h3>'));
     for (const p of PETS) {
@@ -96,7 +96,7 @@
   }
   // weekly card inside the Arena tab
   new MutationObserver(() => {
-    if (document.getElementById('pTitle').textContent !== 'Arena') return;
+    if (document.getElementById('pTitle').dataset.k !== 'Arena') return;
     const body = document.getElementById('pBody'); if (body.querySelector('.wk-card')) return;
     const w = WK(), r = rule();
     const c = SS.el(`<div class="row-card wk-card ${w.done ? 'done' : ''}"><div class="ico tile"><img src="assets/ui/ic_sun.png" alt=""></div><div class="info"><h4>Haftalık: ${r.name}</h4><p>${r.txt} · ${w.done ? '<b>Tamamlandı</b>' : `${3 - w.tries} hak`}</p></div><button class="btn ${w.done || w.tries >= 3 ? 'grey off' : 'yellow'}">${w.done ? '✓' : 'SAVAŞ'}</button></div>`);

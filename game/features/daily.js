@@ -111,7 +111,7 @@
       if (!LN || !save.notify) return;
       try {
         const p = await LN.getPending(); if (p && p.notifications && p.notifications.length) await LN.cancel({ notifications: p.notifications.map(n => ({ id: n.id })) });
-        const list = Notif.plan().map((e, i) => ({ id: 100 + i, title: e.title, body: e.body, schedule: { at: new Date(e.at) } }));
+        const list = Notif.plan().map((e, i) => ({ id: 100 + i, title: SS.t ? SS.t(e.title) : e.title, body: SS.t ? SS.t(e.body) : e.body, schedule: { at: new Date(e.at) } }));
         if (list.length) await LN.schedule({ notifications: list });
       } catch (e) { /* plugin missing or denied */ }
     },
