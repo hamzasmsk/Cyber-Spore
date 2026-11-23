@@ -119,14 +119,13 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 
 **Uygulama adı (en fazla 30):** Shuriken Squad: Ninja Takımı
 
-**Kısa açıklama (en fazla 80):** Ninja takımını kur, sürüleri biç, bossları devir! İnternetsiz idle aksiyon.
+**Kısa açıklama (en fazla 80):** Ninja takımını kur, sürüleri biç, dev bossları devir! Idle aksiyon RPG.
 
 **Tam açıklama (Türkçe):**
 
 > Shuriken Squad'da ninja takımın yolda ilerlerken canavar sürülerine otomatik olarak shuriken, kunai, ok ve
 > büyü fırlatır. Sen takımı güçlendir, silahlarını evrimleştir, bossları devir!
 >
-> 📴 İNTERNETSİZ OYNA — Metroda, uçakta, her yerde. Kapalıyken bile takımın kazanmaya devam eder.
 > ⚔️ OTOMATİK AKSİYON — Takım kendi savaşır; istediğin an parmağınla kontrolü al.
 > 🌀 SÜRÜLER VE KOMBOLAR — Kalabalık dalgaları biç, kombo yap, ekstra altın kazan.
 > 👹 DEV BOSSLAR — Zıplama, ışın, hücum, yağmur… Her bossun kendi saldırıları var.
@@ -138,17 +137,17 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 > 🏯 KULE VE ARENA — Her katta yeni kural, arenada hayatta kalma rekoru.
 > 🧑‍🤝‍🧑 TAKIM, TILSIMLAR, YOLDAŞLAR — 5 ninja, her biri ayrı yetenek.
 > 🎁 GÜNLÜK ÖDÜLLER VE FESTİVALLER — 7 günlük giriş takvimi, hafta sonu Fener Festivali.
+> 💤 SEN YOKKEN DE KAZAN — Takımın sen yokken de altın toplar, maden elmas üretir.
 >
 > Zorunlu reklam yok. Rastgele ücretli sandık yok. Piksel sanat ve sakin müzikler.
 
-**English — short (max 80):** Build your ninja squad, mow down hordes, topple bosses! Offline idle action.
+**English — short (max 80):** Build your ninja squad, mow down hordes, topple giant bosses! Idle action RPG.
 
 **English — full description:**
 
 > Your ninja squad marches on and throws shuriken, kunai, arrows and spells at monster hordes all by itself.
 > You power them up, evolve their weapons and take down giant bosses!
 >
-> 📴 PLAY OFFLINE — On the metro, on a plane, anywhere. Your squad keeps earning even while the game is closed.
 > ⚔️ AUTO ACTION — The squad fights on its own; take control with your finger any time.
 > 🌀 HORDES AND COMBOS — Mow down crowds, chain combos, earn bonus gold.
 > 👹 GIANT BOSSES — Leaps, beams, charges, rain: every boss has its own attacks.
@@ -160,12 +159,13 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 > 🏯 TOWER AND ARENA — A new rule on every floor, and a survival record to beat.
 > 🧑‍🤝‍🧑 SQUAD, CHARMS, COMPANIONS — 5 ninjas, each with their own skill.
 > 🎁 DAILY REWARDS AND FESTIVALS — A 7-day login calendar and the weekend Lantern Festival.
+> 💤 EARN WHILE AWAY — Your squad keeps collecting gold and the mine keeps digging gems.
 >
 > No forced ads. No paid random loot boxes. Pixel art and calm music.
 
 Not: Kapalı test sürümü (`monetization: free`) reklamsız ve satın almasızdır; o sürüm için "Reklam içeriyor: Hayır".
 
-**Etiketler / kategori:** Oyun → Aksiyon (alternatif: Rol yapma). Etiketler: Idle, Aksiyon, Piksel, Tek oyunculu, Çevrimdışı (internetsiz).
+**Etiketler / kategori:** Oyun → Aksiyon (alternatif: Rol yapma). Etiketler: Idle, Aksiyon, Piksel, Tek oyunculu.
 
 ---
 
