@@ -177,15 +177,15 @@ const GUNS = [
   { name: 'Ruh Küresi', glow: 'ice',   evo: { name: 'Gök Gürültüsü',   sp: 'thunder', desc: 'Gökten inen zincir şimşekler' },    mult: 900, cost: 1500, spr: 'BigEnergyBall', ori: -Math.PI / 2, sc: 1, shots: 1, sp: 700, boom: 1, chain: 3, held: 'wh_Book',
     trail: 'aura', hit: 'thunder', snd: 'throw_magic', hsnd: 'magic', tags: ['Zincir şimşek x3', 'Patlar'] },
   // Neo Ninja: the late-game line (energy weapons, original art from tools/build_neo.py)
-  { name: 'Plazma Shuriken', neo: 1, glow: 'neon', evo: { name: 'Plazma Kasırgası', sp: 'orbit', desc: 'Etrafında dönen plazma yıldızları' }, mult: 2500, cost: 3200, spr: 'Plasma', spin: 1, sc: 1, shots: 2, spread: 0.3, sp: 900, curve: 0.4, bounce: 2,
+  { name: 'Plazma Shuriken', neo: 1, glow: 'neon', evo: { name: 'Plazma Kasırgası', sp: 'orbit', desc: 'Etrafında dönen plazma yıldızları' }, mult: 2500, cost: 2000, spr: 'Plasma', spin: 1, sc: 1, shots: 2, spread: 0.3, sp: 900, curve: 0.4, bounce: 2,
     trail: 'neon', hit: 'plasma', snd: 'throw_magic', hsnd: 'magic', tags: ['2 yıldız', 'İki kez seker'] },
-  { name: 'Lazer Kunai', neo: 1, glow: 'laser', evo: { name: 'Lazer Yağmuru', sp: 'rain', desc: 'Gökten lazer kunai yağar' }, mult: 7000, cost: 7000, spr: 'Laser', ori: 0, sc: 1, shots: 1, sp: 1700, pierce: 4,
+  { name: 'Lazer Kunai', neo: 1, glow: 'laser', evo: { name: 'Lazer Yağmuru', sp: 'rain', desc: 'Gökten lazer kunai yağar' }, mult: 7000, cost: 2800, spr: 'Laser', ori: 0, sc: 1, shots: 1, sp: 1700, pierce: 4,
     trail: 'line', hit: 'laser', snd: 'throw2', hsnd: 'hit2', tags: ['Işık hızında', '5 düşman deler'] },
-  { name: 'Enerji Katana', neo: 1, glow: 'neon', evo: { name: 'Kılıç Hattı', sp: 'column', desc: 'Ekranı boydan yaran enerji kesiği' }, mult: 20000, cost: 15000, spr: 'Katana', ori: 0, sc: 1, shots: 1, sp: 950, pierce: 6, push: 1, held: 'wh_Katana',
+  { name: 'Enerji Katana', neo: 1, glow: 'neon', evo: { name: 'Kılıç Hattı', sp: 'column', desc: 'Ekranı boydan yaran enerji kesiği' }, mult: 20000, cost: 3800, spr: 'Katana', ori: 0, sc: 1, shots: 1, sp: 950, pierce: 6, push: 1, held: 'wh_Katana',
     trail: 'neon', hit: 'wave', snd: 'shoot', hsnd: 'hit2', tags: ['Enerji dalgası', '7 düşman deler', 'İter'] },
-  { name: 'Ray Yay', neo: 1, glow: 'neon', evo: { name: 'Ray Yağmuru', sp: 'volley', desc: 'Gökten düşen enerji okları' }, mult: 56000, cost: 32000, spr: 'Rail', ori: 0, sc: 1, shots: 3, spread: 0.2, sp: 1500, chain: 2, held: 'wh_NeoBow',
+  { name: 'Ray Yay', neo: 1, glow: 'neon', evo: { name: 'Ray Yağmuru', sp: 'volley', desc: 'Gökten düşen enerji okları' }, mult: 56000, cost: 5000, spr: 'Rail', ori: 0, sc: 1, shots: 3, spread: 0.2, sp: 1500, chain: 2, held: 'wh_NeoBow',
     trail: 'line', hit: 'plasma', snd: 'throw2', hsnd: 'hit3', tags: ['3 ok', 'Zincir şimşek x2'] },
-  { name: 'Drone Kunai', neo: 1, glow: 'laser', evo: { name: 'Sürü Protokolü', sp: 'galaxy', desc: 'Üç dev drone hedef avlar' }, mult: 160000, cost: 70000, spr: 'Drone', spin: 1, sc: 1, shots: 2, spread: 0.5, sp: 650, curve: 0.9, boom: 1,
+  { name: 'Drone Kunai', neo: 1, glow: 'laser', evo: { name: 'Sürü Protokolü', sp: 'galaxy', desc: 'Üç dev drone hedef avlar' }, mult: 160000, cost: 6500, spr: 'Drone', spin: 1, sc: 1, shots: 2, spread: 0.5, sp: 650, curve: 0.9, boom: 1,
     trail: 'neon', hit: 'drone', snd: 'throw_magic', hsnd: 'magic', tags: ['2 drone', 'Hedef avlar', 'Patlar'] },
 ];
 const TRAIL_COL = { gold: '#ffe18d', magic: '#d3a2c0', fire: '#ff9554', ice: '#8feff1', leaf: '#adbc3a', ink: '#8d977f', neon: '#3fd0e8', laser: '#ff4fb0', dragon: '#ff7a2e', lotus: '#6fb6ff', sakura: '#f9a3c8', moon: '#b9b4e6' };

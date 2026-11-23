@@ -9,9 +9,9 @@ kurman bile gerekmez. Aşağıdaki adımlar sırayla.
 |---|---|
 | `../android/` | Android projesi (uygulama kimliği `com.shurikensquad.game`, dikey ekran, ikonlar, açılış ekranı, imzalama ayarı) |
 | `/.github/workflows/android-release.yml` | Bulutta imzalı `.aab` üreten iş |
-| `icon-512.png` | Mağaza ikonu (512×512) |
-| `feature-graphic-1024x500.png` | Mağaza tanıtım görseli |
-| `screenshots/*.png` | 8 telefon ekran görüntüsü (1080×1920, başlıklı) |
+| `icon-512.png` | Mağaza ikonu (512×512) — `python3 tools/build_store_art.py` ile üretilir (uygulama ikonları da) |
+| `feature-graphic-1024x500.png` / `-en.png` | Mağaza tanıtım görseli (Türkçe / İngilizce) |
+| `screenshots/tr/*.png`, `screenshots/en/*.png` | 8'er telefon ekran görüntüsü (1080×1920, başlıklı) — `node tools/store_shots.js` ile oyunun kendisinden çekilir |
 | `privacy-policy.html` | Gizlilik politikası (Türkçe + İngilizce) |
 | Bu dosyanın sonu | Mağaza metinleri, Veri güvenliği ve içerik derecelendirme cevapları |
 
@@ -56,7 +56,7 @@ Her çalıştırmada sürüm kodu (versionCode) otomatik artar.
 2. **Uygulama içeriği** bölümünü doldur (cevaplar en altta): gizlilik politikası URL'si, reklamlar (**Evet**),
    uygulama erişimi (giriş gerekmiyor), içerik derecelendirmesi, hedef kitle (**13+**, çocuklara yönelik değil),
    veri güvenliği, reklam kimliği (**Evet, reklam için**), devlet uygulaması değil, finansal özellik yok.
-3. **Mağaza girişi:** metinler, `icon-512.png`, `feature-graphic-1024x500.png`, `screenshots/` (en az 2, hepsini yükle),
+3. **Mağaza girişi:** metinler, `icon-512.png`, `feature-graphic-1024x500.png`, `screenshots/tr/` (Türkçe giriş) ve `screenshots/en/` + `feature-graphic-1024x500-en.png` (İngilizce çeviri girişine) — en az 2, hepsini yükle,
    kategori **Oyun → Aksiyon** (ya da Strateji), iletişim e-postası.
 4. **Test → Kapalı test:** yeni kanal, `.aab`'yi yükle, test kullanıcılarının e-postalarını ekle, katılım linkini
    paylaş. 14 gün dolunca **Üretime başvur**.
@@ -119,32 +119,53 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 
 **Uygulama adı (en fazla 30):** Shuriken Squad: Ninja Takımı
 
-**Kısa açıklama (en fazla 80):** Ninja takımını kur, sürüleri biç, bossları devir! Idle aksiyon RPG.
+**Kısa açıklama (en fazla 80):** Ninja takımını kur, sürüleri biç, bossları devir! İnternetsiz idle aksiyon.
 
-**Tam açıklama:**
+**Tam açıklama (Türkçe):**
 
-> Shuriken Squad'da beş kişilik ninja takımın yolda ilerlerken canavar sürülerine otomatik olarak shuriken,
-> kunai, ok ve büyü fırlatır. Sen takımı güçlendir, silahlarını evrimleştir, bossları devir!
+> Shuriken Squad'da ninja takımın yolda ilerlerken canavar sürülerine otomatik olarak shuriken, kunai, ok ve
+> büyü fırlatır. Sen takımı güçlendir, silahlarını evrimleştir, bossları devir!
 >
-> ⚔️ OTOMATİK AKSİYON — Takım kendi savaşır; istediğin an parmağınla kontrolü al, bıraktığında yine kendi devam eder.
+> 📴 İNTERNETSİZ OYNA — Metroda, uçakta, her yerde. Kapalıyken bile takımın kazanmaya devam eder.
+> ⚔️ OTOMATİK AKSİYON — Takım kendi savaşır; istediğin an parmağınla kontrolü al.
 > 🌀 SÜRÜLER VE KOMBOLAR — Kalabalık dalgaları biç, kombo yap, ekstra altın kazan.
-> 👹 DEV BOSSLAR — Her bossun kendine özel saldırıları var: zıplama, ışın, hücum, yağmur. Kaç, vur, kazan!
-> 🗡️ 8 SİLAH VE EVRİM — Shuriken'den Ruh Küresi'ne; yıldız yükselt, 5 yıldızda silahını evrimleştir.
-> 🃏 YETENEK KARTLARI — Her boss sonrası 3 karttan birini seç: delen, seken, donduran, yakan atışlar. Her tur farklı.
-> 🌳 RUH AĞACI — Doğuş yap, ruh topla, üç daldan kalıcı güçler aç.
-> 🏯 KULE — Her katta yeni bir kural; ne kadar yükseğe çıkabilirsin?
-> 🧑‍🤝‍🧑 TAKIM VE KAHRAMANLAR — 5 ninja, her biri ayrı yetenek; parşömenlerle seviye atlat.
-> 🎁 NİNJA YOLU, GÜNLÜK ÖDÜLLER, FESTİVALLER — Sezonluk kostümler, hafta sonu Fener Festivali.
-> 💤 SEN YOKKEN DE KAZAN — Çevrimdışı kazanç ve elmas madeni.
+> 👹 DEV BOSSLAR — Zıplama, ışın, hücum, yağmur… Her bossun kendi saldırıları var.
+> 🗡️ 13 SİLAH VE EVRİM — Shuriken'den Ruh Küresi'ne, oradan Neo Ninja'nın plazma ve lazer silahlarına.
+>    5 yıldızda her silah evrimleşir.
+> ✨ EFEKT KAPLAMALARI — Ejder alevi, yıldırım lotus, sakura fırtınası… Her silahta çalışan görsel şölen.
+> 🃏 YETENEK KARTLARI — Her boss sonrası 3 karttan birini seç: delen, seken, donduran, yakan atışlar.
+> 🌳 RUH AĞACI — Doğuş yap, ruh topla, kalıcı güçler aç.
+> 🏯 KULE VE ARENA — Her katta yeni kural, arenada hayatta kalma rekoru.
+> 🧑‍🤝‍🧑 TAKIM, TILSIMLAR, YOLDAŞLAR — 5 ninja, her biri ayrı yetenek.
+> 🎁 GÜNLÜK ÖDÜLLER VE FESTİVALLER — 7 günlük giriş takvimi, hafta sonu Fener Festivali.
 >
-> Zorunlu reklam yok: yalnızca kendi seçtiğin ödüllü reklamlar. Rastgele ücretli sandık yok.
-> Sakin, rahatlatıcı müzikler ve piksel sanat.
+> Zorunlu reklam yok. Rastgele ücretli sandık yok. Piksel sanat ve sakin müzikler.
 
-**İngilizce (isteğe bağlı çeviri):**
-- Short: *Build your ninja squad, mow down hordes and topple giant bosses! Idle action RPG.*
-- Full: aynı yapıda; Play Console'un çeviri hizmetini de kullanabilirsin.
+**English — short (max 80):** Build your ninja squad, mow down hordes, topple bosses! Offline idle action.
 
-**Etiketler / kategori:** Oyun → Aksiyon (alternatif: Rol yapma). Etiketler: Idle, Aksiyon, Piksel, Tek oyunculu, Çevrimdışı.
+**English — full description:**
+
+> Your ninja squad marches on and throws shuriken, kunai, arrows and spells at monster hordes all by itself.
+> You power them up, evolve their weapons and take down giant bosses!
+>
+> 📴 PLAY OFFLINE — On the metro, on a plane, anywhere. Your squad keeps earning even while the game is closed.
+> ⚔️ AUTO ACTION — The squad fights on its own; take control with your finger any time.
+> 🌀 HORDES AND COMBOS — Mow down crowds, chain combos, earn bonus gold.
+> 👹 GIANT BOSSES — Leaps, beams, charges, rain: every boss has its own attacks.
+> 🗡️ 13 WEAPONS AND EVOLUTIONS — From shuriken to spirit orbs, then the Neo Ninja plasma and laser arsenal.
+>    Every weapon evolves at 5 stars.
+> ✨ EFFECT SKINS — Dragon flame, thunder lotus, sakura storm… a light show that works on every weapon.
+> 🃏 SKILL CARDS — After every boss pick 1 of 3: piercing, bouncing, freezing, burning throws.
+> 🌳 SOUL TREE — Rebirth, collect souls, unlock permanent powers.
+> 🏯 TOWER AND ARENA — A new rule on every floor, and a survival record to beat.
+> 🧑‍🤝‍🧑 SQUAD, CHARMS, COMPANIONS — 5 ninjas, each with their own skill.
+> 🎁 DAILY REWARDS AND FESTIVALS — A 7-day login calendar and the weekend Lantern Festival.
+>
+> No forced ads. No paid random loot boxes. Pixel art and calm music.
+
+Not: Kapalı test sürümü (`monetization: free`) reklamsız ve satın almasızdır; o sürüm için "Reklam içeriyor: Hayır".
+
+**Etiketler / kategori:** Oyun → Aksiyon (alternatif: Rol yapma). Etiketler: Idle, Aksiyon, Piksel, Tek oyunculu, Çevrimdışı (internetsiz).
 
 ---
 

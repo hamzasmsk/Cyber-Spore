@@ -3,14 +3,14 @@
 const A = JSON.parse(process.argv[2] || '{}');
 const cfg = Object.assign({
   hg: 1.3, rg: 1.28, bossMul: 22, pc: 1.25, sc: 1.28, mcg: 1.2, ml: 0.15,
-  team: [0, 800, 5e6, 5e11, 5e17], gunMult: [1, 2.5, 6, 15, 40, 110, 300, 900], gunCost: [0, 5, 15, 40, 100, 250, 600, 1500], starK: 0.35,
+  team: [0, 800, 5e6, 5e11, 5e17], gunMult: [1, 2.5, 6, 15, 40, 110, 300, 900, 2500, 7000, 20000, 56000, 160000], gunCost: [0, 5, 15, 40, 100, 250, 600, 1500, 2000, 2800, 3800, 5000, 6500], starK: 0.35,
   bossGemsFirst: s => 3 + Math.floor(s / 4), bossGemsRepeat: s => 0, treasureP: 0.04, treasureGems: s => 1,
   rebGain: s => s >= 8 ? Math.floor(2 * Math.pow(1.18, s - 8)) : 0, rebPer: 0.3, rebGems: g => 5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4)),
   dailyGemsPerHour: 4.5, hours: 10, paid: false,
 }, A);
 // allow overriding functions via strings
 for (const k of ['bossGemsFirst', 'bossGemsRepeat', 'treasureGems', 'rebGain', 'rebGems']) if (typeof cfg[k] === 'string') cfg[k] = eval(cfg[k]);
-const s = { money: 0, gems: 0, stage: 1, sub: 1, lv: { power: 0, speed: 0, money: 0 }, gun: 0, best: 0, team: 1, rp: 0, reb: 0, star: [1, 1, 1, 1, 1, 1, 1, 1], boost: 0 };
+const s = { money: 0, gems: 0, stage: 1, sub: 1, lv: { power: 0, speed: 0, money: 0 }, gun: 0, best: 0, team: 1, rp: 0, reb: 0, star: Array(13).fill(1), boost: 0 };
 const power = l => 6 * Math.pow(1.18, l), speed = l => Math.min(10, 1.2 + 0.06 * l), mm = l => 1 + cfg.ml * l;
 const COST = { power: l => 8 * Math.pow(cfg.pc, l), speed: l => 12 * Math.pow(cfg.sc, l), money: l => 15 * Math.pow(cfg.mcg, l) };
 const idx = () => (s.stage - 1) * 5 + (s.sub - 1), ehp = () => 10 * Math.pow(cfg.hg, idx()), erw = () => 10 * Math.pow(cfg.rg, idx());
@@ -33,9 +33,9 @@ function shop() {
   }
   for (let k = 0; k < 20; k++) {   // gems: next weapon first, otherwise cheap stars
     const nx = s.gun + 1;
-    if (nx < 8 && s.gems >= cfg.gunCost[nx]) { s.gems -= cfg.gunCost[nx]; s.gun = nx; mark('gun' + nx); continue; }
+    if (nx < cfg.gunMult.length && s.gems >= cfg.gunCost[nx]) { s.gems -= cfg.gunCost[nx]; s.gun = nx; mark('gun' + nx); continue; }
     const st = s.star[s.gun], c = Math.max(2, Math.round(Math.max(cfg.gunCost[s.gun], 5) * cfg.starK * st));
-    if (st < 5 && s.gems >= c && (nx >= 8 || c < 0.35 * cfg.gunCost[nx])) { s.gems -= c; s.star[s.gun]++; if (s.star[s.gun] === 5) mark('evo' + s.gun); continue; }
+    if (st < 5 && s.gems >= c && (nx >= cfg.gunMult.length || c < 0.35 * cfg.gunCost[nx])) { s.gems -= c; s.star[s.gun]++; if (s.star[s.gun] === 5) mark('evo' + s.gun); continue; }
     break;
   }
 }
