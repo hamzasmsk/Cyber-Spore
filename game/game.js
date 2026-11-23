@@ -1973,7 +1973,8 @@ function frame(now) {
   let dt = Math.min(1 / 20, (now - last) / 1000); last = now;
   if (R.stop > 0) { R.stop -= dt; dt *= 0.12; }
   if (R.paused) dt = 0;
-  if (dt > 0) update(dt); render(); updateUI(dt);
+  if (dt > 0) { const n = Math.max(1, Math.round(R.timeScale || 1)); for (let k = 0; k < n; k++) update(dt); }   // timeScale: test panel fast-forward
+  render(); updateUI(dt);
   const pop = R.walletPop > 0; if (pop !== popOn) { popOn = pop; $('money').parentNode.classList.toggle('pop', pop); }
   saveT += dt; if (saveT > 5) { saveT = 0; persist(); }
   requestAnimationFrame(frame);
@@ -2024,7 +2025,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, giveScroll, hlv, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  save, R, F, GUNS, TEAM, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; },

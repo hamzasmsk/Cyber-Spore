@@ -8,6 +8,8 @@
    webMode: what 'auto' does in a browser ('test' while developing, 'off' for a public web release) */
 window.MONETIZE = {
   mode: 'auto',
+  // Test Paneli (Ayarlar → TEST PANELİ, or long-press the stage name). The store release workflow sets this to false.
+  devTools: true,
   webMode: 'test',
 
   // ---- RevenueCat (handles App Store / Google Play billing and receipt validation)

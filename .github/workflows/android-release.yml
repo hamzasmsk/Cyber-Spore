@@ -52,6 +52,8 @@ jobs:
 
       - name: Build web game and copy it into the Android project
         run: |
+          sed -i "s/devTools: true/devTools: false/" monetize.config.js   # no test panel in the store build
+          grep -q "devTools: false" monetize.config.js
           npm run build
           npx cap sync android
 
