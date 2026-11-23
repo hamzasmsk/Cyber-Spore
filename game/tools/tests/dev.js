@@ -23,7 +23,7 @@ const { chromium, devices } = require('playwright'), path = require('path'), fs 
   for (let i = 0; i < nT; i++) { await toggles.nth(i).click(); await page.waitForTimeout(150); }
   await page.click('#pBody .dv-speed [data-v="4"]'); await page.waitForTimeout(800);
   const st = await page.evaluate(() => ({ stage: SS.save.stage, gems: SS.save.gems, gun: SS.save.gun, team: SS.save.team, speed: SS.R.timeScale, dev: SS.save.dev }));
-  await page.evaluate(() => SS.closePanel()); await page.waitForTimeout(200);
+  await page.evaluate(() => { const d = new Date(); SS.save.login.last = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; SS.closePanel(); }); await page.waitForTimeout(1500); await page.evaluate(() => SS.closePanel()); await page.waitForTimeout(200);
   const r = await page.evaluate(() => { const b = document.getElementById('stageLbl').getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; });
   await page.mouse.move(r[0], r[1]); await page.mouse.down(); await page.waitForTimeout(900); await page.mouse.up(); await page.waitForTimeout(300);
   const lp = await page.evaluate(() => document.getElementById('pTitle').textContent);

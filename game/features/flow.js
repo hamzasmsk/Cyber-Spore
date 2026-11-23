@@ -21,7 +21,7 @@
   // ---------------- 1. popup queue
   const GAP = 25000;   // calm time between two interruptions
   let queue = [], lastShown = 0, busy = false;
-  const calm = () => document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov,.mz-ov,.un-card,.fl-card') && !R.boss && !(R.sq && R.sq.ko > 0) && !R.paused;
+  const calm = () => document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov,.mz-ov,.un-card,.fl-card') && !R.boss && !R.mode && !(R.sq && R.sq.ko > 0) && !R.paused;
   // fn() shows the popup (return false if it decided not to); prio: lower first; gap: true = 25 s calm before it, a number = that many ms, false = none
   function request(id, fn, prio = 5, gap = true) {
     if (queue.some(q => q.id === id)) return;

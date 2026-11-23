@@ -576,7 +576,7 @@ function spawnEnemy(forceVr) {
   const x = clamp(W / 2 + lane * F.pathW * 1.1, 60 * U, W - 60 * U), y = 120 + rand(-20, 20) * U;
   const elite = !R.horde && save.stage >= 2 && Math.random() < 0.1, hm = R.horde ? 0.6 : 1;
   // variants (from stage 4): shield / splitter / healer / runner — they make weapon choice and target order matter
-  const vr = forceVr || !elite && !R.horde && save.stage >= 4 && Math.random() < 0.2 ? pick(VARIANTS) : null, vd = vr ? VAR[vr] : null;
+  const vr = forceVr === 'none' ? null : forceVr || !elite && !R.horde && save.stage >= 4 && Math.random() < 0.2 ? pick(VARIANTS) : null, vd = vr ? VAR[vr] : null;
   const hp = enemyHp() * EHP * hm * (d.hp || 1) * (elite ? 4 : 1) * (vd ? vd.hp : 1);
   R.en.push({ id: R.nextId++, type, d, x, y, lane, hp, maxHp: hp, sp: 80 * U * (d.spd || 1) * (elite ? 0.8 : 1) * (vd ? vd.spd : 1), flash: 0, anim: rand(0, 1), knock: 0, kx: 0, ky: 0, kb: 0, age: 0,
     ranged: !!d.ranged && vr !== 'runner', stopped: false, atk: rand(1.4, 2.6), wind: 0, dir: 'd', elite, sc: elite ? 1.5 : 1, gold: EGOLD * hm * (d.hp || 1) * (elite ? 4 : 1) * (vd ? vd.gold : 1), vr, healT: rand(1, 2) });
@@ -681,7 +681,7 @@ function kill(e) {
   if (e.elite || e.treasure) R.stop = 0.07;
   if (e.elite && Math.random() < 0.04) giveScroll(1, e.x, e.y - 24 * P);
   if (e.treasure) { const g = 1 + (save.stage >= 25 ? 1 : 0); save.gems += g; addText(e.x, e.y - 30 * P, '+' + g, 'gem'); sfx('gem', 0); fx('fx_circlew', e.x, e.y - 8 * P, 1, 0.3); }
-  if (!R.boss && !save.bossReady) {
+  if (!R.boss && !save.bossReady && !R.mode) {
     save.kills++;
     if (save.kills >= KILLS_PER_SUB) {
       if (save.sub < SUBS) { save.sub++; save.kills = 0; toast(`Aşama ${save.stage}-${save.sub}`); sfx('stage', 0); runHooks('stage'); }
@@ -1059,6 +1059,7 @@ function aiSteer() {
   }
   let vx = tx - sq.x, vy = ty - sq.y; const dd = Math.hypot(vx, vy), k = 1 / Math.max(dd, 70 * U);
   vx *= k; vy *= k;
+  if (R.mode) for (const e of R.en) { if (e.dead || !e.rush) continue; const dx = sq.x - e.x, dy = sq.y - e.y, d = Math.hypot(dx, dy) || 1, r0 = 110 * U; if (d < r0) { const w = (1 - d / r0) * 2.4; vx += dx / d * w; vy += dy / d * w; } }
   for (const p of R.eb) {
     if (p.k === 'lob') {
       const dx = sq.x - p.tx, dy = sq.y - p.ty, d = Math.hypot(dx, dy) || 1, r0 = 80 * U;
@@ -1101,7 +1102,8 @@ function knockout() {
   for (const e of R.en) e.kb = 240 * U;
   for (const h of R.heroes) puff(h.x, h.y, 2);
   R.shake = 6;
-  if (R.boss) bossFail();
+  if (R.mode) { /* survival etc. end through HOOKS.ko */ }
+  else if (R.boss) bossFail();
   else {
     banner('NAKAVT!', save.bossReady ? 'Takım toparlanıyor…' : 'Aşama ilerlemesi sıfırlandı');
     if (!save.bossReady) save.kills = 0;
@@ -1311,7 +1313,7 @@ function update(dt) {
       for (const dc of R.decals) dc.y += d;
       for (const p of R.parts) if (p.k === 'bit' || p.k === 'anim') p.y += d;
       if (R.advLeft <= 0) {
-        if (save.bossReady && R.retryT <= 0 && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
+        if (save.bossReady && R.retryT <= 0 && !R.mode && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
@@ -1336,10 +1338,11 @@ function update(dt) {
       e.burn -= dt; e.burnT -= dt;
       if (e.burnT <= 0) { e.burnT = 0.4; bits(e.x, e.y - 10 * P, 'q_Fire', 1); damage(e, e.burnD, false, false); if (e.dead) continue; }
     }
-    const goal = enemyGoal(e);
+    const goal = e.rush ? { x: R.sq.x, y: R.sq.y - 4 * P } : enemyGoal(e);
+    if (e.rush && !ko) { e.hitT = (e.hitT || 0) - dt; if (e.hitT <= 0 && Math.hypot(e.x - R.sq.x, (e.y - R.sq.y) * 1.3) < 26 * U * (e.sc || 1)) { e.hitT = 0.8; hurtSquad(e.dmg || hpBase() * 0.05, e.x, e.y - 8 * P); } }
     const dx = goal.x - e.x, dy = goal.y - e.y, d = Math.hypot(dx, dy);
     if (e.vr === 'runner' && !e.stopped && Math.random() < 0.15) part({ k: 'anim', a: 'fx_smoke', x: e.x, y: e.y + 2 * P, s: 0.5, life: 0.25, max: 0.25, ay: 1, alpha: 0.35 });
-    if (e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
+    if (e.rush ? d > 4 * U : e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
     else e.stopped = true;
     if (L0) e.dir = e.stopped ? dirOf(L0.x - e.x, L0.y - e.y) : dirOf(dx, dy);
     if (e.knock > 0) { const eb = enemyBox(); e.x = clamp(e.x + e.kx * e.knock, eb.x0 - 20 * U, eb.x1 + 20 * U); e.y = Math.max(e.y + e.ky * e.knock, Math.min(e.y, eb.y0 + 20 * U)); e.knock *= 0.5; if (e.knock < 0.3) e.knock = 0; }

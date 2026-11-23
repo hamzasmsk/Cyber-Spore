@@ -138,7 +138,7 @@
 .ac-row .btn{min-width:64px;font-size:15px}
 .tw-hp em{font-style:normal;padding:0 4px;color:var(--cream)}
 .tw-hp em.ez{background:var(--green)}.tw-hp em.md{background:#c98f2f}.tw-hp em.hd{background:var(--red)}.tw-hp em.no{background:var(--ink2)}
-.hub-tabs .btn{font-size:13px}
+.hub-tabs .btn{font-size:12px;padding-inline:2px}
 
 /* Kahraman seviyeleri */
 .hl-row .ico{position:relative}
@@ -241,3 +241,37 @@
 .cm-t i{font-style:normal;padding:0 4px;color:var(--cream);background:var(--ink2)}
 .cm-t.on{background:var(--gold2)}
 .cm-t.on i{background:var(--purple)}
+
+/* Hayatta Kal */
+.sv-hud{position:absolute;left:50%;top:calc(130px + var(--safe-t));z-index:4;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:3px 10px 4px;background:rgba(19,27,27,.85);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--red);color:var(--cream);pointer-events:none}
+.sv-hud.hidden{display:none}
+.sv-t{font-size:20px;color:var(--gold2);text-shadow:var(--o-sm);font-variant-numeric:tabular-nums}
+.sv-k{font-size:13px}
+.sv-bar{display:block;width:60px;height:8px;background:var(--ink2);box-shadow:inset 0 0 0 1px var(--ink)}
+.sv-bar i{display:block;height:100%;width:0;background:var(--green)}
+.sv-lv{font-size:11px;color:var(--sage2)}
+.sv-res{display:flex;gap:6px}
+.sv-res>div{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px;background:var(--ink2);clip-path:var(--notch);color:var(--cream)}
+.sv-res small{font-size:11px;color:var(--sage2)}
+.sv-res b{font-size:24px;color:var(--gold2);text-shadow:var(--o-sm)}
+#goal.sv-hide{display:none}
+
+/* Yolculuk haritası */
+.jm-path{position:relative;display:flex;flex-direction:column;gap:6px;padding-left:22px}
+.jm-path::before{content:"";position:absolute;left:9px;top:10px;bottom:10px;width:6px;background:var(--ink2);box-shadow:inset 0 0 0 2px var(--ink)}
+.jm-node{position:relative;display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--ink2);color:var(--dark)}
+.jm-node::before{content:"";position:absolute;left:-17px;top:50%;width:10px;height:10px;margin-top:-5px;background:var(--sage2);box-shadow:0 0 0 2px var(--ink)}
+.jm-node b{width:30px;font-size:18px;color:var(--ink);text-align:center}
+.jm-node img{width:30px;height:30px}
+.jm-node span{display:flex;flex-direction:column;font-size:13px;line-height:1.2}
+.jm-node small{font-size:11px;color:var(--muted)}
+.jm-node.done{opacity:.55}
+.jm-node.done::before{background:var(--green)}
+.jm-node.cur{background:#fff3d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 5px var(--gold)}
+.jm-node.cur::before{background:var(--gold2);animation:blink 1s steps(2) infinite}
+.jm-node.new img{filter:brightness(.35)}
+.jm-node.g-forest{border-left:6px solid #74a334}.jm-node.g-grass{border-left:6px solid #56864c}.jm-node.g-sand{border-left:6px solid #d78b4a}.jm-node.g-snow{border-left:6px solid #79b8ce}.jm-node.g-ash{border-left:6px solid #a5608b}
+.jm-you{position:absolute;right:8px;font-style:normal;font-size:11px;padding:0 5px;color:var(--ink);background:var(--gold2)}
+.jm-card{display:block;width:100%;max-width:320px;margin:0 auto;image-rendering:pixelated}
+.wk-card .btn{min-width:72px}
+.wk-card.done{opacity:.6}

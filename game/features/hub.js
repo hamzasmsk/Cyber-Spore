@@ -6,6 +6,7 @@
   if (!SS) return;
   const TABS = [
     { k: 'missions', label: 'Görevler', open: () => SS.missions && SS.missions.open(), badge: () => 0 },
+    { k: 'surv', label: 'Arena', open: () => SS.survival && SS.survival.open(), badge: () => (SS.survival && SS.survival.free() ? 1 : 0) },
     { k: 'tower', label: 'Kule', open: () => SS.tower && SS.tower.open(), badge: () => (SS.tower ? SS.tower.attempts() : 0) },
     { k: 'ach', label: 'Başarım', open: () => SS.ach && SS.ach.open(), badge: () => (SS.ach ? SS.ach.ready() : 0) },
   ];
