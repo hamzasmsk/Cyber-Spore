@@ -64,7 +64,10 @@
   const current = () => GOALS.find(g => !G.done[g.id] && (!g.when || g.when()));
   const chip = SS.el('<button id="goal" class="goal"><img src="assets/ui/ic_missions.png" alt=""><span></span><b></b></button>');
   document.getElementById('ui').appendChild(chip);
-  let shown = null;
+  let shown = null, foldT = 0;
+  // the full text stays a few seconds, then folds to the icon so the top of the field stays clear
+  function unfold() { chip.classList.remove('mini'); clearTimeout(foldT); foldT = setTimeout(() => chip.classList.add('mini'), 6000); }
+  unfold();
   function tickGoals() {
     // completed goals pay out (also ones finished while another goal was shown)
     for (const g of GOALS) if (!G.done[g.id] && g.ok()) {
@@ -76,13 +79,14 @@
     if (!g) {   // after the chain: an open-ended goal keeps the chip useful
       const nb = (save.best || 1) + 1;
       chip.querySelector('span').textContent = `${nb}. bölüme ulaş`;
-      chip.querySelector('b').textContent = ''; shown = null; chip.onclick = null; return;
+      chip.querySelector('b').textContent = ''; shown = null; chip.onclick = () => { SS.sfx('click'); unfold(); }; return;
     }
-    if (shown !== g.id) { shown = g.id; chip.classList.remove('new'); void chip.offsetWidth; chip.classList.add('new'); }
+    if (shown !== g.id) { shown = g.id; chip.classList.remove('new'); void chip.offsetWidth; chip.classList.add('new'); unfold(); }
     chip.querySelector('span').textContent = g.txt;
     chip.querySelector('b').innerHTML = `<img src="assets/ui/gem.png" alt="">${g.gems}`;
     chip.onclick = () => {
       SS.sfx('click');
+      if (chip.classList.contains('mini')) { unfold(); return; }   // first tap only shows the text
       if (g.act) g.act();
       else if (g.go) { const t = g.go(); if (t) { t.classList.remove('fl-point'); void t.offsetWidth; t.classList.add('fl-point'); } }
       else SS.toast('Savaşmaya devam et: takım kendi ilerler');

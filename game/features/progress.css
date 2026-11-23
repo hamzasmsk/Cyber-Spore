@@ -185,18 +185,22 @@
 @keyframes mShake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 
 /* Sonraki hedef (flow.js) */
-.goal{position:absolute;left:50%;top:calc(132px + var(--safe-t));z-index:4;transform:translateX(-50%);max-width:min(320px,86vw);display:flex;align-items:center;gap:5px;height:24px;padding:0 6px 0 4px;border:0;cursor:pointer;
+.goal{position:absolute;left:max(8px,var(--safe-l));top:calc(98px + var(--safe-t));z-index:4;max-width:min(300px,calc(100vw - 100px));display:flex;align-items:center;gap:5px;height:24px;padding:0 6px 0 4px;border:0;cursor:pointer;
   font-family:inherit;color:var(--cream);background:rgba(19,27,27,.78);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--gold);pointer-events:auto}
 .goal img{width:16px;height:16px;flex:none}
 .goal span{min-width:0;font-size:12px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--o-sm)}
 .goal b{flex:none;display:flex;align-items:center;gap:2px;font-size:12px;color:var(--gold2)}
 .goal b img{width:12px;height:12px}
 .goal b:empty{display:none}
-.goal:active{transform:translate(-50%,2px)}
+.goal:active{transform:translateY(2px)}
+/* after a few seconds the goal folds to its icon + reward; a tap unfolds it */
+.goal span{max-width:260px;transition:max-width .25s steps(5)}
+.goal.mini span{max-width:0}
+.goal.mini{gap:3px;background:rgba(19,27,27,.6)}
 .goal.new{animation:goalIn .5s steps(5)}
 .goal.done{animation:goalDone .6s steps(6)}
 .goal.hide{opacity:0;pointer-events:none;transition:opacity .2s}
-@keyframes goalIn{0%{transform:translate(-50%,-10px);opacity:0}100%{transform:translateX(-50%);opacity:1}}
+@keyframes goalIn{0%{transform:translateY(-10px);opacity:0}100%{transform:none;opacity:1}}
 @keyframes goalDone{0%,100%{box-shadow:inset 0 0 0 2px var(--gold)}30%,70%{box-shadow:inset 0 0 0 2px var(--green),0 0 0 3px var(--green)}}
 .fl-point{animation:flPoint .9s steps(6) 2}
 @keyframes flPoint{0%,100%{transform:none;filter:none}50%{transform:translateY(-6px);filter:brightness(1.3)}}

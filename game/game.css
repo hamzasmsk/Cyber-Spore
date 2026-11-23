@@ -310,3 +310,12 @@ html.uiz #ui,html.uiz #panel{right:auto;bottom:auto;width:var(--uiw);height:var(
 html.uiz #panel .panel.pop{max-height:calc(var(--uih) * .84);width:min(440px,calc(var(--uiw) * .94))}
 html.uiz #pBody{max-height:calc(var(--uih) * .68)}
 html.uiz .ps-list{max-height:calc(var(--uih) * .42)}
+/* compact top HUD: the stage name lives inside the progress bar, BOSS sits under the wallet, so enemies
+   walking in from the top stay visible */
+.toprow{align-items:flex-start}
+.pbar{height:22px;display:flex;align-items:center;padding:0 9px}
+.pbar .stage{position:relative;flex:1;min-width:0;display:block;text-align:left;font-size:13px;line-height:22px;padding:0;text-shadow:var(--o-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer}
+.pbar em{position:relative;flex:none;font-style:normal;font-size:12px;line-height:22px;color:var(--cream);text-shadow:var(--o-sm)}
+.wallet .pill{height:26px;font-size:12px;padding:0 7px 0 2px}
+.wallet .pill img{width:20px;height:20px}
+#toast{top:calc(140px + var(--safe-t))}
