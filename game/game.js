@@ -510,6 +510,20 @@ function makeChunk(c) {
   deco.sort((a, z) => a.y - z.y);
   return { cv: g, deco, bi };
 }
+// wind: tree crowns and bushes lean one art pixel with the gusts; the trunk stays put (strips of the sprite)
+const SWAY = /tree|trio|big_|palm|bush|leafy|drybush|clover|flower/;
+function sway(d, y) {
+  const f = AF[d.n]; if (!f) return;
+  const gust = Math.sin(R.t * 0.7) * 0.6 + Math.sin(R.t * 0.23 + 1.7) * 0.5, ph = d.x * 0.013 + d.y * 0.007;
+  const top = Math.round((Math.sin(R.t * 1.6 + ph) * 0.6 + gust) * (f[3] > 24 ? 1 : 0.6));
+  const w = f[2] * P, h = f[3] * P, x0 = snap(d.x - w / 2), y0 = snap(y - h), cut = [0, Math.floor(f[3] * 0.35), Math.floor(f[3] * 0.65), f[3]];
+  ctx.save(); if (d.flip) { ctx.translate(snap(d.x) * 2, 0); ctx.scale(-1, 1); }
+  for (let i = 0; i < 3; i++) {
+    const off = i === 0 ? top : i === 1 ? Math.round(top / 2) : 0, sy = cut[i], sh = cut[i + 1] - sy; if (sh <= 0) continue;
+    ctx.drawImage(atlasImg, f[0], f[1] + sy, f[2], sh, x0 + off * P * (d.flip ? -1 : 1), y0 + sy * P, w, sh * P);
+  }
+  ctx.restore();
+}
 function drawGroundTiles() {
   const CHT = CH * 16 * P, c0 = Math.floor(-R.cam / CHT), c1 = Math.floor((H - R.cam) / CHT);
   for (let c = c0; c <= c1; c++) {
@@ -521,7 +535,7 @@ function drawGroundTiles() {
   for (let c = c0 - 1; c <= c1; c++) {   // decor (tree crowns may hang over chunk edges)
     const ch = chunks.get(c); if (!ch) continue;
     const y0 = c * CHT + R.cam;
-    for (const d of ch.deco) { const y = y0 + d.y; if (y < -10 || y - 300 > H) continue; spr(d.n, d.x, y, 1, 0.5, 1, d.flip); }
+    for (const d of ch.deco) { const y = y0 + d.y; if (y < -10 || y - 300 > H) continue; if (SWAY.test(d.n) && !save.eco) sway(d, y); else spr(d.n, d.x, y, 1, 0.5, 1, d.flip); }
   }
 }
 
@@ -683,6 +697,7 @@ function bits(x, y, set, n) {
 }
 function confetti(x, y, col, n) { bits(x, y, biome().bits, Math.min(8, n)); }
 function boom(x, y, s = 1) {
+  if (R.flashes && R.flashes.length < 12) R.flashes.push({ x, y, r: 70 * s, life: 0.25, max: 0.25 });   // light flash (features/visuals.js)
   vfx('ring', 'fire', x, y, s, 0.35);
   if (s < 1) { if (R.t - (R.boomT || 0) < 0.07 || R.parts.length > 170) { fx('fx_circle', x, y, s, 0.25); return; } R.boomT = R.t; }
   fx('fx_circle', x, y, s, 0.32);
@@ -1251,7 +1266,7 @@ function updateEnemyShots(dt) {
 }
 
 // ================================================================ update
-const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [], shot: [], hit: [], tower: [], perk: [] };
+const HOOKS = { update: [], render: [], kill: [], bossWin: [], bossStart: [], bossFail: [], buy: [], stage: [], hurt: [], ko: [], purchase: [], ult: [], star: [], rebirth: [], shot: [], hit: [], tower: [], perk: [], light: [] };
 const runHooks = (k, ...a) => { for (const f of HOOKS[k]) { try { f(...a); } catch (err) { console.error('hook', k, err); } } };
 function update(dt) {
   R.t += dt;
@@ -1529,6 +1544,7 @@ function render() {
       ctx.globalAlpha = 1;
     } else { ctx.globalAlpha = Math.min(1, a * 2); spr(p.f, p.x, p.y, 1, 0.5, 0.5, p.flip); ctx.globalAlpha = 1; }
   }
+  runHooks('light', ctx);   // lighting / weather layer (features/visuals.js), drawn under the HUD-like overlays
   drawSquadHp();
   for (const m of R.coins) spr(`coin_${Math.floor(m.t * 10 + m.ph) % 4}`, m.x, m.y, 1, 0.5, 0.5);
   for (const tx of R.txt) {
@@ -2026,7 +2042,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
 }
 window.SS = {
   save, R, F, GUNS, TEAM, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
-  spr, sprT, rrect, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
+  spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; },
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },

@@ -46,6 +46,7 @@
       ['+20 parşömen', () => { SS.giveScroll(20); SS.persist(); }],
     ]],
     ['Oyun anları', [
+      ['Hava: yağmur / kar / kül …', () => { const ks = ['rain', 'snow', 'ash', 'fireflies', 'dust'], i = (ks.indexOf(SS.visuals && SS.visuals.current) + 1) % ks.length; SS.visuals && SS.visuals.weather(ks[i]); ok('Hava: ' + ks[i]); }],
       ['Sürü dalgası', closeAnd(() => { R.horde = true; R.toSpawn = 16; R.spawnT = 0; R.phase = 'fight'; })],
       ['Yetenek kartları', closeAnd(() => SS.perks && SS.perks.offer())],
       ['Hazine canavarı', closeAnd(() => { R.phase = 'fight'; SS.spawnTreasure(); })],
