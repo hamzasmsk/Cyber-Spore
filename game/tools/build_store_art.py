@@ -266,7 +266,7 @@ def feature(lang):
         text(lay, ln, 22, 170 + i * 22, small, rgba('#fce2ca'), INK)
     out.alpha_composite(lay.resize((W * K, H * K), Image.NEAREST))
     name = 'feature-graphic-1024x500.png' if lang == 'tr' else 'feature-graphic-1024x500-en.png'
-    out.save(os.path.join(ROOT, 'store', name), optimize=True)
+    out.convert('RGB').save(os.path.join(ROOT, 'store', name), optimize=True)   # Play wants 24-bit PNG (no alpha)
 
 
 if __name__ == '__main__':

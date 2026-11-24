@@ -52,7 +52,7 @@
   document.getElementById('c').addEventListener('pointerdown', e => {
     if (!spot || !ok()) return;
     const b = R.boss, x = b.x + spot.ox, y = b.y - (b.z || 0) + spot.oy;
-    if (Math.hypot(e.clientX - x, e.clientY - y) > 34 * SS.U) return;
+    if (Math.hypot(e.clientX - (SS.colBox ? SS.colBox().x : 0) - x, e.clientY - y) > 34 * SS.U) return;
     e.stopImmediatePropagation(); e.preventDefault(); hit();
   }, true);
   SS.weakspot = { get spot() { return spot; }, hit: () => spot && hit() };

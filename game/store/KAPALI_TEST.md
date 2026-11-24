@@ -14,6 +14,8 @@ kesintisiz** kapalı teste katılmış olmasını ister. 2026'da gelen geri bild
 5. Mağaza girişi (açıklamalar, ekran görüntüleri: `store/`), içerik derecelendirmesi, veri güvenliği
    (`PLAY_STORE.md`), hedef kitle (13+), reklam: **Hayır** (free sürümde reklam yok) → incelemeye gönder.
 6. Onay gelince **katılım bağlantısını** test kullanıcılarına gönder.
+   - 14 günlük sayaç, bir kişi katılımı kabul edip oyunu **Google Play'den** kurduğunda başlar (APK ile kuranlar sayılmaz).
+   - 13 yaş altı Google hesapları test kullanıcısı olamaz.
 
 ## 2. Test kullanıcılarına gönderilecek mesaj (kopyala)
 

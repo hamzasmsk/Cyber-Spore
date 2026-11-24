@@ -18,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'Version name shown to players (e.g. 1.0.0)'
-        required: true
-        default: '1.0.0'
+        description: 'Version name shown to players (e.g. 1.0.1); empty = game/release.json'
+        required: false
+        default: ''
       upload_track:
         description: 'Upload to Google Play track (needs PLAY_SERVICE_ACCOUNT_JSON); "none" = only build'
         required: true
@@ -41,14 +41,16 @@ jobs:
       run:
         working-directory: game
     env:
-      VERSION_CODE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
       - name: Release settings (manual inputs, or game/release.json on push)
         run: |
+          # every upload needs a larger version code; the offset keeps it growing even if the run counter restarts
+          echo "VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION_NAME=${{ github.event.inputs.version_name }}" >> "$GITHUB_ENV"
+            V="${{ github.event.inputs.version_name }}"; [ -n "$V" ] || V=$(node -p "require('./release.json').version_name")
+            echo "VERSION_NAME=$V" >> "$GITHUB_ENV"
             echo "MONETIZATION=${{ github.event.inputs.monetization }}" >> "$GITHUB_ENV"
             echo "UPLOAD_TRACK=${{ github.event.inputs.upload_track }}" >> "$GITHUB_ENV"
           else
@@ -78,8 +80,10 @@ jobs:
           grep -q "devTools: false" monetize.config.js
           if [ "$MONETIZATION" = "free" ]; then
             sed -i "s/mode: 'auto'/mode: 'free'/" monetize.config.js; grep -q "mode: 'free'" monetize.config.js
-            npm uninstall --no-audit --no-fund @capacitor-community/admob   # no ad SDK (and no AD_ID permission) in a build without ads
+            # no ad SDK and no billing library (so no AD_ID / BILLING permission) in a build without ads and purchases
+            npm uninstall --no-audit --no-fund @capacitor-community/admob @revenuecat/purchases-capacitor
           fi
+          echo "window.SS_VERSION = '$VERSION_NAME';" > version.js
           npm run build
           npx cap sync android
 

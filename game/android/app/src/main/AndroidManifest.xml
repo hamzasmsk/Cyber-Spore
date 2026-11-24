@@ -49,8 +49,7 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- advertising id for AdMob (declare "Advertising ID: yes" in Play Console > App content) -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <!-- no AD_ID here: the AdMob library adds it to builds that contain ads; the free build has neither -->
     <!-- reminders are scheduled inexactly; exact alarms are restricted on Google Play, so the plugin's request is removed -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" tools:node="remove" />

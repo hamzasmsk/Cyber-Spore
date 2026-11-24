@@ -116,7 +116,7 @@ kimlikler girilene kadar "Yakında" yazar; oyun bunlar olmadan da sorunsuz çal�
 4. Sayfanın üstündeki **Proje kimliği** (yalnızca rakamlar) ile skor tablosunun kimliğini (`Cgk...`) bana gönder;
    ya da kendin `game/android/app/src/main/res/values/games-ids.xml` dosyasındaki iki boş satıra yaz.
 5. Play Games projesini **Yayınla** (test kullanıcıları önce de görebilir: **Test kullanıcıları** listesine e-posta ekle).
-Oyun en iyi bölümü her yükseldiğinde skor tablosuna gönderir; oyuncu ilk açılışta Play Games'e otomatik giriş yapar.
+Kimlikler girildikten sonra: oyun en iyi bölümü her yükseldiğinde skor tablosuna gönderir; oyuncu ilk açılışta Play Games'e otomatik giriş yapar.
 
 ## 8. Yayından önce son kontrol
 
@@ -157,7 +157,7 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 > 🎁 GÜNLÜK ÖDÜLLER VE FESTİVALLER — 7 günlük giriş takvimi, hafta sonu Fener Festivali.
 > 💤 SEN YOKKEN DE KAZAN — Takımın sen yokken de altın toplar, maden elmas üretir.
 >
-> Zorunlu reklam yok. Rastgele ücretli sandık yok. Piksel sanat ve sakin müzikler.
+> Reklam yok. Rastgele ücretli sandık yok. Piksel sanat ve sakin müzikler.
 
 **English — short (max 80):** Build your ninja squad, mow down hordes, topple giant bosses! Idle action RPG.
 
@@ -179,7 +179,7 @@ Play Console'da yeni sürüme yükle. İstersen `PLAY_SERVICE_ACCOUNT_JSON` sır
 > 🎁 DAILY REWARDS AND FESTIVALS — A 7-day login calendar and the weekend Lantern Festival.
 > 💤 EARN WHILE AWAY — Your squad keeps collecting gold and the mine keeps digging gems.
 >
-> No forced ads. No paid random loot boxes. Pixel art and calm music.
+> No ads. No paid random loot boxes. Pixel art and calm music.
 
 Not: Kapalı test sürümü (`monetization: free`) reklamsız ve satın almasızdır; o sürüm için "Reklam içeriyor: Hayır".
 
@@ -189,26 +189,35 @@ Not: Kapalı test sürümü (`monetization: free`) reklamsız ve satın almasız
 
 ## Veri güvenliği (Data safety) formu
 
-- **Veri topluyor veya paylaşıyor mu?** Evet (AdMob ve satın alma için).
-- **Aktarım sırasında şifreleniyor mu?** Evet. **Silme talebi:** Kullanıcı uygulamadan silebilir (Ayarlar → Sıfırla).
+### `free` sürümü (şimdiki kapalı test ve ilk yayın)
+- **Veri topluyor veya paylaşıyor mu?** Evet (GameAnalytics kullanım verisi; Play Games sıralaması).
+- **Aktarım sırasında şifreleniyor mu?** Evet.
+- **Kullanıcı veri silinmesini isteyebilir mi?** Evet: cihazdaki veri Ayarlar → Sıfırla ile silinir; gönderilmiş
+  kullanım verisi için gizlilik politikasındaki e-posta adresine yazılır.
 - Toplanan veri türleri:
-  - *Cihaz veya diğer kimlikler* (reklam kimliği) — toplanır ve paylaşılır, **Reklam veya pazarlama**, **Analiz**
-    (AdMob), reklamlar isteğe bağlı olduğu için toplama **isteğe bağlı** (kullanıcı reklam izlemeyi seçerse) işaretlenebilir.
-  - *Uygulama etkinliği → Uygulama etkileşimleri* (reklam etkileşimi) — AdMob, reklam amaçlı.
-  - *Uygulama bilgileri ve performansı → Kilitlenme günlükleri / tanılama* — AdMob SDK, analiz.
-  - *Finansal bilgi → Satın alma geçmişi* — yalnızca satın almalar açıksa (RevenueCat), uygulama işlevi.
-  - *Uygulama etkinliği → Uygulama etkileşimleri* ve *Cihaz veya diğer kimlikler* (rastgele kurulum kimliği) —
-    **GameAnalytics**, amaç **Analiz**, **isteğe bağlı** (oyuncu Ayarlar'dan kapatabilir), paylaşılmaz, anonim.
-  - *Uygulama bilgileri ve performansı → Diğer performans verileri* (FPS / bellek özeti) — GameAnalytics, analiz.
-- Konum, kişiler, fotoğraf, mesaj, e-posta, ad **toplanmaz**.
+  - *Uygulama etkinliği → Uygulama etkileşimleri* — **GameAnalytics**, toplanır, **paylaşılmaz**, amaç **Analiz**.
+    "Toplama zorunlu mu?" → **Zorunlu** işaretle (varsayılan açık; Ayarlar'dan kapatılabilse de güvenli cevap bu).
+  - *Cihaz veya diğer kimlikler* (rastgele kurulum kimliği) — GameAnalytics, aynı cevaplar.
+  - *Uygulama etkinliği → Diğer kullanıcı tarafından oluşturulan içerik / Oyun içi skor*: Play Games'e giriş
+    yapılırsa en iyi bölüm skor tablosuna gider — bunu Google Play Games hizmeti işler; *Uygulama etkinliği →
+    Diğer işlemler* altında **Uygulama işlevselliği**, **isteğe bağlı** olarak beyan et.
+- Reklam kimliği, konum, kişiler, fotoğraf, mesaj, e-posta, ad, finansal bilgi **toplanmaz**.
+- Uygulama içeriği → **Reklamlar: Hayır**, **Reklam kimliği: Hayır**.
+
+### `full` sürümü (ileride reklam + satın alma açılırsa)
+Yukarıdakilere ek olarak: *Cihaz veya diğer kimlikler* (reklam kimliği, AdMob, **Reklam**, paylaşılır),
+*Uygulama etkileşimleri* (reklam etkileşimi, AdMob), *Kilitlenme günlükleri / tanılama* (AdMob SDK),
+*Finansal bilgi → Satın alma geçmişi* (Google Play / RevenueCat, **Uygulama işlevselliği**). Reklamlar: **Evet**,
+reklam kimliği: **Evet, reklam için**. Gizlilik politikasına reklam ve satın alma bölümleri yeniden eklenir.
 
 ## İçerik derecelendirmesi (IARC anketi) — önerilen cevaplar
 
 Şiddet: **çizgi film/fantastik şiddet, kan yok** (canavarlar piksel efektle kaybolur). Cinsellik, küfür,
-uyuşturucu, kumar: **yok** (ücretli rastgele sandık yok). Kullanıcılar arası iletişim: **yok**.
-Satın alma: **evet (dijital ürünler)**. Beklenen sonuç: PEGI 7 / ESRB Everyone 10+ civarı.
+uyuşturucu, kumar: **yok** (ücretli rastgele sandık yok). Kullanıcılar arası iletişim: **yok** (sıralamada yalnızca
+Play Games adı görünür, mesajlaşma yok). Dijital satın alma: `free` sürümde **hayır**, `full` sürümde **evet**.
+Beklenen sonuç: PEGI 7 / ESRB Everyone 10+ civarı.
 
 ## Hedef kitle
 
-**13 ve üzeri** seç (13–15, 16–17, 18+). 13 altını seçersen Aileler politikası devreye girer:
+**13 ve üzeri** seç (13–15, 16–17, 18+). "Uygulama çocuklara hitap ediyor mu?" sorusuna: piksel çizgi film tarzı ama hedef kitle genç ve yetişkin idle oyuncular; mağaza metni ve görseller çocuklara yönelik dil kullanmıyor; analitik 13 yaş altını hedeflemiyor. 13 altını seçersen Aileler politikası devreye girer:
 `monetize.config.js` → `admob.childDirected: true` yapılmalı ve kişiselleştirilmiş reklam kapanır.

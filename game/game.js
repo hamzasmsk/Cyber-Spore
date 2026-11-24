@@ -38,9 +38,15 @@ let K = 4, L = 1, P = 2, BW = 0, BH = 0;
 // camera distance: device px per canvas px = ZOOM * U * DPR (rounded). 0.95 shows ~30% more field than the old 1.25.
 const ZOOM = 0.95;   // K device px per canvas px, L = CSS px per canvas px, P = CSS px per art px
 const F = {};
+// wide (landscape) screens keep a phone-shaped portrait column in the middle (Android 16 ignores the portrait lock on
+// tablets and foldables, desktop browsers are wide too); GX = the column's left edge in CSS px
+let GX = 0;
+function colBox() { const w = window.innerWidth, h = window.innerHeight, cw = w > h * 0.8 ? Math.round(Math.min(w, h * 0.62)) : w; return { w: cw, h, x: Math.round((w - cw) / 2) }; }
 function resize() {
   DPR = window.devicePixelRatio || 1;
-  W = window.innerWidth; H = window.innerHeight;
+  const cb = colBox(); GX = cb.x; W = cb.w; H = cb.h;
+  const de = document.documentElement; de.classList.toggle('col', GX > 0); de.style.setProperty('--gx', GX + 'px'); de.style.setProperty('--colw', W + 'px');
+  cv.style.left = GX + 'px';
   U = clamp(Math.min(W, H * 0.56) / 390, 0.8, 1.7);
   K = Math.max(1, Math.round(ZOOM * U * DPR)); L = K / DPR; P = 2 * L;
   BW = Math.ceil(W / L); BH = Math.ceil(H / L);
@@ -53,7 +59,7 @@ function resize() {
   F.pathW = Math.min(W * 0.66, 290 * U);
   F.S = { x: lerp(F.B.x, F.A.x, 0.36), y: lerp(F.B.y, F.A.y, 0.36) };
   const r = $('money').parentNode.getBoundingClientRect();
-  F.wallet = { x: r.left + 16, y: r.top + r.height / 2 };
+  F.wallet = { x: r.left - GX + 16, y: r.top + r.height / 2 };
   chunks.clear();
   if (atlasImg.naturalWidth) setupHeroes();
 }
@@ -1168,12 +1174,12 @@ const panelOpen = () => !$('panel').classList.contains('hidden');
 cv.addEventListener('pointerdown', e => {
   if (R.joy || panelOpen() || e.clientY < 130 || e.clientY > H - 150) return;
   e.preventDefault(); audioInit();
-  R.joy = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: e.clientX, y: e.clientY, t: 0 };
+  R.joy = { id: e.pointerId, ox: e.clientX - GX, oy: e.clientY, x: e.clientX - GX, y: e.clientY, t: 0 };
   try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
 });
 window.addEventListener('pointermove', e => {
   const j = R.joy; if (!j || e.pointerId !== j.id) return;
-  j.x = e.clientX; j.y = e.clientY;
+  j.x = e.clientX - GX; j.y = e.clientY;
   const dx = j.x - j.ox, dy = j.y - j.oy, d = Math.hypot(dx, dy), m = JOY_R * 1.25;
   if (d > m) { j.ox = j.x - dx / d * m; j.oy = j.y - dy / d * m; }
 });
@@ -1309,7 +1315,7 @@ function updateSquad(dt) {
   if (Math.abs(sq.vx) < 2 && !inp.x) sq.vx = 0; if (Math.abs(sq.vy) < 2 && !inp.y) sq.vy = 0;
   const hb = heroBox();
   sideT -= dt;
-  if (sideT <= 0) { sideT = 0.5; sideRects = Array.from(document.querySelectorAll('#ui .side')).map(el => el.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0); }
+  if (sideT <= 0) { sideT = 0.5; sideRects = Array.from(document.querySelectorAll('#ui .side')).map(el => el.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0).map(r => ({ left: r.left - GX, right: r.right - GX, top: r.top, bottom: r.bottom, width: r.width, height: r.height })); }
   sq.x = clamp(sq.x + sq.vx * dt, hb.x0, hb.x1); sq.y = clamp(sq.y + sq.vy * dt, hb.y0, hb.y1);
   avoidSides(sq, 24 * U);
   const b = R.boss;
@@ -2387,7 +2393,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  colBox, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,

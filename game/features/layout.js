@@ -33,7 +33,7 @@
   if (!place()) window.addEventListener('load', place);
   // tablets / wide windows: the HUD and panels are drawn for phones, so scale them up instead of stretching tiny
   function uiZoom() {
-    const w = window.innerWidth, h = window.innerHeight, z0 = Math.min(w / 390, h / 760), z = z0 > 1.15 ? Math.min(1.6, z0) : 1, st = document.documentElement.style;
+    const cb = window.SS && window.SS.colBox ? window.SS.colBox() : { w: window.innerWidth, h: window.innerHeight }, w = cb.w, h = cb.h, z0 = Math.min(w / 390, h / 760), z = z0 > 1.15 ? Math.min(1.6, z0) : 1, st = document.documentElement.style;
     document.documentElement.classList.toggle('uiz', z > 1);
     st.setProperty('--uiz', z.toFixed(3)); st.setProperty('--uiw', (w / z).toFixed(1) + 'px'); st.setProperty('--uih', (h / z).toFixed(1) + 'px');
   }
