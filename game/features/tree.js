@@ -88,7 +88,7 @@
     foot.querySelector('.btn').onclick = () => {
       if (!sp) return;
       if (save.gems < RESPEC_GEMS) { SS.sfx('no'); SS.toast('Yeterli elmas yok'); return; }
-      if (!confirm(`Ruh Ağacı sıfırlansın mı? ${sp} ruh geri döner (${RESPEC_GEMS} elmas).`)) return;
+      { const q = `Ruh Ağacı sıfırlansın mı? ${sp} ruh geri döner (${RESPEC_GEMS} elmas).`; if (!confirm(SS.t ? SS.t(q) : q)) return; }
       save.gems -= RESPEC_GEMS; save.tree.souls = points() + sp; save.tree.lv = {}; SS.persist(); SS.refreshUI(); SS.sfx('close', 0); SS.PANELS.rebirth('t');
     };
     body.appendChild(foot);

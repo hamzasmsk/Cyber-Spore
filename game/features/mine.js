@@ -4,7 +4,7 @@
 function boot() {
   const SS = window.SS; if (!SS || SS._mineB) return; SS._mineB = true;
   const save = SS.save;
-  const MAX_LV = 20;
+  const MAX_LV = 12;   // capped: an endless mine would out-produce the rest of the gem economy
   if (!save.mine || typeof save.mine !== 'object') save.mine = {};
   const M = save.mine;
   if (!(M.lv >= 1)) M.lv = 1;
@@ -12,9 +12,9 @@ function boot() {
   if (!(M.t > 0)) M.t = Date.now();
 
   // gems per hour, storage cap (hours of production), upgrade cost (scales with stage)
-  const perHour = lv => 2 * Math.pow(1.15, lv - 1);            // lv1: 2 gems / hour (balanced against the gem economy)
+  const perHour = lv => 2 * Math.pow(1.12, Math.min(lv, MAX_LV) - 1);   // lv1: 2 gems / hour, lv12: ~7 / hour
   const capOf = lv => Math.max(16, Math.floor(perHour(lv) * 8)); // 8 hours of storage: one collection a night is enough
-  const costOf = lv => (SS.reward ? SS.reward() : SS.enemyHp()) * 45 * Math.pow(2.05, lv - 1);
+  const costOf = lv => (SS.reward ? SS.reward() : SS.enemyHp()) * (SS.moneyMul ? SS.moneyMul() : 1) * 45 * Math.pow(2.05, lv - 1);   // priced in real income, so rebirth bonuses do not make it free
 
   function accrue() {
     const now = Date.now(), dt = Math.max(0, now - (M.t || now)) / 3.6e6;

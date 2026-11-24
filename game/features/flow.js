@@ -21,7 +21,9 @@
   // ---------------- 1. popup queue
   const GAP = 25000;   // calm time between two interruptions
   let queue = [], lastShown = 0, busy = false;
-  const calm = () => document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov,.mz-ov,.un-card,.fl-card') && !R.boss && !R.mode && !(R.sq && R.sq.ko > 0) && !R.paused;
+  // right after a boss win the card picker and the gem card come first: hold everything else for a few seconds
+  let winAt = 0; SS.HOOKS.bossWin.push(() => { winAt = Date.now(); });
+  const calm = () => document.getElementById('panel').classList.contains('hidden') && !document.querySelector('.pk-ov,.mz-ov,.mz-card,.un-card,.fl-card,#koCard') && !R.boss && !R.mode && !(R.sq && R.sq.ko > 0) && !R.paused && !R.psave && Date.now() - winAt > 3000;
   // fn() shows the popup (return false if it decided not to); prio: lower first; gap: true = 25 s calm before it, a number = that many ms, false = none
   function request(id, fn, prio = 5, gap = true) {
     if (queue.some(q => q.id === id)) return;

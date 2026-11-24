@@ -59,7 +59,7 @@
     root.appendChild(SS.el('<h3 class="fb-sec pt-sec"><img src="assets/ui/ic_paw.png" alt="">Yoldaşlar</h3>'));
     for (const p of PETS) {
       const got = p.ok(), on = PT.on === p.id && got;
-      const r = SS.el(`<div class="row-card ${on ? 'cur' : ''} ${got ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/mon_${p.id}.png" alt=""></div><div class="info"><h4>${p.name}</h4><p>${p.txt} · saldırır${got ? '' : ` · <b>${p.need}</b>`}</p></div>
+      const r = SS.el(`<div class="row-card ${on ? 'cur' : ''} ${got ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/mon_${p.id}.png" alt=""></div><div class="info"><h4>${p.name}</h4><p>${p.txt} · düşmanlara saldırır${got ? '' : ` · <b>${p.need}</b>`}</p></div>
         ${on ? '<button class="btn grey off">YANINDA</button>' : got ? '<button class="btn green">AL</button>' : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
       if (got && !on) r.querySelector('.btn').onclick = () => { PT.on = p.id; SS.persist(); SS.sfx('accept', 0); SS.closePanel(); setTimeout(() => document.querySelector('#skinBtn') && document.querySelector('#skinBtn').click(), 120); };
       root.appendChild(r);

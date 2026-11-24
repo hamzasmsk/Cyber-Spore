@@ -216,8 +216,10 @@
 
   // ================================================================ in-run placements
   // after a boss win: a small non-blocking card offers to double the gems with a rewarded ad
-  function bossReward(gems) {
+  function bossReward(gems, waited = 0) {
     if (!Ads.available('bossReward') || gems <= 0) return;
+    // after the card picker (it opens a moment after the win), never on top of it
+    if (waited < 2 || (document.querySelector('.pk-ov') && waited < 60)) { setTimeout(() => bossReward(gems, waited + 1), 400); return; }
     const card = SS.el(`<div class="mz-card"><img src="assets/ui/gem.png" alt=""><b>+${gems}</b><span>Zafer elması</span>
       <button class="btn yellow"><img src="assets/ui/play.png" alt="">x2</button><i class="mz-t"></i></div>`);
     document.getElementById('ui').appendChild(card);
@@ -238,14 +240,16 @@
       const tk = tickets(), ad = Ads.available('continue');
       body.appendChild(SS.el(`<p class="big-note">Boss kaçmak üzere. ${tk ? `Boss Bileti kullan (${tk} adet)` : 'Bir reklam izle'}, 15 saniye daha savaş.</p>`));
       const row = SS.el(`<div class="btnrow"><button class="btn grey">Vazgeç</button>${tk ? '<button class="btn yellow tk"><img src="assets/ui/ic_ticket.png" alt="">Bilet</button>' : ''}${ad ? `<button class="btn green ad"><img src="assets/ui/play.png" alt="">${Ads.noads() ? 'Devam' : 'İzle'}</button>` : ''}</div>`);
-      let done = false; const fin = v => { if (done) return; done = true; SS.closePanel(); cb(v); };
-      row.children[0].onclick = () => fin(false);
+      // one choice only: while an ad loads/plays every button is locked and closing the panel does not count as "no"
+      let done = false, busy = false; const fin = v => { if (done) return; done = true; SS.closePanel(); cb(v); };
+      const lock = () => { for (const b of row.children) b.classList.add('off'); };
+      row.children[0].onclick = () => { if (!busy) fin(false); };
       const tb = row.querySelector('.tk'), ab = row.querySelector('.ad');
-      if (tb) tb.onclick = () => { save.inv.ticket--; SS.persist(); fin(true); };
-      if (ab) ab.onclick = async () => fin(await Ads.show('continue'));
+      if (tb) tb.onclick = () => { if (busy || done) return; lock(); save.inv.ticket--; SS.persist(); fin(true); };
+      if (ab) ab.onclick = async () => { if (busy || done) return; busy = true; lock(); const ok = await Ads.show('continue'); busy = false; fin(ok); };
       body.appendChild(row);
       // closing the panel any other way counts as "no"
-      const watch = setInterval(() => { if (document.getElementById('panel').classList.contains('hidden')) { clearInterval(watch); fin(false); } }, 200);
+      const watch = setInterval(() => { if (document.getElementById('panel').classList.contains('hidden') && !busy) { clearInterval(watch); fin(false); } }, 200);
     });
   }
 

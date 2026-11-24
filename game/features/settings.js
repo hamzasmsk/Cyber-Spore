@@ -90,11 +90,11 @@
       cp.onclick = async () => {
         SS.persist(); let c = '';
         try { c = 'SS1.' + btoa(unescape(encodeURIComponent(localStorage.getItem(SAVE_KEY) || JSON.stringify(save)))); } catch (e) { c = ''; }
-        try { await navigator.clipboard.writeText(c); SS.toast('Kayıt kodu kopyalandı'); } catch (e) { prompt('Kayıt kodun (kopyala):', c); }
+        try { await navigator.clipboard.writeText(c); SS.toast('Kayıt kodu kopyalandı'); } catch (e) { prompt(SS.t ? SS.t('Kayıt kodun (kopyala):') : 'Kayıt kodun (kopyala):', c); }
         SS.sfx('click');
       };
       ld.onclick = () => {
-        const c = (prompt('Kayıt kodunu yapıştır (şu anki ilerleme silinir):') || '').trim();
+        const c = (prompt(SS.t ? SS.t('Kayıt kodunu yapıştır (şu anki ilerleme silinir):') : 'Kayıt kodunu yapıştır (şu anki ilerleme silinir):') || '').trim();
         if (!c) return;
         try {
           if (!c.startsWith('SS1.')) throw 0;

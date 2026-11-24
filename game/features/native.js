@@ -13,9 +13,23 @@
   const KEY = 'swarmsquad_idle_v1', Pl = n => cap.Plugins && cap.Plugins[n];
   const Prefs = Pl('Preferences'), App = Pl('App'), Haptics = Pl('Haptics');
   if (Prefs) {
-    let local = null; try { local = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
-    if (!local) Prefs.get({ key: KEY }).then(r => { if (r && r.value) { try { localStorage.setItem(KEY, r.value); location.reload(); } catch (e) { /* ignore */ } } });
-    const mirror = () => { try { const v = localStorage.getItem(KEY); if (v) Prefs.set({ key: KEY, value: v }); } catch (e) { /* ignore */ } };
+    // restore first, mirror after: until the app's own copy has been checked nothing is written back to it, and the
+    // page is reloaded with saving switched off, so a fresh stage-1 save can never overwrite the copy being restored
+    let ready = false;
+    const startedFresh = !SS.loadInfo || SS.loadInfo.from === 'new', localT = SS.save.t || 0;
+    const mirror = () => { if (!ready || SS.R.noSave) return; try { const v = localStorage.getItem(KEY); if (v) Prefs.set({ key: KEY, value: v }); } catch (e) { /* ignore */ } };
+    Prefs.get({ key: KEY }).then(r => {
+      const v = r && r.value; let o = null; try { o = v ? JSON.parse(v) : null; } catch (e) { o = null; }
+      const valid = o && typeof o.stage === 'number' && o.lv && typeof o.lv === 'object';
+      // the app's copy wins when the WebView storage came back empty, or when it is clearly newer (storage evicted
+      // and partly rebuilt, or an Auto Backup restore)
+      if (valid && (startedFresh || (o.t || 0) > localT + 60000)) {
+        SS.R.noSave = true;
+        try { localStorage.setItem(KEY, v); } catch (e) { /* ignore */ }
+        location.reload(); return;
+      }
+      ready = true; mirror();
+    }).catch(() => { ready = true; });
     setInterval(mirror, 4000);   // the app's own copy follows the save within seconds
     document.addEventListener('visibilitychange', () => { if (document.hidden) { SS.persist(); mirror(); } });
     window.addEventListener('pagehide', () => { SS.persist(); mirror(); });

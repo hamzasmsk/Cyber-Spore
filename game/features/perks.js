@@ -81,7 +81,7 @@
   function show(cards, rerolled) {
     close(true);
     SS.R.paused = true;
-    ov = SS.el(`<div class="pk-ov"><div class="pk-box"><div class="pk-title">YETENEK SEÇ<small>Bu Doğuşun sonuna kadar geçerli · ${total()} kart</small></div><div class="pk-row"></div>
+    ov = SS.el(`<div class="pk-ov"><div class="pk-box"><div class="pk-title">YETENEK SEÇ<small>${(SS.save.best || 1) >= 8 ? 'Bu Doğuşun sonuna kadar geçerli' : 'Bu tur boyunca geçerli'} · ${total()} kart</small></div><div class="pk-row"></div>
       <div class="pk-foot"><button class="btn grey pk-rr ${rerolled || save.gems < REROLL_GEMS ? 'off' : ''}"><img src="assets/ui/gem.png" alt="">${REROLL_GEMS} · Yenile</button></div><div class="pk-t"><i></i></div></div></div>`);
     const row = ov.querySelector('.pk-row');
     cards.forEach((p, i) => {

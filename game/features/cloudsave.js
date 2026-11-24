@@ -9,6 +9,7 @@
   const SS = window.SS;
   if (!SS || !window.claude || !window.claude.use) return;
   const KEY = SS.SAVE_KEY || 'swarmsquad_idle_v1';
+  const localT = SS.save.t || 0;   // read before any await: saves made while we wait must not look newer than the cloud
   (async () => {
     let db = null, user = null;
     try { [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } catch (e) { return; }
@@ -21,7 +22,7 @@
       const snap = await ref.get();
       const d = snap.exists ? snap.data() : null;
       let reloaded = false; try { reloaded = sessionStorage.getItem('ss_cloud_loaded') === '1'; } catch (e) { /* ignore */ }
-      if (d && typeof d.json === 'string' && (d.t || 0) > (SS.save.t || 0) + 10000 && !reloaded) {
+      if (d && typeof d.json === 'string' && (d.t || 0) > localT + 10000 && !reloaded) {
         const o = JSON.parse(d.json);
         if (o && typeof o.stage === 'number') {
           SS.R.noSave = true;   // keep this run from overwriting what we are about to load

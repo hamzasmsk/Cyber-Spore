@@ -116,9 +116,11 @@
     const st = wl.querySelector('.rk-ws'), btn = wl.querySelector('.rk-wb'), list = wl.querySelector('.rk-list');
     const set = (txt, label, on, fn) => { st.textContent = T(txt); btn.textContent = T(label); btn.className = `btn ${on ? 'blue' : 'grey off'} rk-wb`; btn.onclick = on ? () => { SS.sfx('click'); fn(); } : null; };
     if (PG) {
+      wl.style.display = 'none';
       set('Bağlanıyor…', '…', false);
       pgStatus().then(s => {
-        if (!s.configured || !s.ready) return set('Yakında: Google Play Games', 'YAKINDA', false);
+        if (!s.configured || !s.ready) { wl.remove(); return; }   // not set up yet: no half-finished card
+        wl.style.display = '';
         if (!s.signedIn) return set('Google Play Games ile giriş yap', 'GİRİŞ', true, () => PG.signIn().then(r => { pg.signedIn = !!(r && r.signedIn); submit(); paintWorld(wl); }).catch(() => SS.toast('Giriş yapılamadı')));
         set('Tüm oyuncular arasında yerini gör', 'AÇ', true, () => { submit(); PG.showLeaderboard().catch(() => SS.toast('Sıralama açılamadı')); });
       });
@@ -133,7 +135,7 @@
       }).catch(() => { list.innerHTML = `<li class="rk-wait">${esc(T('Sıralama yüklenemedi'))}</li>`; });
       return;
     }
-    set('Google Play sürümünde', '—', false);
+    wl.remove();   // no leaderboard on this platform
   }
 
   SS.ranking = { open, tier: () => TIERS[tierOf(save.best || 1)], TIERS, submit };

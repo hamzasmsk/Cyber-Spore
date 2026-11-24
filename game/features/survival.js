@@ -74,7 +74,7 @@
   SS.HOOKS.kill.push(e => {
     if (!run || !e || !e.surv) return;
     run.kills++;
-    if (run.kills >= run.next) { run.prev = run.next; run.lvl++; run.next += 10 + run.lvl * 4; levelUp(); }
+    if (run.kills >= run.next && !run.over && !(R.sq && R.sq.ko > 0)) { run.prev = run.next; run.lvl++; run.next += 10 + run.lvl * 4; levelUp(); }
   });
   SS.HOOKS.ko.push(() => { if (run && !run.over) setTimeout(() => end(false), 900); });
 
@@ -86,7 +86,7 @@
     let done = false;
     const pickB = (b, el) => {
       if (done) return; done = true; clearInterval(tm);
-      if (b.id === 'heal') { if (R.sq) R.sq.hp = R.sq.maxHp; } else run.b[b.id] = lv(b.id) + 1;
+      if (b.id === 'heal') { if (R.sq) R.sq.hp = R.sq.maxHp; } else if (run) run.b[b.id] = lv(b.id) + 1;   // the run may have ended meanwhile
       el && el.classList.add('chosen'); SS.sfx('accept', 0);
       setTimeout(() => { ov.remove(); R.paused = false; }, 300);
     };
@@ -99,6 +99,7 @@
   function end(survived) {
     if (!run || run.over) return;
     run.over = true;
+    const lvl = document.querySelector('#ui .pk-ov'); if (lvl && /SEVİYE|LEVEL/.test(lvl.textContent)) { lvl.remove(); R.paused = false; }   // no level-up card left behind
     const k = run.kills, t = Math.min(RUN, run.t);
     for (const e of R.en) if (e.surv && !e.dead) { e.dead = true; SS.puff(e.x, e.y, 1); }
     R.eb.length = 0; hud.classList.add('hidden'); const gl = document.getElementById('goal'); if (gl) gl.classList.remove('sv-hide');

@@ -200,7 +200,7 @@ const TEAM = [
   { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
   { id: 'NinjaRed',    name: 'Kızıl',   cost: 800,  perk: 'Takıma +%10 atış hızı' },
   { id: 'NinjaYellow', name: 'Altın',   cost: 5e6,  perk: 'Takıma +%20 altın' },
-  { id: 'NinjaBomb',   name: 'Bombacı', cost: 5e11, perk: 'Atışların %20si patlar (alan hasarı)' },
+  { id: 'NinjaBomb',   name: 'Bombacı', cost: 5e11, perk: 'Atışlar %20 şansla patlar (alan hasarı)' },
   { id: 'NinjaMasked', name: 'Maske',   cost: 5e17, perk: '+%6 kritik şansı' },
 ];
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
@@ -230,7 +230,7 @@ const save = (() => {
 const saveState = { at: 0, fails: 0, told: false, bakAt: 0 };
 function persist() {
   if (R.noSave) return;
-  save.t = Date.now();
+  save.t = Date.now(); save.tMax = Math.max(save.tMax || 0, save.t);   // tMax: latest clock ever seen (offline reward vs clock changes)
   let json;
   try { json = JSON.stringify(save); } catch (e) { return; }
   try {
@@ -290,7 +290,7 @@ const scrollNeed = lv => lv * 2;
 const heroCost = lv => reward() * 40 * lv;
 const PERK_TXT = [
   l => `Takım canı +%${4 * (l - 1)}`, l => `Takıma +%${10 + (l - 1)} atış hızı`, l => `Takıma +%${20 + 2 * (l - 1)} altın`,
-  l => `Atışların %${20 + (l - 1)}'si patlar (alan hasarı)`, l => `+%${(6 + 0.5 * (l - 1)).toFixed(1).replace('.0', '')} kritik şansı`];
+  l => `Atışlar %${20 + (l - 1)} şansla patlar (alan hasarı)`, l => `+%${(6 + 0.5 * (l - 1)).toFixed(1).replace('.0', '')} kritik şansı`];
 function giveScroll(n, x, y) {
   const owned = Math.max(1, save.team), i = Math.floor(Math.random() * owned);
   save.scrolls[i] = (save.scrolls[i] || 0) + n;
@@ -1268,6 +1268,8 @@ function knockout() {
 // the knockout card: what was lost and the quickest ways to get stronger (closes itself after a few seconds)
 function koCard() {
   const old = document.getElementById('koCard'); if (old) old.remove();
+  if (R.psave) return;   // nobody is looking: the power-save screen keeps its calm summary
+  if (!$('panel').classList.contains('hidden')) closePanel();
   const SSx = window.SS, can = k => !SSx || !SSx.unlocked || SSx.unlocked(k), gunIco = ($('gunIcoImg') || document.querySelector('.gunico') || {}).src || 'assets/ui/wi_Shuriken.png';
   const c = el(`<div id="koCard" class="ko-card"><b>YENİLDİN!</b><span>Bir aşama geri: ${save.stage}-${save.sub}</span>
     <small>Düşmanlar seni geçti. Biraz güçlen, sonra devam!</small>
@@ -1495,7 +1497,7 @@ function update(dt) {
       for (const dc of R.decals) dc.y += d;
       for (const p of R.parts) if (p.k === 'bit' || p.k === 'anim') p.y += d;
       if (R.advLeft <= 0) {
-        if (save.bossReady && R.retryT <= 0 && !R.mode && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();
+        if (save.bossReady && R.retryT <= 0 && !R.mode && $('panel').classList.contains('hidden') && !(window.SS && window.SS.busy && window.SS.busy())) startBoss();   // not behind an open menu
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
@@ -1565,7 +1567,7 @@ function update(dt) {
       b.t -= dt;
       if (b.t <= 0) {
         const mon = window.SS && window.SS.mon;
-        if (!b.cont && !b.ex && mon && mon.canContinue() && b.hp < b.maxHp * 0.6) {   // only offered when the win is in reach
+        if (!b.cont && !b.ex && !R.psave && mon && mon.canContinue() && b.hp < b.maxHp * 0.6) {   // never behind the power-save screen   // only offered when the win is in reach
           b.cont = true; b.t = 0; R.paused = true;
           mon.offerContinue(ok => { R.paused = false; last = performance.now(); if (ok && R.boss === b) { b.t = 15; banner('+15 SN!', 'Bitir şunu!'); sfx('skill', 0); uiKey = ''; } else if (R.boss === b) bossFail(); });
         } else bossFail();
@@ -2130,8 +2132,9 @@ function toast(text) { const t = $('toast'); t.textContent = text; t.classList.r
 // ---------------- panels (weapons, team, rebirth, offline)
 function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 function openPanel(title, color, build) {
+  const same = $('pTitle').dataset.k === title && !$('panel').classList.contains('hidden');
   $('pTitle').textContent = title; $('pTitle').dataset.k = title; $('pTitle').className = 'ribbon ' + (color || '');   // data-k keeps the untranslated title for features
-  const body = $('pBody'); body.innerHTML = ''; build(body);
+  const body = $('pBody'); body.innerHTML = ''; if (!same) body.scrollTop = 0; build(body);
   if ($('panel').classList.contains('hidden')) sfx('open', 0);
   $('panel').classList.remove('hidden');
   const imgs = [...body.querySelectorAll('img')].filter(im => im.complete && im.naturalWidth && !im.dataset.px), rs = imgs.map(im => im.getBoundingClientRect());
@@ -2257,7 +2260,7 @@ const PANELS = {
       const owned = i < save.team, next = i === save.team, lv = hlv(i), sc2 = save.scrolls[i] || 0, need = scrollNeed(lv), max = lv >= HERO_MAX, cost = heroCost(lv), can = owned && !max && sc2 >= need;
       const bar = owned && !max ? `<div class="hl-bar ${sc2 >= need ? 'full' : ''}"><i style="width:${Math.min(100, sc2 / need * 100)}%"></i><span><img src="assets/ui/ic_scroll.png" alt="">${sc2} / ${need}</span></div>` : '';
       const row = el(`<div class="row-card hl-row ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt="">${owned ? `<span class="hl-lv">${max ? 'MAKS' : 'Sv.' + lv}</span>` : ''}</div>
-        <div class="info"><h4>${h.name}</h4><p>${owned ? PERK_TXT[i](lv) : h.perk}${owned && lv > 1 ? ` · <b>+%${Math.round((heroMul(i) - 1) * 100)} hasar</b>` : ''}</p>${bar}</div>
+        <div class="info"><h4>${h.name}</h4><p>${owned && !(i === 0 && lv <= 1) ? PERK_TXT[i](lv) : h.perk}${owned && lv > 1 ? ` · <b>+%${Math.round((heroMul(i) - 1) * 100)} hasar</b>` : ''}</p>${bar}</div>
         ${owned ? (max ? '<button class="btn grey off">MAKS</button>' : `<button class="btn ${can ? 'green' : 'grey off'} up"><img src="assets/ui/coin.png" alt="">${fmt(cost)}</button>`)
           : next ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(h.cost)}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
       const b = row.querySelector('.btn');
@@ -2292,6 +2295,8 @@ const PANELS = {
     const btn = el(`<button class="btn purple wide ${gain > 0 ? '' : 'off'}">YENİDEN DOĞ</button>`);
     btn.onclick = () => {
       if (gain <= 0) return;
+      if (R.boss || R.mode) { sfx('no'); toast('Önce bu dövüşü bitir'); return; }   // a Kule / Arena / boss fight must end through its own path
+      if (rebirthGain() !== gain) { PANELS.rebirth(); toast('Değerler güncellendi'); return; }   // a boss was won behind the panel
       const rg = rebirthGems(gain); save.gems += rg; runHooks('rebirth', gain);
       save.rp += gain; save.rebirths++; save.stage = 1; save.sub = 1; save.kills = 0; save.bossReady = false; save.money = 0; save.lv = { power: 0, speed: 0, money: 0 };
       R.en.length = 0; R.eb.length = 0; R.bul.length = 0; R.boss = null; $('bossHud').classList.add('hidden'); setupHeroes(); if (R.sq) R.sq.hp = R.sq.maxHp = sqMaxHp();
@@ -2303,7 +2308,8 @@ const PANELS = {
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { audioInit(); sfx('click'); PANELS[b.dataset.open](); }));
 function offlineReward() {
   if (!save.t) return;
-  const away = (Date.now() - save.t) / 1000;
+  // measured from the latest time the game has ever seen, so moving the device clock forward and back pays nothing extra
+  const away = (Date.now() - Math.max(save.t, save.tMax || 0)) / 1000;
   if (away < 60 || !save.rate) return;
   const gain = Math.min(away, (8 + modAdd('offH')) * 3600) * save.rate * 0.4;
   if (gain < 1) return;
@@ -2313,9 +2319,15 @@ function offlineReward() {
     body.appendChild(el(`<div class="big-num">+${fmt(gain)}</div>`));
     const Ads = window.SS && window.SS.Ads;
     const row = el(`<div class="btnrow"><button class="btn green"><img src="assets/ui/coin.png" alt="">TOPLA</button>${Ads && Ads.available('offline') ? '<button class="btn yellow"><img src="assets/ui/play.png" alt="">x2 TOPLA</button>' : ''}</div>`);
-    row.children[0].onclick = () => { audioInit(); addMoney(gain, W / 2, H / 2, 16); sfx('gold', 0); closePanel(); persist(); };
-    if (row.children[1]) row.children[1].onclick = async () => { audioInit(); const ok = await Ads.show('offline'); addMoney(gain * (ok ? 2 : 1), W / 2, H / 2, ok ? 24 : 16); sfx('gold', 0); closePanel(); persist(); };
+    // paid exactly once: buttons lock on the first tap, and closing the panel any other way (X, backdrop, back
+    // button) still pays the plain amount
+    let paid = false;
+    const pay = mul => { if (paid) return; paid = true; addMoney(gain * mul, W / 2, H / 2, mul > 1 ? 24 : 16); sfx('gold', 0); persist(); };
+    const lock = () => { for (const b of row.children) b.classList.add('off'); };
+    row.children[0].onclick = () => { if (paid || row.dataset.busy) return; audioInit(); lock(); pay(1); closePanel(); };
+    if (row.children[1]) row.children[1].onclick = async () => { if (paid || row.dataset.busy) return; row.dataset.busy = '1'; audioInit(); lock(); const ok = await Ads.show('offline'); pay(ok ? 2 : 1); closePanel(); };
     body.appendChild(row);
+    const watch = setInterval(() => { if (!body.isConnected || $('panel').classList.contains('hidden')) { clearInterval(watch); if (!row.dataset.busy) pay(1); } }, 300);
   });
 }
 
@@ -2393,7 +2405,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  colBox, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  colBox, moneyMul, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,

@@ -37,7 +37,7 @@
     stage: {
       icon: 'assets/ui/ic_stamp.png',
       make: () => { const add = pickOf([1, 1, 2]); return { goal: (save.stage || 1) + add, base: save.stage || 1, gems: 4 + add * 2, cash: 0 }; },
-      text: m => `Bölüm ${m.goal}'e ulaş`,
+      text: m => `${m.goal}. bölüme ulaş`,
     },
     earn: {
       icon: 'assets/ui/coin.png',

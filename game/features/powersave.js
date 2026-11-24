@@ -108,7 +108,7 @@
   new MutationObserver(() => {
     if (document.getElementById('pTitle').dataset.k !== 'Ayarlar') return;
     const w = document.querySelector('#pBody .fa-mwrap'); if (!w || w.querySelector('.ps-set')) return;
-    const row = SS.el(`<div class="dv-speed ps-set"><span>Güç tasarrufu</span>${[[0, 'Kapalı'], [2, '2 dk'], [5, '5 dk']].map(([v, l]) => `<button class="btn ${save.psAuto === v ? 'purple' : 'grey'}" data-v="${v}">${l}</button>`).join('')}<button class="btn blue ps-now">AÇ</button></div>`);
+    const row = SS.el(`<div class="dv-speed ps-set"><span>Güç tasarrufu</span>${[[0, 'Kapalı'], [2, '2 dk'], [5, '5 dk']].map(([v, l]) => `<button class="btn ${save.psAuto === v ? 'purple' : 'grey'}" data-v="${v}">${l}</button>`).join('')}<button class="btn blue ps-now">ŞİMDİ</button></div>`);
     row.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { save.psAuto = +b.dataset.v; SS.persist(); SS.sfx('click'); row.querySelectorAll('[data-v]').forEach(x => x.className = 'btn ' + (+x.dataset.v === save.psAuto ? 'purple' : 'grey')); });
     row.querySelector('.ps-now').onclick = () => { SS.sfx('click'); enter(false); };
     const gq = [...w.querySelectorAll('.dv-speed')].find(x => /Grafik|Graphics/.test(x.textContent));
