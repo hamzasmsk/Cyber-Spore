@@ -101,6 +101,16 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          # forgive copy-paste slips: stray spaces / line breaks, or a pasted "NAME=" prefix
+          clean() { local v; v=$(printf '%s' "$1" | tr -d '\r\n'); v="${v#*_PASSWORD=}"; v="${v#*_ALIAS=}"; v="${v#"${v%%[![:space:]]*}"}"; v="${v%"${v##*[![:space:]]}"}"; printf '%s' "$v"; }
+          export ANDROID_KEYSTORE_PASSWORD="$(clean "$ANDROID_KEYSTORE_PASSWORD")"
+          export ANDROID_KEY_PASSWORD="$(clean "$ANDROID_KEY_PASSWORD")"
+          export ANDROID_KEY_ALIAS="$(clean "$ANDROID_KEY_ALIAS")"
+          # clear messages instead of a deep Gradle error
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD >/dev/null 2>&1; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the key: re-enter it (only the part after '=' in secrets.txt)"; exit 1; fi
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD -alias "$ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::ANDROID_KEY_ALIAS is wrong: it should be: upload"; exit 1; fi
           chmod +x gradlew
           ./gradlew --no-daemon bundleRelease
 
