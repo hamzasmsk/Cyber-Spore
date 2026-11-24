@@ -1188,7 +1188,9 @@ function moveInput() {
   return { x, y };
 }
 // autopilot: drift to a calm spot under the enemies, step out of lob landing zones, sidestep incoming orbs,
-// keep clear of the boss body and walk into the safe gap of a boss shockwave
+// keep clear of the boss body and walk into the safe gap of a boss shockwave. It is a decent dodger, not a perfect
+// one (it reacts late and only half-heartedly), so some hits land and steering by hand pays off.
+const AI_DODGE = 0.5;
 function aiSteer() {
   const sq = R.sq, b = R.boss;
   let tx = F.S.x + Math.sin(R.t * 0.45) * 36 * U, ty = F.S.y;
@@ -1205,11 +1207,11 @@ function aiSteer() {
   for (const p of R.eb) {
     if (p.k === 'lob') {
       const dx = sq.x - p.tx, dy = sq.y - p.ty, d = Math.hypot(dx, dy) || 1, r0 = 80 * U;
-      if (d < r0) { const w = (1 - d / r0) * 3.2; vx += dx / d * w; vy += dy / d * w; }
+      if (d < r0 && p.t > p.T * 0.45) { const w = (1 - d / r0) * 3.2 * AI_DODGE; vx += dx / d * w; vy += dy / d * w; }
     } else if (p.k === 'orb') {
       const rx = sq.x - p.x, ry = sq.y - 8 * P - p.y, v2 = p.vx * p.vx + p.vy * p.vy || 1;
       const tc = clamp((rx * p.vx + ry * p.vy) / v2, 0, 0.9), cx = rx - p.vx * tc, cy = ry - p.vy * tc, cd = Math.hypot(cx, cy) || 1, r0 = 52 * U;
-      if (cd < r0) { const w = (1 - cd / r0) * 2.6; vx += cx / cd * w; vy += cy / cd * w; }
+      if (cd < r0) { const w = (1 - cd / r0) * 2.6 * AI_DODGE; vx += cx / cd * w; vy += cy / cd * w; }
     }
   }
   if (b && b.arrive >= 1) { const dx = sq.x - b.x, dy = (sq.y - b.y) / 0.6, d = Math.hypot(dx, dy) || 1; if (d < 150 * U) { vx += dx / d * 1.5; vy += dy / d * 1.5; } }
@@ -1218,7 +1220,7 @@ function aiSteer() {
   const beam = R.eb.find(p => p.k === 'beam');
   for (const lx of [lane, beam ? beam.x : null]) {
     if (lx === null || lx === undefined) continue;
-    const dx = sq.x - lx; if (Math.abs(dx) < 75 * U) { const dir = Math.abs(dx) > 4 * U ? Math.sign(dx) : (lx < W / 2 ? 1 : -1); vx += dir * 3.5 * (1 - Math.abs(dx) / (75 * U)) + dir * 0.6; }
+    const dx = sq.x - lx; if (Math.abs(dx) < 75 * U) { const dir = Math.abs(dx) > 4 * U ? Math.sign(dx) : (lx < W / 2 ? 1 : -1); vx += (dir * 3.5 * (1 - Math.abs(dx) / (75 * U)) + dir * 0.6) * AI_DODGE; }
   }
   const m = Math.hypot(vx, vy); if (m > 1) { vx /= m; vy /= m; }
   return { x: vx * 0.85, y: vy * 0.85 };
@@ -1235,6 +1237,7 @@ function hurtSquad(dmg, x, y) {
   sfx('hurt', 0, x); sfx('voice', 0, x, rand(-2, 2));
   runHooks('hurt', dmg);
   if (sq.hp <= 0) knockout();
+  else if (!R.mode && save.tut && !save.tut.hp && sq.hp < sq.maxHp * 0.6) { save.tut.hp = 1; toast('Can biterse bir aşama geri düşersin: güçlen ya da parmağınla kaç!'); }
   return true;
 }
 function knockout() {
@@ -1247,12 +1250,41 @@ function knockout() {
   if (R.mode) { /* survival etc. end through HOOKS.ko */ }
   else if (R.boss) bossFail();
   else {
-    banner('NAKAVT!', save.bossReady ? 'Takım toparlanıyor…' : 'Aşama ilerlemesi sıfırlandı');
-    if (!save.bossReady) save.kills = 0;
-    sfx('fail', 0);
+    // a knockout costs one step of the stage (the boss gate too), so a low health bar is worth reacting to
+    R.koPrev = { sub: save.sub, kills: save.kills, ready: save.bossReady, stage: save.stage };
+    if (save.bossReady) save.bossReady = false; else if (save.sub > 1) save.sub--;
+    save.kills = 0; R.koN = (R.koN || 0) + 1;
+    sfx('fail', 0); koCard();
   }
   uiKey = '';
   runHooks('ko');
+}
+// the knockout card: what was lost and the quickest ways to get stronger (closes itself after a few seconds)
+function koCard() {
+  const old = document.getElementById('koCard'); if (old) old.remove();
+  const SSx = window.SS, can = k => !SSx || !SSx.unlocked || SSx.unlocked(k), gunIco = ($('gunIcoImg') || document.querySelector('.gunico') || {}).src || 'assets/ui/wi_Shuriken.png';
+  const c = el(`<div id="koCard" class="ko-card"><b>YENİLDİN!</b><span>Bir aşama geri: ${save.stage}-${save.sub}</span>
+    <small>Düşmanlar seni geçti. Biraz güçlen, sonra devam!</small>
+    <div class="ko-acts"><button class="btn green" data-k="power"><img src="assets/ui/ic_power.png" alt="">Güç</button>${can('guns') ? `<button class="btn blue" data-k="guns"><img src="${gunIco}" alt="">Silah</button>` : ''}${can('team') ? '<button class="btn purple" data-k="team"><img src="assets/ui/ic_team.png" alt="">Takım</button>' : ''}</div></div>`);
+  // get back up at once and keep the step (rewarded ad; in the ad-free release it is simply given)
+  const Ads = SSx && SSx.Ads, prev = R.koPrev;
+  if (Ads && Ads.available && Ads.available('revive') && prev) {
+    const rv = el('<button class="btn yellow ko-rev"><img src="assets/ui/play.png" alt="">HEMEN KALK<small>Aşama ilerlemen gitmesin</small></button>');
+    c.appendChild(rv);
+    rv.onclick = async () => {
+      c.remove(); R.paused = true;
+      const ok = await Ads.show('revive'); R.paused = false; last = performance.now();
+      if (ok && R.sq && save.stage === prev.stage) { R.sq.ko = 0.01; save.sub = prev.sub; save.kills = prev.kills; save.bossReady = prev.ready; banner('GERİ DÖNDÜN!', 'İlerleme korundu'); sfx('skill', 0); uiKey = ''; persist(); }
+    };
+  }
+  document.body.appendChild(c);
+  const close = () => { c.classList.add('out'); setTimeout(() => c.remove(), 250); };
+  c.querySelectorAll('button[data-k]').forEach(b => b.onclick = () => {
+    sfx('click'); close();
+    if (b.dataset.k === 'power') { const u = document.querySelector('.ucard[data-up="power"]'); if (u) { u.classList.remove('ko-hint'); void u.offsetWidth; u.classList.add('ko-hint'); setTimeout(() => u.classList.remove('ko-hint'), 2600); } }
+    else PANELS[b.dataset.k]();
+  });
+  setTimeout(() => { if (c.isConnected) close(); }, 6000);
 }
 function updateSquad(dt) {
   const sq = R.sq; if (!sq) return;
@@ -1261,7 +1293,7 @@ function updateSquad(dt) {
   if (sq.ko > 0) {
     sq.ko -= dt; sq.hp = sq.maxHp * clamp(1 - sq.ko / 3, 0, 1);
     if (sq.ko <= 0) { sq.ko = 0; sq.hp = sq.maxHp; sq.inv = 1.5; for (const h of R.heroes) puff(h.x, h.y, 2); }
-  } else if (sq.calm > 2.5 && sq.hp < sq.maxHp) sq.hp = Math.min(sq.maxHp, sq.hp + sq.maxHp * 0.05 * dt);
+  } else if (sq.calm > 3 && sq.hp < sq.maxHp) sq.hp = Math.min(sq.maxHp, sq.hp + sq.maxHp * 0.04 * dt);
   sq.hp = Math.min(sq.hp, sq.maxHp);
   sq.lag = sq.lag > sq.hp ? Math.max(sq.hp, sq.lag - sq.maxHp * 0.5 * dt) : sq.hp;
   // control: your finger always wins; 0.7 s after you let go the autopilot takes over again
@@ -1466,6 +1498,7 @@ function update(dt) {
     }
   }
   const L0 = R.heroes[0];
+  let lunging = 0; for (const e of R.en) if (!e.dead && (e.lw > 0 || e.lunge > 0)) lunging++;
   for (const e of R.en) {
     if (e.dead) continue;
     e.age += dt; e.anim += dt; if (e.flash > 0) e.flash -= dt;
@@ -1482,11 +1515,25 @@ function update(dt) {
       e.burn -= dt; e.burnT -= dt;
       if (e.burnT <= 0) { e.burnT = 0.4; bits(e.x, e.y - 10 * P, 'q_Fire', 1); damage(e, e.burnD, false, false); if (e.dead) continue; }
     }
+    // melee enemies that are left standing in front of the squad lunge at it (a red "!" warns first): the squad only
+    // takes hits when it is not killing fast enough, so the health bar tells the player when to upgrade
+    if (!R.mode && !e.ranged && !ko && !e.summoned) {
+      if (e.lunge) {
+        e.lunge -= dt;
+        if (e.lunge <= 0 || !e.rush) { e.rush = false; e.lunge = 0; e.lt = -rand(1.5, 3); }
+      } else if (e.lw > 0) {
+        e.lw -= dt;
+        if (e.lw <= 0) { e.rush = true; e.lunge = 2.2; e.hitT = 0; e.dmg = hpBase() * (e.elite ? 0.12 : 0.08); sfx('lob', 0.2, e.x); }
+      } else if (!R.boss && e.age > 1) {
+        e.lt = (e.lt || 0) + dt;
+        if (e.lt > 2.2 && lunging < Math.min(4, 2 + Math.floor(save.stage / 10))) { e.lw = 0.5; e.lt = 0; lunging++; }
+      }
+    }
     const goal = e.rush ? { x: R.sq.x, y: R.sq.y - 4 * P } : enemyGoal(e);
-    if (e.rush && !ko) { e.hitT = (e.hitT || 0) - dt; if (e.hitT <= 0 && Math.hypot(e.x - R.sq.x, (e.y - R.sq.y) * 1.3) < 26 * U * (e.sc || 1)) { e.hitT = 0.8; hurtSquad(e.dmg || hpBase() * 0.05, e.x, e.y - 8 * P); } }
+    if (e.rush && !ko) { e.hitT = (e.hitT || 0) - dt; if (e.hitT <= 0 && Math.hypot(e.x - R.sq.x, (e.y - R.sq.y) * 1.3) < 26 * U * (e.sc || 1)) { e.hitT = 0.8; hurtSquad(e.dmg || hpBase() * 0.05, e.x, e.y - 8 * P); if (e.lunge) { e.rush = false; e.kb = 120 * U; } } }
     const dx = goal.x - e.x, dy = goal.y - e.y, d = Math.hypot(dx, dy);
     if (e.vr === 'runner' && !e.stopped && Math.random() < 0.15) part({ k: 'anim', a: 'fx_smoke', x: e.x, y: e.y + 2 * P, s: 0.5, life: 0.25, max: 0.25, ay: 1, alpha: 0.35 });
-    if (e.rush ? d > 4 * U : e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, e.sp * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
+    if (e.rush ? d > 4 * U : e.stopped ? d > 30 * U : d > 6 * U) { e.stopped = false; const m = Math.min(d, (e.lunge ? Math.max(e.sp * 2.6, 300 * U) : e.sp) * (e.slow > 0 ? 0.45 : 1) * dt); e.x += dx / d * m; e.y += dy / d * m; }
     else e.stopped = true;
     if (L0) e.dir = e.stopped ? dirOf(L0.x - e.x, L0.y - e.y) : dirOf(dx, dy);
     if (e.knock > 0) { const eb = enemyBox(); e.x = clamp(e.x + e.kx * e.knock, eb.x0 - 20 * U, eb.x1 + 20 * U); e.y = Math.max(e.y + e.ky * e.knock, Math.min(e.y, eb.y0 + 20 * U)); e.knock *= 0.5; if (e.knock < 0.3) e.knock = 0; }
@@ -1648,10 +1695,11 @@ function render() {
       else if (o.vr) outline(name, o.x, o.y - lift, VAR[o.vr].rim, es, 0.9);
       spr(name, o.x, o.y - lift, es);
       if (o.flash > 0) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#ffffff');
-      else if (o.wind > 0 && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#fce2ca');
+      else if ((o.wind > 0 || o.lw > 0) && Math.floor(t * 16) % 2) spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#fce2ca');
       if (o.slow > 0) { ctx.globalAlpha = 0.5; spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#b8dce5'); }
       ctx.globalAlpha = 1;
       if (o.burn > 0) spr(`q_Fire_${Math.floor(t * 10 + o.id) % (AN.q_Fire || 1)}`, o.x + 3 * P, o.y - lift - 15 * P * es, 1, 0.5, 1);
+      if (o.lw > 0) btext('!', o.x, o.y - lift - (16 * es + 10) * P + (Math.floor(t * 12) % 2) * P, 'r', 1.2);
       if (o.hp < o.maxHp || o.elite || o.treasure) { const fh = o.hp / o.maxHp; o.hl = Math.max(fh, (o.hl === undefined ? 1 : o.hl) - 0.025); drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, fh, o.elite || o.treasure ? '#f1c471' : '#e0394c', o.hl); }
     } else if (it.k === 1) {
       const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * (o.rage ? 11 : 7)) % n}`, by = o.y - (o.z || 0);
@@ -1907,12 +1955,16 @@ function drawShots(t) {
 function drawSquadHp() {
   const sq = R.sq, L0 = R.heroes[0]; if (!L0) return;
   // squad health, drawn at half-art-pixel detail (Q = one canvas pixel):
-  // a gold-rimmed badge with a beating heart, then a metal-framed bar with a three-tone glossy fill, moving energy
+  // a beating pixel heart, then a metal-framed bar with a three-tone glossy fill, moving energy
   // stripes, 10% notches, a bright leading edge, a damage trail (white flash, then orange), a green glint when
   // healing, and the current HP written in the middle. Colour follows health: green > 50% > gold > 25% > red.
-  const Q = P / 2, t = R.t, BW = 62, BH = 14, BD = 18;            // bar width / height, badge size (in Q)
+  const Q = P / 2, t = R.t, BW = 62, BH = 14, BD = 14;            // bar width / height, heart box (in Q)
   const f = clamp(sq.hp / sq.maxHp, 0, 1), lag = clamp(sq.lag / sq.maxHp, 0, 1);
-  const ko = sq.ko > 0, low = !ko && f <= 0.25, total = BD - 4 + BW;
+  const ko = sq.ko > 0, low = !ko && f <= 0.25, total = 9 + BW;
+  // only on screen when it matters: hurt, healing, knocked out, a boss or a special mode; fades out 2.5 s after full
+  if (f < 0.999 || ko || R.boss || R.mode || sq.lag < sq.maxHp * 0.999) sq.showT = 2.5; else sq.showT = (sq.showT || 0) - 1 / 60;
+  const A = clamp(sq.showT / 0.5, 0, 1); if (A <= 0) return;
+  ctx.globalAlpha = A;
   const cx = clamp(L0.x, (total / 2 + 6) * Q, W - (total / 2 + 6) * Q);
   const x0 = snap(cx - total / 2 * Q), y0 = snap(L0.y - 33 * P);
   const r = (a, b, c, d, col) => prect(x0 + a * Q, y0 + b * Q, c * Q, d * Q, col);
@@ -1922,9 +1974,9 @@ function drawSquadHp() {
   if (sq.prevHp !== undefined && sq.hp > sq.prevHp + sq.maxHp * 0.004) sq.healT = 0.35;
   sq.prevHp = sq.hp; if (sq.healT > 0) sq.healT -= 1 / 60;
   // ---- bar (to the right of the badge)
-  const bx = BD - 4, by = (BD - BH) / 2;
+  const bx = 9, by = (BD - BH) / 2;
   const R2 = (a, b, c, d, col) => r(bx + a, by + b, c, d, col);
-  ctx.globalAlpha = 0.35; R2(1, 2, BW, BH, INK); ctx.globalAlpha = 1;            // drop shadow
+  ctx.globalAlpha = (0.35) * A; R2(1, 2, BW, BH, INK); ctx.globalAlpha = A;            // drop shadow
   R2(1, 0, BW - 2, BH, INK); R2(0, 1, BW, BH - 2, INK);                            // outline, cut corners
   R2(1, 1, BW - 2, 1, '#6f7d99'); R2(1, BH - 2, BW - 2, 1, '#262b3a');             // metal bevel
   R2(BW - 3, 2, 2, BH - 4, '#454f68'); R2(BW - 3, 2, 1, BH - 4, '#a6b4cc');         // end cap
@@ -1938,30 +1990,46 @@ function drawSquadHp() {
     R2(ix, iy, fw, 1, pal[3]);                                                      // top highlight
     R2(ix, iy + ih - 1, fw, 1, pal[0]);                                             // bottom shade
     if (!ko) {                                                                       // moving energy stripes
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = (0.16) * A;
       const off = Math.floor(t * 14) % 8;
       for (let k = -ih; k < fw; k += 8) for (let j = 0; j < ih; j++) { const xx = k + off + (ih - j); if (xx >= 0 && xx < fw) R2(ix + xx, iy + j, 2, 1, '#ffffff'); }
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = A;
     }
     R2(ix + fw - 1, iy, 1, ih, pal[3]);                                             // bright leading edge
-    if (sq.healT > 0) { ctx.globalAlpha = sq.healT / 0.35 * 0.6; R2(ix, iy, fw, ih, '#c3f08a'); ctx.globalAlpha = 1; }
+    if (sq.healT > 0) { ctx.globalAlpha = (sq.healT / 0.35 * 0.6) * A; R2(ix, iy, fw, ih, '#c3f08a'); ctx.globalAlpha = A; }
   }
   for (let k = 1; k < 10; k++) { const xx = ix + Math.round(iw * k / 10); R2(xx, iy, 1, 1, 'rgba(19,27,27,0.55)'); R2(xx, iy + ih - 1, 1, 1, 'rgba(19,27,27,0.55)'); }
   if (low && Math.floor(t * 4) % 2) { R2(1, -1, BW - 2, 1, '#e0394c'); R2(1, BH, BW - 2, 1, '#e0394c'); }
   // HP number in the middle of the bar
   if (!ko) btext(fmt(Math.max(0, sq.hp)), x0 + (bx + ix + iw / 2) * Q, y0 + (by + BH / 2) * Q, 'w', 0.5);
-  // ---- badge (drawn last so it overlaps the bar's left end)
-  const rim = ko ? '#8e7c73' : '#d9a03c', rimD = ko ? '#5f5a48' : '#9c6a24';
-  r(2, 0, BD - 4, BD, INK); r(0, 2, BD, BD - 4, INK); r(1, 1, BD - 2, BD - 2, INK);  // octagon outline
-  r(2, 1, BD - 4, 1, rim); r(1, 2, 1, BD - 4, rim); r(2, BD - 2, BD - 4, 1, rimD); r(BD - 2, 2, 1, BD - 4, rimD);
-  r(2, 2, BD - 4, BD - 4, ko ? '#3a3530' : low ? '#4a1c34' : '#1d2340');           // inner plate
-  r(3, 2, BD - 6, 1, 'rgba(255,255,255,0.18)');
+  // ---- heart (drawn last so it overlaps the bar's left end): a crisp hand-drawn pixel heart, one canvas pixel per dot,
+  // lit from the top left; it beats (faster when low), turns grey with a crack while knocked out
   const beat = ko ? 0 : (t * (low ? 3.2 : 1.2)) % 1 < 0.15 ? 1 : 0;
-  const hx = x0 + BD / 2 * Q, hy = y0 + BD / 2 * Q;
-  if (beat && !save.eco) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35; spr('vx_glow24_fire', hx, hy, 0.5, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-  spr('heart', hx, hy + (beat ? 0 : Q), 0.5, 0.5, 0.5);
-  if (ko) { ctx.globalAlpha = 0.6; spr('heart', hx, hy + Q, 0.5, 0.5, 0.5, false, 0, '#5f5a48'); ctx.globalAlpha = 1; }
+  const hc = ko ? { o: INK, h: '#d6cfc4', l: '#b9ad9c', r: '#8e7c73', d: '#5f5a48', c: INK }
+    : { o: INK, h: '#ffffff', l: '#ff8a8f', r: '#e0394c', d: '#9c1f33', c: '#e0394c' };
+  const hx0 = 0, hy0 = (BD - HEART.length) / 2 - beat;
+  if (beat && !save.eco) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (low ? 0.5 : 0.3) * A; spr('vx_glow24_fire', x0 + 6.5 * Q, y0 + (hy0 + 6) * Q, 0.5, 0.5, 0.45); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = A; }
+  for (let yy = 0; yy < HEART.length; yy++) {
+    const row = HEART[yy];
+    for (let xx = 0; xx < row.length; xx++) { const ch = row[xx]; if (ch !== '.') r(hx0 + xx, hy0 + yy, 1, 1, hc[ch]); }
+  }
+  if (ko) { r(hx0 + 6, hy0 + 2, 1, 3, INK); r(hx0 + 5, hy0 + 5, 1, 2, INK); r(hx0 + 6, hy0 + 7, 1, 2, INK); }   // crack
+  ctx.globalAlpha = 1;
 }
+const HEART = [
+  '..ooo...ooo..',
+  '.ollro.orrro.',
+  'ohhlrrorrrrdo',
+  'ohlrrrrrrrrdo',
+  'olrrrrrrrrrdo',
+  'orrrrrrrrrddo',
+  '.orrrrrrrrdo.',
+  '..orrrrrrdo..',
+  '...orrrrdo...',
+  '....orrdo....',
+  '.....odo.....',
+  '......o......',
+];
 function drawJoystick() {
   const j = R.joy; if (!j) return;
   ctx.globalAlpha = Math.min(1, j.t * 8);

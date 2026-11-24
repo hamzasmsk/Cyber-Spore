@@ -120,18 +120,5 @@
     if ((save.rebirths || 0) === 0 && save.tree) { save.tree.souls = (save.tree.souls || 0) + 3; setTimeout(() => SS.toast('İlk Doğuş hediyesi: +3 ruh · Ruh Ağacı\'na bak'), 2400); }
   });
 
-  // ---------------- 4. revive after a knock-out (rewarded ad, optional, only outside boss fights)
-  SS.HOOKS.ko.push(() => {
-    const Ads = SS.Ads; if (!Ads || !Ads.available('revive') || R.boss) return;
-    const kills = save.kills, ready = save.bossReady;
-    const c = SS.el('<div class="mz-card fl-revive"><img src="assets/ui/heart.png" alt=""><span>Aşama ilerlemen gitmesin</span><button class="btn yellow"><img src="assets/ui/play.png" alt="">HEMEN KALK</button><i class="mz-t" style="animation-duration:2.6s"></i></div>');
-    document.getElementById('ui').appendChild(c);
-    const close = () => { c.classList.add('out'); setTimeout(() => c.remove(), 250); };
-    const tm = setTimeout(close, 2600);
-    c.querySelector('.btn').onclick = async () => {
-      clearTimeout(tm); R.paused = true;
-      const ok = await Ads.show('revive'); R.paused = false; close();
-      if (ok && R.sq) { R.sq.ko = 0.01; save.kills = Math.max(save.kills, kills); save.bossReady = save.bossReady || ready; SS.banner('GERİ DÖNDÜN!', 'İlerleme korundu'); SS.sfx('skill', 0); SS.refreshUI(); }
-    };
-  });
+  // (4. the revive offer after a knock-out now lives on the knockout card in game.js)
 })();

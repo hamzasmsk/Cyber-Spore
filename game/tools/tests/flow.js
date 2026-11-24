@@ -19,7 +19,7 @@ const { chromium, devices } = require('playwright');
   console.log('timeline', [...new Set(seen)].join(' | '));
   // KO revive
   await page.evaluate(() => { SS.closePanel(); document.querySelectorAll('.un-card').forEach(c => c.remove()); SS.knockout(); });
-  await page.waitForTimeout(500); console.log('revive card', await page.evaluate(() => !!document.querySelector('.fl-revive')));
+  await page.waitForTimeout(500); console.log('revive card', await page.evaluate(() => !!document.querySelector('.ko-rev')));
   await page.screenshot({ path: S + '/f3-revive.png' });
   console.log('errors', errs.length ? errs : 'none'); await b.close();
 })();
