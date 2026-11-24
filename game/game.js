@@ -711,7 +711,7 @@ function addMoney(v, x, y, n) {
   }
   sfx('coin');
 }
-function addText(x, y, s, kind) { if (kind === 'dmg' && R.txt.length > 14) return; if (kind === 'crit' && R.txt.filter(t => t.kind === 'crit').length > 4) return; if (R.txt.length > 50) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.0 : 0.7, max: kind === 'money' ? 1.0 : 0.7 }); }
+function addText(x, y, s, kind) { if (kind === 'dmg' && R.txt.length > 14) return; if (kind === 'crit' && R.txt.filter(t => t.kind === 'crit').length > 2) return; if (R.txt.length > 50) R.txt.shift(); R.txt.push({ x, y, s, kind, life: kind === 'money' ? 1.0 : 0.7, max: kind === 'money' ? 1.0 : 0.7 }); }
 // particles: anim = pack fx sheet played once; bit = physical chip with gravity; float = drifting trail mote
 const busy = () => Math.min(1, 12 / Math.max(1, R.bul.length)) * Math.min(1, 110 / Math.max(1, R.parts.length));
 function part(p) { if ((save.eco || R.fx >= 2) && p.k !== 'anim' && Math.random() < 0.6) return; if (p.k !== 'anim' && Math.random() > busy()) return; if (R.parts.length < 200) R.parts.push(p); }
@@ -733,8 +733,93 @@ function boom(x, y, s = 1) {
   bits(x, y, 'q_Fire', 4);
   R.shake = Math.max(R.shake, 4); sfx('boom');
 }
+// ================================================================ projectile look (per weapon)
+// Every throw is drawn in layers: a tapered ribbon trail with the weapon's own colour ramp (head = hot core,
+// tail = dark edge), an additive glow for energy weapons, element motes, then the sprite. Impacts get a one-frame
+// white flash, outward spark streaks in the same ramp and, for heavy weapons, a shock ring. Budgeted by R.fx.
+// ramp: head -> tail colours; w: ribbon width at the head (art px); len: trail length (CSS px at U=1);
+// add: additive blend; motes: particle set left behind; sparks: impact streak count; ring: impact ring palette
+const PSTYLE = {
+  Shuriken:      { ramp: ['#ffffff', '#ffe18d', '#f2a93b', '#b0601e'], w: 4, len: 54, add: false, motes: 'q_Spark', mp: 0.15, sparks: 6, sc: 1 },
+  Kunai:         { ramp: ['#ffffff', '#cfe8ff', '#6fa8dc', '#2d4f8c'], w: 3, len: 80, add: false, sparks: 5, sc: 1.5, cut: 1 },
+  Arrow:         { ramp: ['#ffffff', '#ffe9b3', '#e0a040', '#8a4f1e'], w: 3, len: 70, add: false, sparks: 4, sc: 1.5 },
+  BigKunai:      { ramp: ['#ffffff', '#f2d6f0', '#c98ae0', '#6b3fa0'], w: 5, len: 90, add: true, sparks: 9, ring: 'magic', sc: 0.75 },
+  ShurikenMagic: { ramp: ['#ffffff', '#ffe1f4', '#d3a2c0', '#8a5cf0'], w: 4, len: 64, add: true, motes: 'q_Spark', mp: 0.6, sparks: 8, sc: 1 },
+  IceSpike:      { ramp: ['#ffffff', '#d9fbff', '#8feff1', '#3b8fb0'], w: 3, len: 70, add: true, motes: 'q_Snow', mp: 0.5, sparks: 8, ring: 'ice', sc: 1.25 },
+  Fireball:      { ramp: ['#fff8d0', '#ffe18d', '#ff9554', '#d14b34', '#6b3a3a'], w: 6, len: 64, add: true, motes: 'q_Fire', mp: 0.7, sparks: 10, sc: 1.25 },
+  BigEnergyBall: { ramp: ['#ffffff', '#d9fbff', '#8feff1', '#6fb6ff', '#3b3aa6'], w: 6, len: 60, add: true, jitter: 1, motes: 'q_Spark', mp: 0.5, sparks: 10, ring: 'ice', sc: 1 },
+  Plasma:        { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#ff4fb0'], w: 4, len: 56, add: true, motes: 'fxp_bit', mp: 0.4, sparks: 8, sc: 1 },
+  Laser:         { ramp: ['#ffffff', '#ffd6ef', '#ff4fb0', '#7a1f5c'], w: 4, len: 150, add: true, sparks: 6, sc: 1, cut: 1 },
+  Katana:        { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#1b5f8c'], w: 8, len: 50, add: true, motes: 'fxp_bit', mp: 0.3, sparks: 9, ring: 'neon', sc: 1 },
+  Rail:          { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#1b5f8c'], w: 3, len: 130, add: true, sparks: 6, sc: 1 },
+  Drone:         { ramp: ['#ffffff', '#ffd6ef', '#ff4fb0', '#7a1f5c'], w: 3, len: 60, add: true, motes: 'fxp_bit', mp: 0.25, sparks: 7, sc: 1 },
+};
+const pstyle = g => PSTYLE[g.spr] || PSTYLE.Shuriken;
+const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const ramp = (r, t) => r[Math.min(r.length - 1, Math.max(0, Math.floor(t * r.length)))];
+// a filled disk on the pixel grid (rows of whole pixels, so it stays crisp)
+function pdisk(x, y, r, col) {
+  const n = Math.max(1, Math.round(r / P)), cx = snap(x), cy = snap(y);
+  for (let j = -n; j <= n; j++) { const w = Math.round(Math.sqrt(Math.max(0, n * n - j * j))); prect(cx - w * P, cy + j * P, (2 * w + 1) * P, P, col); }
+}
+// tapered ribbon along the trail points: wide hot head, thin dark tail; electric styles jitter sideways.
+// Two passes: a darker edge (normal blend, 1 px wider each side) so the trail reads on snow as well as on dark
+// ground, then the bright core (additive for energy weapons).
+function drawRibbon(q, S, rp, lead, many) {
+  const tr = q.trail; if (!tr.length) return;
+  const pts = [{ x: q.x, y: q.y }].concat(tr);
+  let D = 0; for (let i = 1; i < pts.length; i++) D += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  if (D < 2 * P) return;
+  if (R.fx >= 2 && !lead) return;   // adaptive quality: on slow phones only the leader's throws keep a ribbon
+  const step = (lead && !many && R.fx < 1 ? 1 : 2) * P, w0 = S.w * (lead ? 1 : 0.7) * ((q.sc || 1) >= 1.5 ? 1.5 : 1);
+  const edge = rp[rp.length - 1], samples = [];
+  let d = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const A = pts[i - 1], B = pts[i], seg = Math.hypot(B.x - A.x, B.y - A.y); if (seg < 0.01) continue;
+    const nx = -(B.y - A.y) / seg, ny = (B.x - A.x) / seg;
+    for (let s0 = 0; s0 < seg; s0 += step) {
+      const t = (d + s0) / D; if (t > 1) break;
+      const j = S.jitter && t > 0.08 ? Math.round(rand(-1.5, 1.5)) * P : 0;
+      samples.push(t, snap(A.x + (B.x - A.x) * s0 / seg + nx * j), snap(A.y + (B.y - A.y) * s0 / seg + ny * j));
+    }
+    d += seg;
+  }
+  const k = lead ? 1 : 0.6;
+  for (let i = 0; i < samples.length; i += 3) {   // edge
+    const t = samples[i], w = Math.max(1, Math.round(w0 * Math.pow(1 - t, 0.75))) + 2;
+    ctx.globalAlpha = 0.45 * Math.pow(1 - t, 1.4) * k;
+    prect(samples[i + 1] - Math.floor(w / 2) * P, samples[i + 2] - Math.floor(w / 2) * P, w * P, w * P, edge);
+  }
+  if (S.add) ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < samples.length; i += 3) {   // core
+    const t = samples[i], w = Math.max(1, Math.round(w0 * Math.pow(1 - t, 0.75)));
+    ctx.globalAlpha = (S.add ? 0.8 : 0.95) * Math.pow(1 - t, 1.1) * k;
+    prect(samples[i + 1] - Math.floor(w / 2) * P, samples[i + 2] - Math.floor(w / 2) * P, w * P, w * P, ramp(rp, t));
+  }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+}
+// impact: white flash + spark streaks thrown outward along the hit direction (+ ring for heavy weapons)
+function impactFx(q, x, y, big) {
+  if (save.eco) return;
+  const S = pstyle(q.g), budget = R.fx >= 2 ? 0.35 : R.fx >= 1 ? 0.6 : 1, lead = !q.from || q.from.i === 0 || q.special;
+  if (R.parts.length < 185) R.parts.push({ k: 'flash', x, y, r: (big ? 9 : 5) * P, col: S.ramp[1], life: 0.07, max: 0.07 });
+  const n = Math.round((S.sparks + (q.crit ? 4 : 0) + (big ? 4 : 0)) * budget * (lead ? 1 : 0.5));
+  for (let i = 0; i < n && R.parts.length < 195; i++) {
+    const a = q.a + Math.PI + rand(-1.2, 1.2) + (Math.random() < 0.35 ? Math.PI : 0), sp = rand(120, 320) * U * (big ? 1.3 : 1);
+    R.parts.push({ k: 'streak', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, len: rand(3, 6) * P, ramp: S.ramp, life: rand(0.16, 0.3), max: 0.3, add: S.add });
+  }
+  if (S.ring && (big || q.crit || lead) && gate(0.05)) vfx('ring', q.pg || S.ring, x, y, big ? 0.8 : 0.5, 0.25);
+}
+// throw flash in the hand
+function muzzleFx(q) {
+  if (save.eco || R.fx >= 2 || R.parts.length > 170) return;
+  const S = pstyle(q.g);
+  R.parts.push({ k: 'flash', x: q.x, y: q.y, r: 4 * P, col: S.ramp[1], life: 0.06, max: 0.06 });
+  for (let i = 0; i < 2; i++) { const a = q.a + rand(-0.5, 0.5), sp = rand(80, 160) * U; R.parts.push({ k: 'streak', x: q.x, y: q.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, len: 3 * P, ramp: S.ramp, life: 0.12, max: 0.12, add: S.add }); }
+}
 function hitFx(q, t) {
   const g = q.g, x = q.x, y = q.y;
+  impactFx(q, x, y, t === R.boss || !!g.boom);
   switch (g.hit) {
     case 'cut': fx('fx_cut', x, y); break;
     case 'claw': fx('fx_claw', x, y); break;
@@ -810,6 +895,7 @@ function throwNow(h) {
     runHooks('shot', R.bul[R.bul.length - 1]);
   }
   if (g.held === 'wh_Wand' || g.held === 'wh_Book') fx('fx_spark', o.x, o.y, 0.5, 0.15);
+  if (h.i === 0 || Math.random() < 0.35) muzzleFx(R.bul[R.bul.length - 1]);
   if (!save.eco && R.swish.length < 10) R.swish.push({ x: o.x, y: o.y, a: h.ang, life: 0.14, col: TRAIL_COL[(save.cos && save.cos.trail) || g.glow] || '#fce2ca' });
   sfx(g.snd || 'shoot', 0.12, o.x);
 }
@@ -1409,10 +1495,11 @@ function update(dt) {
     q.life -= dt; q.age += dt; q.tt -= dt;
     const g = q.g;
     if (q.tt <= 0) {   // trail: ghost copies + element motes
-      q.tt = 0.03; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > (g.trail === 'line' ? 5 : 3)) q.trail.pop();
-      if (!save.eco && g.trail !== 'ghost' && g.trail !== 'line' && Math.random() < (g.trail === 'spark' ? 0.25 : 0.5)) {
-        const set = g.trail === 'snow' ? 'q_Snow' : g.trail === 'fire' ? 'q_Fire' : g.trail === 'neon' ? 'fxp_bit' : 'q_Spark', m = AN[set] || 1;
-        part({ k: 'float', f: `${set}_${Math.floor(Math.random() * m)}`, x: q.x + rand(-4, 4) * U, y: q.y + rand(-4, 4) * U, vx: rand(-20, 20) * U, vy: rand(-20, 20) * U, life: 0.35, max: 0.35 });
+      q.tt = 0.03;
+      const S = pstyle(g);
+      if (!save.eco && S.motes && Math.random() < S.mp) {
+        const set = S.motes, m = AN[set] || 1;
+        part({ k: 'float', f: `${set}_${Math.floor(Math.random() * m)}`, x: q.x + rand(-4, 4) * U, y: q.y + rand(-4, 4) * U, vx: rand(-20, 20) * U, vy: (set === 'q_Fire' ? rand(-50, -15) : rand(-20, 20)) * U, life: 0.35, max: 0.35 });
       }
     }
     const t = q.tgt, alive = t && !t.dead && (t === R.boss || R.en.includes(t));
@@ -1428,6 +1515,11 @@ function update(dt) {
       } else if (alive) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * 5);
     } else if (alive && q.home) q.a = turn(q.a, Math.atan2(aimY(t) - q.y, t.x - q.x), dt * (g.curve ? 7 : g.shots > 1 ? 7 : 16));
     q.x += Math.cos(q.a) * q.sp * dt; q.y += Math.sin(q.a) * q.sp * dt;
+    { const tr = q.trail, h0 = tr[0];   // ribbon points: a new one every ~2 px, trimmed to the style's length
+      if (!h0 || Math.hypot(q.x - h0.x, q.y - h0.y) > 2 * U) tr.unshift({ x: q.x, y: q.y });
+      const max = pstyle(g).len * U; let d = 0;
+      for (let i = 1; i < tr.length; i++) { d += Math.hypot(tr[i].x - tr[i - 1].x, tr[i].y - tr[i - 1].y); if (d > max) { tr.length = i + 1; break; } }
+      if (tr.length > 80) tr.length = 80; }
     if (g.wobble) { const w = Math.cos(q.age * 16 + q.wob) * 70 * U * dt; q.x -= Math.sin(q.a) * w; q.y += Math.cos(q.a) * w; }
     if (!q.dead && R.boss && R.boss.arrive >= 1 && !q.hits.has(R.boss) && Math.hypot(R.boss.x - q.x, aimY(R.boss) - q.y) < 60 * U) onHit(q, R.boss);
     if (!q.dead) for (const c of R.en) {
@@ -1454,6 +1546,7 @@ function update(dt) {
   for (const p of R.parts) {
     p.life -= dt;
     if (p.k === 'bit') { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 700 * U * dt; p.vx *= 0.98; }
+    else if (p.k === 'streak') { p.x += p.vx * dt; p.y += p.vy * dt; const k = Math.pow(0.02, dt); p.vx *= k; p.vy *= k; }
     else if (p.k === 'float') { p.x += p.vx * dt; p.y += p.vy * dt; }
   }
   for (const t of R.txt) { t.life -= dt; t.y -= (t.kind === 'money' ? 40 : 30) * U * dt; }
@@ -1572,27 +1665,36 @@ function render() {
       for (let k = 0; k <= n; k++) prect(lerp(ax, bx, k / n) - sz * P / 2, lerp(ay, by, k / n) - sz * P / 2, sz * P, sz * P, col);
     }
   }
-  // thrown weapons: fading ghost trail, then the weapon (never freely rotated: spin = frame flip, else 16 directions)
+  // thrown weapons: ribbon trail + glow + sprite (never freely rotated: spin = frame flip, else 16 directions)
+  const many = R.bul.length > 24;
   for (const q of R.bul) {
-    const g = q.g, n = AN['p_' + g.spr] || 1, sc = q.sc || g.sc || 1;
-    const cosT = save.cos && save.cos.trail, trailCol = cosT ? TRAIL_COL[cosT] : '#fce2ca', glowName = q.pg || cosT || g.glow;
+    const g = q.g, S = pstyle(g), n = AN['p_' + g.spr] || 1, sc = (q.sc || g.sc || 1) * (S.sc || 1);
+    const cosT = save.cos && save.cos.trail, tint = q.pg ? TRAIL_COL[q.pg] : cosT ? TRAIL_COL[cosT] : null;
+    const rp = tint ? ['#ffffff', tint, tint, '#46402e'] : S.ramp;
     const lead = q.special || !q.from || q.from.i === 0 || R.bul.length < 10;   // visual hierarchy: the leader's throws are the loud ones
-    if (lead && glowName && (q.pg || cosT || q.special || star(save.gun) >= 2 || g.held === 'wh_Wand' || g.held === 'wh_Book')) {
-      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.3 + 0.1 * Math.sin(q.age * 20)) * Math.max(0.35, Math.min(1, 9 / R.bul.length));
-      spr(`vx_glow${q.special || evolved() ? 40 : 24}_${glowName}`, q.x, q.y, sc >= 1.5 ? 1.5 : 1, 0.5, 0.5);
+    if (!save.eco) drawRibbon(q, S, rp, lead, many);
+    if ((S.add || q.pg || q.special) && (lead || !many)) {   // soft additive core glow
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.32 + 0.08 * Math.sin(q.age * 20)) * (lead ? 1 : 0.5);
+      spr(`vx_glow${q.special || evolved() || sc >= 1.5 ? 40 : 24}_${q.pg || cosT || g.glow || 'gold'}`, q.x, q.y, 1, 0.5, 0.5);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     }
     const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
     const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
-    if (g.trail === 'line') {
-      const e = q.trail[q.trail.length - 1];
-      if (e) { const n = Math.ceil(Math.hypot(q.x - e.x, q.y - e.y) / P); for (let k = 1; k <= n; k++) { ctx.globalAlpha = 0.55 * (1 - k / (n + 1)); prect(lerp(q.x, e.x, k / n) - P / 2, lerp(q.y, e.y, k / n) - P / 2, P, P, trailCol); } }
-    } else if (lead) for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = (g.trail === 'ghost' ? 0.4 : 0.26) - i * (g.trail === 'ghost' ? 0.12 : 0.09); spr(name, q.trail[i].x, q.trail[i].y, sc, 0.5, 0.5, false, rot, g.trail === 'ghost' || cosT ? trailCol : null); }
-    ctx.globalAlpha = 1;
     spr(name, q.x, q.y, sc, 0.5, 0.5, false, rot);
   }
   for (const p of R.parts) {
     const a = clamp(p.life / p.max, 0, 1);
+    if (p.k === 'flash') {   // one-frame white-hot pop
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a;
+      pdisk(p.x, p.y, p.r * (0.6 + 0.4 * a), '#ffffff'); pdisk(p.x, p.y, p.r * (1.1 + 0.5 * (1 - a)), hexA(p.col, 0.45));
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; continue;
+    }
+    if (p.k === 'streak') {   // a spark: short pixel line along its motion, hot head, cooling tail
+      const v = Math.hypot(p.vx, p.vy) || 1, ux = p.vx / v, uy = p.vy / v, len = Math.max(P, p.len * a), m = Math.ceil(len / P);
+      if (p.add) ctx.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < m; k++) { ctx.globalAlpha = a * (1 - k / (m + 1)); prect(snap(p.x - ux * k * P) - P / 2, snap(p.y - uy * k * P) - P / 2, P, P, ramp(p.ramp, (1 - a) * 0.6 + k / m * 0.4)); }
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; continue;
+    }
     if (p.k === 'anim') {
       const n = AN[p.a] || 1, f = Math.min(n - 1, Math.floor((1 - a) * n));
       if (p.alpha) ctx.globalAlpha = p.alpha;
@@ -1905,7 +2007,7 @@ function startPreview(canvas, gi) {
   const pw = Math.round(CW / L), ph = Math.round(CH / L);
   canvas.width = pw; canvas.height = ph; canvas.style.width = pw * L + 'px'; canvas.style.height = ph * L + 'px';
   const pc = canvas.getContext('2d'); pc.imageSmoothingEnabled = false;
-  const mon = biome().pool[0], hero = { x: 46, y: GY, dir: 'r', atk: 0, wind: 0, recoil: 0, ang: 0, id: heroId(0), i: 0 };
+  const mon = biome().pool[0], hero = { x: 46, y: GY, dir: 'r', atk: 0, wind: 0, recoil: 0, ang: 0, id: heroId(0), i: 0 }, PS = pstyle(g);
   let shots = [], parts = [], t = 0, next = 0.4, flash = 0, lastT = performance.now();
   const step = now => {
     if (run !== prevRun || !canvas.isConnected) return;
@@ -1914,15 +2016,19 @@ function startPreview(canvas, gi) {
     if (next <= 0) { hero.atk = 0.2; hero.wind = 0.07; next = 1.1; }
     if (hero.wind > 0) { hero.wind -= dt; if (hero.wind <= 0) { hero.recoil = 0.09; for (let k = 0; k < g.shots; k++) shots.push({ x: hero.x + 7 * P, y: hero.y - 8 * P, a: (g.shots > 1 ? (k - (g.shots - 1) / 2) * 0.12 : 0) + (g.curve ? -0.5 : 0), age: 0, trail: [] }); } }
     for (const q of shots) {
-      q.age += dt; q.trail.unshift({ x: q.x, y: q.y }); if (q.trail.length > 4) q.trail.pop();
+      q.age += dt;
       q.a = turn(q.a, Math.atan2(GY - 8 * P - q.y, 250 - q.x), dt * (g.curve ? 6 : 12));
       q.x += Math.cos(q.a) * g.sp * 0.5 * dt; q.y += Math.sin(q.a) * g.sp * 0.5 * dt;
+      { const tr = q.trail, h0 = tr[0]; if (!h0 || Math.hypot(q.x - h0.x, q.y - h0.y) > 2 * U) tr.unshift({ x: q.x, y: q.y });
+        let d = 0; for (let i = 1; i < tr.length; i++) { d += Math.hypot(tr[i].x - tr[i - 1].x, tr[i].y - tr[i - 1].y); if (d > PS.len * 0.7 * U) { tr.length = i + 1; break; } } }
       if (g.wobble) q.y += Math.cos(q.age * 16) * 40 * dt;
       if (q.x > 244) { q.dead = true; flash = 0.08; const fxn = { cut: 'fx_cut', claw: 'fx_claw', star: 'fx_spark', ice: 'fx_ice', fire: 'fx_flam', thunder: 'fx_thunder' }[g.hit] || 'fx_spark';
-        parts.push({ a: fxn, x: q.x, y: q.y, life: 0.3, max: 0.3, s: 0.5 }); if (g.boom) parts.push({ a: 'fx_circle', x: q.x, y: q.y, life: 0.3, max: 0.3, s: 1 }); }
+        parts.push({ a: fxn, x: q.x, y: q.y, life: 0.3, max: 0.3, s: 0.5 }); if (g.boom) parts.push({ a: 'fx_circle', x: q.x, y: q.y, life: 0.3, max: 0.3, s: 1 });
+        parts.push({ k: 'flash', x: q.x, y: q.y, r: 6 * P, life: 0.07, max: 0.07 });
+        for (let i = 0; i < PS.sparks; i++) { const a = Math.PI + rand(-1.2, 1.2) + (Math.random() < 0.35 ? Math.PI : 0), sp = rand(90, 220) * U; parts.push({ k: 'streak', x: q.x, y: q.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: rand(0.18, 0.3), max: 0.3 }); } }
     }
     shots = shots.filter(q => !q.dead);
-    for (const p of parts) p.life -= dt; parts = parts.filter(p => p.life > 0);
+    for (const p of parts) { p.life -= dt; if (p.k === 'streak') { p.x += p.vx * dt; p.y += p.vy * dt; const k = Math.pow(0.02, dt); p.vx *= k; p.vy *= k; } } parts = parts.filter(p => p.life > 0);
     // draw with the shared sprite code on the preview canvas
     const keep = ctx; ctx = pc;
     try {
@@ -1940,10 +2046,16 @@ function startPreview(canvas, gi) {
       for (const q of shots) {
         const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
         const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
-        for (let i = q.trail.length - 1; i >= 0; i--) { ctx.globalAlpha = 0.35 - i * 0.08; spr(name, q.trail[i].x, q.trail[i].y, g.sc || 1, 0.5, 0.5, false, rot, '#fce2ca'); }
-        ctx.globalAlpha = 1; spr(name, q.x, q.y, g.sc || 1, 0.5, 0.5, false, rot);
+        drawRibbon(q, PS, PS.ramp, true, false);
+        if (PS.add) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35; spr(`vx_glow24_${g.glow || 'gold'}`, q.x, q.y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+        spr(name, q.x, q.y, (g.sc || 1) * (PS.sc || 1), 0.5, 0.5, false, rot);
       }
-      for (const p of parts) { const nn = AN[p.a] || 1, f = Math.min(nn - 1, Math.floor((1 - p.life / p.max) * nn)); spr(`${p.a}_${f}`, p.x, p.y, p.s, 0.5, 0.5); }
+      for (const p of parts) {
+        const a = p.life / p.max;
+        if (p.k === 'flash') { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a; pdisk(p.x, p.y, p.r, '#ffffff'); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; continue; }
+        if (p.k === 'streak') { const v = Math.hypot(p.vx, p.vy) || 1; for (let k = 0; k < 4; k++) { ctx.globalAlpha = a * (1 - k / 5); prect(snap(p.x - p.vx / v * k * P) - P / 2, snap(p.y - p.vy / v * k * P) - P / 2, P, P, ramp(PS.ramp, (1 - a) * 0.6 + k / 4 * 0.4)); } ctx.globalAlpha = 1; continue; }
+        const nn = AN[p.a] || 1, f = Math.min(nn - 1, Math.floor((1 - p.life / p.max) * nn)); spr(`${p.a}_${f}`, p.x, p.y, p.s, 0.5, 0.5);
+      }
     } finally { ctx = keep; }
     requestAnimationFrame(step);
   };
