@@ -40,7 +40,6 @@ jobs:
     defaults:
       run:
         working-directory: game
-    env:
     steps:
       - uses: actions/checkout@v5
 
