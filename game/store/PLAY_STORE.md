@@ -46,16 +46,20 @@ yükleme anahtarını kaybedersen destekten sıfırlatabilirsin.
 
 ## 3. Paketi derle
 
-GitHub → **Actions → Shuriken Squad Android → Run workflow** → sürüm adı `1.0.0` → çalıştır.
+`game/release.json` dosyasındaki sürüm adı (`version_name`) değişince derleme kendiliğinden başlar
+(`monetization`: `free` = reklamsız ve satın almasız kapalı test sürümü, `full` = reklam + satın alma).
+Ana dalda (`main`) ise GitHub → **Actions → Shuriken Squad Android → Run workflow** ile de başlatılabilir.
 ~10 dakika sonra çalıştırma sayfasında **Artifacts** altında `shuriken-squad-1.0.0-N` (içinde `app-release.aab`).
 Her çalıştırmada sürüm kodu (versionCode) otomatik artar.
 
 ## 4. Play Console'da uygulamayı oluştur
 
 1. **Uygulama oluştur:** ad `Shuriken Squad`, varsayılan dil Türkçe, **Oyun**, **Ücretsiz**.
-2. **Uygulama içeriği** bölümünü doldur (cevaplar en altta): gizlilik politikası URL'si, reklamlar (**Evet**),
-   uygulama erişimi (giriş gerekmiyor), içerik derecelendirmesi, hedef kitle (**13+**, çocuklara yönelik değil),
-   veri güvenliği, reklam kimliği (**Evet, reklam için**), devlet uygulaması değil, finansal özellik yok.
+2. **Uygulama içeriği** bölümünü doldur (cevaplar en altta): gizlilik politikası URL'si, uygulama erişimi (giriş
+   gerekmiyor), içerik derecelendirmesi, hedef kitle (**13+**, çocuklara yönelik değil), veri güvenliği, devlet
+   uygulaması değil, finansal özellik yok.
+   - **`free` sürümü (kapalı test):** reklamlar **Hayır**, reklam kimliği **Hayır** (reklam kütüphanesi pakette yok).
+   - **`full` sürümü (ileride):** reklamlar **Evet**, reklam kimliği **Evet, reklam için**.
 3. **Mağaza girişi:** metinler, `icon-512.png`, `feature-graphic-1024x500.png`, `screenshots/tr/` (Türkçe giriş) ve `screenshots/en/` + `feature-graphic-1024x500-en.png` (İngilizce çeviri girişine) — en az 2, hepsini yükle,
    kategori **Oyun → Aksiyon** (ya da Strateji), iletişim e-postası.
 4. **Test → Kapalı test:** yeni kanal, `.aab`'yi yükle, test kullanıcılarının e-postalarını ekle, katılım linkini
