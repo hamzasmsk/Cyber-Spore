@@ -34,7 +34,7 @@
     </div>
     <div id="bossHud" class="hidden">
       <img id="bossImg" src="assets/ui/boss_GiantSlime2.png" alt="">
-      <div class="bossbar"><i id="bossFill"></i><span id="bossHpTxt"></span></div>
+      <div class="bossbar"><b id="bossLag"></b><i id="bossFill"></i><em class="bb-p2"></em><span id="bossHpTxt"></span></div>
       <div class="btimer" id="bossTime">30</div>
     </div>
   </div>
@@ -95,16 +95,19 @@
 <script src="features/tower.js"></script>
 <script src="features/survival.js"></script>
 <script src="features/achievements.js"></script>
+<script src="features/ranking.js"></script>
 <script src="features/fxskins.js"></script>
 <script src="features/events.js"></script>
 <script src="features/journey.js"></script>
 <script src="features/settings.js"></script>
 <script src="features/layout.js"></script>
+<script src="features/powersave.js"></script>
 <script src="features/unlock.js"></script>
 <script src="features/weakspot.js"></script>
 <script src="features/analytics.js"></script>
 <script src="features/devtools.js"></script>
 <script src="features/native.js"></script>
+<script src="features/cloudsave.js"></script>
 <script>
 if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) {
   navigator.serviceWorker.register('sw.js').catch(function () {});

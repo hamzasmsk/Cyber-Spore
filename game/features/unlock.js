@@ -22,7 +22,7 @@
     ['dexBtn', 9, 'Koleksiyon', 'Yendiğin her canavar ve boss burada kayıtlı.', 'ic_book'],
     ['piggyBtn', 10, 'Kumbara', 'Düşmanlar kumbaraya elmas biriktirir.', 'ic_piggy'],
   ];
-  const TABS = { ach: 5, surv: 6, tower: 12 };
+  const TABS = { ach: 5, surv: 6, tower: 12, rank: 4 };
   if (!save.unl || typeof save.unl !== 'object') {
     save.unl = {};
     for (const s of STEPS) if ((save.best || 1) >= s[1]) save.unl[s[0]] = 2;   // older saves: already known, no intro

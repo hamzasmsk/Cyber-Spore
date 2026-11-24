@@ -16,12 +16,14 @@
     let local = null; try { local = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
     if (!local) Prefs.get({ key: KEY }).then(r => { if (r && r.value) { try { localStorage.setItem(KEY, r.value); location.reload(); } catch (e) { /* ignore */ } } });
     const mirror = () => { try { const v = localStorage.getItem(KEY); if (v) Prefs.set({ key: KEY, value: v }); } catch (e) { /* ignore */ } };
-    setInterval(mirror, 15000);
+    setInterval(mirror, 4000);   // the app's own copy follows the save within seconds
     document.addEventListener('visibilitychange', () => { if (document.hidden) { SS.persist(); mirror(); } });
+    window.addEventListener('pagehide', () => { SS.persist(); mirror(); });
     SS.HOOKS.purchase && SS.HOOKS.purchase.push(() => { SS.persist(); mirror(); });
   }
   if (App && App.addListener) App.addListener('backButton', () => {
-    if (!document.getElementById('panel').classList.contains('hidden')) SS.closePanel();
+    if (SS.powersave && SS.powersave.on) SS.powersave.exit();
+    else if (!document.getElementById('panel').classList.contains('hidden')) SS.closePanel();
     else if (App.minimizeApp) App.minimizeApp();
   });
   const Review = Pl('InAppReview');

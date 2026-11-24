@@ -104,6 +104,20 @@ RevenueCat anahtarı girilmeden uygulama içi satın almalar **otomatik gizlenir
 3. <https://www.revenuecat.com> → proje → Android uygulaması (Play hizmet hesabı bağlanır) → ürünleri içe aktar.
 4. `monetize.config.js` → `revenuecat.android` = `goog_...` anahtarı. Yeni bir `.aab` derle.
 
+## 7b. Dünya sıralaması (Google Play Games) — isteğe bağlı, yayından sonra da olur
+Oyunda **Görev → Sıralama** sekmesi hazır (rütbe, rekorlar, dönemler, yolculuk). "Dünya sıralaması" kartı, aşağıdaki
+kimlikler girilene kadar "Yakında" yazar; oyun bunlar olmadan da sorunsuz çalışır.
+1. Play Console → uygulaman → **Büyüme → Play Games Hizmetleri → Kurulum ve yönetim → Yapılandırma**.
+   "Hayır, oyunum Google API'lerini kullanmıyor" → oyunun adını yaz → **Oluştur**.
+2. **Kimlik bilgileri → Android kimlik bilgisi ekle**: paket adı `com.shurikensquad.game`; SHA-1 için
+   Play Console → **Test ve yayınla → Uygulama bütünlüğü → Uygulama imzalama anahtarı sertifikası**'ndaki SHA-1'i kullan.
+3. **Skor tabloları → Skor tablosu oluştur**: ad "En iyi bölüm", biçim **Sayısal**, sıralama **Yüksek puan daha iyi**,
+   simge isteğe bağlı (store/icon-512.png kullanılabilir).
+4. Sayfanın üstündeki **Proje kimliği** (yalnızca rakamlar) ile skor tablosunun kimliğini (`Cgk...`) bana gönder;
+   ya da kendin `game/android/app/src/main/res/values/games-ids.xml` dosyasındaki iki boş satıra yaz.
+5. Play Games projesini **Yayınla** (test kullanıcıları önce de görebilir: **Test kullanıcıları** listesine e-posta ekle).
+Oyun en iyi bölümü her yükseldiğinde skor tablosuna gönderir; oyuncu ilk açılışta Play Games'e otomatik giriş yapar.
+
 ## 8. Yayından önce son kontrol
 
 - [ ] `monetize.config.js` → `webMode: 'off'` gerekmiyor (uygulama içinde `auto` gerçek SDK kullanır); ama oyunu

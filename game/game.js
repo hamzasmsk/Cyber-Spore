@@ -206,9 +206,36 @@ const SUBS = 5, KILLS_PER_SUB = 20, BOSS_TIME = 30, EHP = 0.4, EGOLD = 0.45;
 const SAVE_KEY = 'swarmsquad_idle_v1';
 const DEF = { money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1, rebirths: 0, rp: 0, auto: true, sound: true, music: true, t: 0, rate: 0, best: 1 };
 // auto boss is always on now (the OTO toggle was removed)
-const save = (() => { let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { s = null; }
-  const d = JSON.parse(JSON.stringify(DEF)); if (s && typeof s === 'object') { Object.assign(d, s); d.lv = Object.assign({ power: 0, speed: 0, money: 0 }, s.lv || {}); } return d; })();
-function persist() { if (R.noSave) return; save.t = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage blocked */ } }
+// Save robustness: the save is written every 5 s (real time), on leaving the app and after key moments, and a
+// second copy (…_bak) is refreshed every 30 s from a save that just parsed back cleanly. Loading tries the main
+// copy, then the backup; a copy that does not parse is kept under …_corrupt instead of being thrown away. If the
+// device refuses a write (storage full / blocked) the player is told once.
+const SAVE_BAK = SAVE_KEY + '_bak';
+const okSave = o => o && typeof o === 'object' && typeof o.stage === 'number' && o.stage >= 1 && o.lv && typeof o.lv === 'object';
+const loadInfo = { from: 'new', recovered: false };
+const save = (() => {
+  let s = null, raw = null;
+  for (const k of [SAVE_KEY, SAVE_BAK]) {
+    try { raw = localStorage.getItem(k); const o = raw ? JSON.parse(raw) : null; if (okSave(o)) { s = o; loadInfo.from = k === SAVE_KEY ? 'main' : 'backup'; break; } } catch (e) { /* try the next copy */ }
+    if (k === SAVE_KEY && raw) { loadInfo.recovered = true; try { localStorage.setItem(SAVE_KEY + '_corrupt', raw); } catch (e) { /* ignore */ } }
+  }
+  if (loadInfo.from === 'main') loadInfo.recovered = false;
+  const d = JSON.parse(JSON.stringify(DEF)); if (s) { Object.assign(d, s); d.lv = Object.assign({ power: 0, speed: 0, money: 0 }, s.lv || {}); } return d; })();
+const saveState = { at: 0, fails: 0, told: false, bakAt: 0 };
+function persist() {
+  if (R.noSave) return;
+  save.t = Date.now();
+  let json;
+  try { json = JSON.stringify(save); } catch (e) { return; }
+  try {
+    localStorage.setItem(SAVE_KEY, json);
+    saveState.at = save.t; saveState.fails = 0;
+    if (save.t - saveState.bakAt > 30000 && okSave(JSON.parse(localStorage.getItem(SAVE_KEY)))) { localStorage.setItem(SAVE_BAK, json); saveState.bakAt = save.t; }
+  } catch (e) {
+    saveState.fails++;
+    if (!saveState.told && saveState.fails >= 2) { saveState.told = true; setTimeout(() => toast('Kayıt alınamadı: cihaz depolaması dolu olabilir'), 0); }
+  }
+}
 
 // ================================================================ economy
 const rebirthMul = () => 1 + save.rp * 0.3;
@@ -1625,7 +1652,7 @@ function render() {
       if (o.slow > 0) { ctx.globalAlpha = 0.5; spr(name, o.x, o.y - lift, es, 0.5, 1, false, 0, '#b8dce5'); }
       ctx.globalAlpha = 1;
       if (o.burn > 0) spr(`q_Fire_${Math.floor(t * 10 + o.id) % (AN.q_Fire || 1)}`, o.x + 3 * P, o.y - lift - 15 * P * es, 1, 0.5, 1);
-      if (o.hp < o.maxHp || o.elite || o.treasure) drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, o.hp / o.maxHp, o.elite || o.treasure ? '#f1c471' : '#e0394c');
+      if (o.hp < o.maxHp || o.elite || o.treasure) { const fh = o.hp / o.maxHp; o.hl = Math.max(fh, (o.hl === undefined ? 1 : o.hl) - 0.025); drawBar(o.x, o.y - lift - (16 * es + 3) * P, o.elite ? 20 : 16, fh, o.elite || o.treasure ? '#f1c471' : '#e0394c', o.hl); }
     } else if (it.k === 1) {
       const n = AN['b_' + o.key] || 1, name = `b_${o.key}_${Math.floor(o.anim * (o.rage ? 11 : 7)) % n}`, by = o.y - (o.z || 0);
       ctx.globalAlpha = o.leaving ? Math.max(0, 1 - o.leaving / 2) : 1;
@@ -1788,12 +1815,17 @@ function drawFist(x, y) {
   prect(x0 - P, y0, 3 * q + 2 * P, 3 * q, INK); prect(x0, y0 - P, 3 * q, 3 * q + 2 * P, INK);
   prect(x0, y0, 3 * q, 3 * q, '#3d3247'); prect(x0, y0, 2 * q, q, '#5e5070');
 }
+// enemy health: ink frame with cut corners, dark trough, two-tone fill with a top highlight, white damage trail
 function drawBar(cx, y, w, f, col = '#e0394c', lag = 0) {
-  const pw = w * P, x = cx - pw / 2;
-  prect(x + P, y, pw - 2 * P, 4 * P, INK); prect(x, y + P, pw, 2 * P, INK);
-  prect(x + P, y + P, pw - 2 * P, 2 * P, '#5f7160');
-  if (lag > f) prect(x + P, y + P, (pw - 2 * P) * clamp(lag, 0, 1), 2 * P, '#fce2ca');
-  if (f > 0) prect(x + P, y + P, Math.max(P, Math.round((w - 2) * clamp(f, 0, 1)) * P), 2 * P, col);
+  const pw = w * P, x = snap(cx - pw / 2), Q = P / 2, gold = col === '#f1c471';
+  const fill = gold ? ['#9c6a24', '#f1c471', '#fff2c2'] : ['#8f2233', '#e0394c', '#ff9aa0'];
+  prect(x + Q, y, pw - 2 * Q, 4 * P, INK); prect(x, y + Q, pw, 4 * P - 2 * Q, INK);
+  const ix = x + Q * 2, iy = y + Q * 2, iw = pw - Q * 4, ih = 4 * P - Q * 4;
+  prect(ix, iy, iw, ih, '#241c1a');
+  const fw = Math.round(iw / Q * clamp(f, 0, 1)) * Q;
+  if (lag > f) prect(ix + fw, iy, Math.round(iw / Q * clamp(lag, 0, 1)) * Q - fw, ih, '#fce2ca');
+  if (fw > 0) { prect(ix, iy, fw, ih, fill[1]); prect(ix, iy, fw, Q, fill[2]); prect(ix, iy + ih - Q, fw, Q, fill[0]); }
+  if (gold) { prect(x - Q, y + P, Q, 2 * P, '#f1c471'); prect(x + pw, y + P, Q, 2 * P, '#f1c471'); }
 }
 function drawAmbient(t) {
   const b = biome(); if (!b.amb || save.eco) return;
@@ -1874,28 +1906,61 @@ function drawShots(t) {
 }
 function drawSquadHp() {
   const sq = R.sq, L0 = R.heroes[0]; if (!L0) return;
-    // squad health: framed pixel bar drawn at half-art-pixel detail (Q = one canvas pixel), with a highlight and a
-  // shade row, quarter ticks, an orange damage trail, a passing shine, and a heart that beats faster when low
-  const Q = P / 2, w = 54, h = 9, f = clamp(sq.hp / sq.maxHp, 0, 1), lag = clamp(sq.lag / sq.maxHp, 0, 1), t = R.t;
-  const cx = clamp(L0.x, (w / 2 + 8) * Q, W - (w / 2 + 2) * Q), x = snap(cx - w / 2 * Q + 4 * Q), y = snap(L0.y - 24 * P);
-  const ko = sq.ko > 0, low = !ko && f <= 0.25;
-  const C = ko ? ['#8e7c73', '#b9ad9c', '#5f5a48'] : f > 0.5 ? ['#74a334', '#a9d16a', '#4c7a2a'] : f > 0.25 ? ['#f1c471', '#ffe18d', '#c98f2f'] : ['#e0394c', '#f07b7b', '#8f3e56'];
-  const r = (a, b, c, d, col) => prect(x + a * Q, y + b * Q, c * Q, d * Q, col);
-  ctx.globalAlpha = 0.35; r(-1, 1, w + 2, h, INK); ctx.globalAlpha = 1;            // soft drop shadow
-  r(1, -1, w - 2, h + 2, INK); r(0, 0, w, h, INK);                                    // outline with cut corners
-  if (low && Math.floor(t * 4) % 2) { r(1, -1, w - 2, 1, '#e0394c'); r(1, h, w - 2, 1, '#e0394c'); }
-  const iw = w - 4, fx = Math.round(iw * f), lx = Math.round(iw * lag);
-  r(2, 2, iw, h - 4, '#2b2620');                                                       // empty trough
-  if (lx > fx) r(2 + fx, 2, lx - fx, h - 4, '#ff9554');                                // recent damage
-  if (fx > 0) {
-    r(2, 2, fx, h - 4, C[0]); r(2, 2, fx, 1, C[1]); r(2, h - 3, fx, 1, C[2]);
-    const sp = (t * 0.6 % 2.5) / 1.5;                                                  // shine sweep every 2.5 s
-    if (sp < 1 && !ko) { const sx = Math.round(sp * (fx + 6)) - 3; ctx.globalAlpha = 0.55; for (let k = 0; k < 2; k++) { const xx = sx + k; if (xx >= 0 && xx < fx) r(2 + xx, 2, 1, h - 4, '#ffffff'); } ctx.globalAlpha = 1; }
+  // squad health, drawn at half-art-pixel detail (Q = one canvas pixel):
+  // a gold-rimmed badge with a beating heart, then a metal-framed bar with a three-tone glossy fill, moving energy
+  // stripes, 10% notches, a bright leading edge, a damage trail (white flash, then orange), a green glint when
+  // healing, and the current HP written in the middle. Colour follows health: green > 50% > gold > 25% > red.
+  const Q = P / 2, t = R.t, BW = 62, BH = 14, BD = 18;            // bar width / height, badge size (in Q)
+  const f = clamp(sq.hp / sq.maxHp, 0, 1), lag = clamp(sq.lag / sq.maxHp, 0, 1);
+  const ko = sq.ko > 0, low = !ko && f <= 0.25, total = BD - 4 + BW;
+  const cx = clamp(L0.x, (total / 2 + 6) * Q, W - (total / 2 + 6) * Q);
+  const x0 = snap(cx - total / 2 * Q), y0 = snap(L0.y - 33 * P);
+  const r = (a, b, c, d, col) => prect(x0 + a * Q, y0 + b * Q, c * Q, d * Q, col);
+  const pal = ko ? ['#5f5a48', '#8e7c73', '#b9ad9c', '#d6cfc4'] : f > 0.5 ? ['#2f6b25', '#4f9a33', '#7cc847', '#c3f08a']
+    : f > 0.25 ? ['#8a5a14', '#c98f2f', '#f1c471', '#ffe9a8'] : ['#6b1f2a', '#b0283a', '#e0394c', '#ff9aa0'];
+  // healing glint (hp went up since last frame)
+  if (sq.prevHp !== undefined && sq.hp > sq.prevHp + sq.maxHp * 0.004) sq.healT = 0.35;
+  sq.prevHp = sq.hp; if (sq.healT > 0) sq.healT -= 1 / 60;
+  // ---- bar (to the right of the badge)
+  const bx = BD - 4, by = (BD - BH) / 2;
+  const R2 = (a, b, c, d, col) => r(bx + a, by + b, c, d, col);
+  ctx.globalAlpha = 0.35; R2(1, 2, BW, BH, INK); ctx.globalAlpha = 1;            // drop shadow
+  R2(1, 0, BW - 2, BH, INK); R2(0, 1, BW, BH - 2, INK);                            // outline, cut corners
+  R2(1, 1, BW - 2, 1, '#6f7d99'); R2(1, BH - 2, BW - 2, 1, '#262b3a');             // metal bevel
+  R2(BW - 3, 2, 2, BH - 4, '#454f68'); R2(BW - 3, 2, 1, BH - 4, '#a6b4cc');         // end cap
+  const ix = 2, iy = 2, iw = BW - 6, ih = BH - 4;
+  R2(ix, iy, iw, ih, '#171411'); R2(ix, iy, iw, 1, '#0c0a08');                     // trough + inner shadow
+  const fw = Math.round(iw * f), lw = Math.round(iw * lag);
+  if (lw > fw) R2(ix + fw, iy, lw - fw, ih, sq.hit > 0 ? '#ffffff' : '#ff9554');   // damage trail
+  if (fw > 0) {
+    R2(ix, iy, fw, ih, pal[1]);                                                     // body
+    R2(ix, iy, fw, Math.ceil(ih / 2), pal[2]);                                      // upper half lighter
+    R2(ix, iy, fw, 1, pal[3]);                                                      // top highlight
+    R2(ix, iy + ih - 1, fw, 1, pal[0]);                                             // bottom shade
+    if (!ko) {                                                                       // moving energy stripes
+      ctx.globalAlpha = 0.16;
+      const off = Math.floor(t * 14) % 8;
+      for (let k = -ih; k < fw; k += 8) for (let j = 0; j < ih; j++) { const xx = k + off + (ih - j); if (xx >= 0 && xx < fw) R2(ix + xx, iy + j, 2, 1, '#ffffff'); }
+      ctx.globalAlpha = 1;
+    }
+    R2(ix + fw - 1, iy, 1, ih, pal[3]);                                             // bright leading edge
+    if (sq.healT > 0) { ctx.globalAlpha = sq.healT / 0.35 * 0.6; R2(ix, iy, fw, ih, '#c3f08a'); ctx.globalAlpha = 1; }
   }
-  for (let k = 1; k < 4; k++) r(2 + Math.round(iw * k / 4), 3, 1, h - 6, 'rgba(19,27,27,0.45)');   // quarter ticks
+  for (let k = 1; k < 10; k++) { const xx = ix + Math.round(iw * k / 10); R2(xx, iy, 1, 1, 'rgba(19,27,27,0.55)'); R2(xx, iy + ih - 1, 1, 1, 'rgba(19,27,27,0.55)'); }
+  if (low && Math.floor(t * 4) % 2) { R2(1, -1, BW - 2, 1, '#e0394c'); R2(1, BH, BW - 2, 1, '#e0394c'); }
+  // HP number in the middle of the bar
+  if (!ko) btext(fmt(Math.max(0, sq.hp)), x0 + (bx + ix + iw / 2) * Q, y0 + (by + BH / 2) * Q, 'w', 0.5);
+  // ---- badge (drawn last so it overlaps the bar's left end)
+  const rim = ko ? '#8e7c73' : '#d9a03c', rimD = ko ? '#5f5a48' : '#9c6a24';
+  r(2, 0, BD - 4, BD, INK); r(0, 2, BD, BD - 4, INK); r(1, 1, BD - 2, BD - 2, INK);  // octagon outline
+  r(2, 1, BD - 4, 1, rim); r(1, 2, 1, BD - 4, rim); r(2, BD - 2, BD - 4, 1, rimD); r(BD - 2, 2, 1, BD - 4, rimD);
+  r(2, 2, BD - 4, BD - 4, ko ? '#3a3530' : low ? '#4a1c34' : '#1d2340');           // inner plate
+  r(3, 2, BD - 6, 1, 'rgba(255,255,255,0.18)');
   const beat = ko ? 0 : (t * (low ? 3.2 : 1.2)) % 1 < 0.15 ? 1 : 0;
-  spr('heart', x - 2 * Q, y + h / 2 * Q, beat ? 0.5 : 0.5, 0.5, 0.5);
-  if (beat) { ctx.globalAlpha = 0.5; spr('heart', x - 2 * Q, y + h / 2 * Q - Q, 0.5, 0.5, 0.5, false, 0, '#ffffff'); ctx.globalAlpha = 1; }
+  const hx = x0 + BD / 2 * Q, hy = y0 + BD / 2 * Q;
+  if (beat && !save.eco) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35; spr('vx_glow24_fire', hx, hy, 0.5, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+  spr('heart', hx, hy + (beat ? 0 : Q), 0.5, 0.5, 0.5);
+  if (ko) { ctx.globalAlpha = 0.6; spr('heart', hx, hy + Q, 0.5, 0.5, 0.5, false, 0, '#5f5a48'); ctx.globalAlpha = 1; }
 }
 function drawJoystick() {
   const j = R.joy; if (!j) return;
@@ -1947,7 +2012,9 @@ function updateUI(dt) {
   bb.classList.toggle('ready', save.bossReady && !R.boss); bb.classList.toggle('locked', !save.bossReady);
   $('bossBtnImg').src = `assets/ui/boss_${bossKey()}.png`;
   if (R.boss) {
-    $('bossFill').style.width = Math.max(0, R.boss.hp / R.boss.maxHp * 100) + '%';
+    const bf = Math.max(0, R.boss.hp / R.boss.maxHp * 100) + '%';
+    $('bossFill').style.width = bf; $('bossLag').style.width = bf;   // the lag bar follows late (CSS transition delay): a damage trail
+    $('bossHud').classList.toggle('p2', !!R.boss.p2);
     $('bossHpTxt').textContent = fmt(Math.max(0, R.boss.hp));
     const bt = $('bossTime'); bt.textContent = Math.max(0, Math.ceil(R.boss.t)); bt.classList.toggle('low', R.boss.t < 8);
   }
@@ -2197,9 +2264,10 @@ function frame(now) {
   if (R.stop > 0) { R.stop -= dt; dt *= 0.12; }
   if (R.paused) dt = 0;
   if (dt > 0) { const n = Math.max(1, Math.round(R.timeScale || 1)); for (let k = 0; k < n; k++) update(dt); }   // timeScale: test panel fast-forward
-  render(); updateUI(dt);
+  if (!R.psave) { render(); updateUI(dt); }   // power-save screen (features/powersave.js): the fight goes on, nothing is drawn
   const pop = R.walletPop > 0; if (pop !== popOn) { popOn = pop; $('money').parentNode.classList.toggle('pop', pop); }
-  saveT += dt; if (saveT > 5) { saveT = 0; persist(); }
+  saveT += Math.min(0.25, (now - (frame.prev || now)) / 1000); frame.prev = now;   // real time, also while paused
+  if (saveT > 5) { saveT = 0; persist(); }
   requestAnimationFrame(frame);
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) { persist(); for (const k in tracks) tracks[k].pause(); } else last = performance.now(); musicUpdate(); });
@@ -2210,6 +2278,7 @@ Promise.all([atlasReady, Promise.race([fontReady, new Promise(r => setTimeout(r,
   $('loading').classList.add('hidden');
   ctrlBadge();
   offlineReward();
+  if (loadInfo.recovered && loadInfo.from === 'backup') setTimeout(() => banner('KAYIT KURTARILDI', 'Kayıt yedekten kurtarıldı'), 1200);
   requestAnimationFrame(frame);
 });
 window.addEventListener('pointerdown', audioInit, { once: true });
@@ -2253,7 +2322,7 @@ window.SS = {
   save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
-  get _audio() { return { AC, master, sfxBus }; },
+  get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,
   get squad() { return R.sq; }, get leader() { return R.heroes[0]; },
   get U() { return U; }, get W() { return W; }, get H() { return H; }, get DPR() { return DPR; }, get P() { return P; },
   refreshUI() { uiKey = ''; }, get sounds() { return Object.keys(SND); }, get music() { return musicKey; },

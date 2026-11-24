@@ -7,6 +7,9 @@
   const SAVE_KEY = 'swarmsquad_idle_v1';
 
   if (typeof save.eco !== 'boolean') save.eco = false;
+  // the old "Eko mod" switch (fewer effects) is now Grafik: Düşük; the power-save screen lives in powersave.js
+  if (save.eco && !save.gfx) save.gfx = 'low';
+  save.eco = save.gfx === 'low';
   if (typeof save.vibrate !== 'boolean') save.vibrate = true;
   if (typeof save.sound !== 'boolean') save.sound = true;
   if (typeof save.music !== 'boolean') save.music = true;
@@ -23,7 +26,6 @@
   const ITEMS = [
     { key: 'sound', label: 'Efektler', icon: 'assets/ui/ic_sound_on.png', iconOff: 'assets/ui/ic_sound_off.png', note: 'Atış, para ve boss sesleri' },
     { key: 'music', label: 'Müzik', icon: 'assets/ui/ic_music.png', note: 'Bölge müzikleri' },
-    { key: 'eco', label: 'Eko mod', icon: 'assets/ui/ic_eco.png', note: 'Az efekt, az pil' },
     { key: 'vibrate', label: 'Titreşim', icon: 'assets/ui/ic_vibrate.png', note: 'Önemli anlarda titret' },
   ];
 
@@ -34,7 +36,7 @@
       money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1,
       rebirths: 0, rp: 0, auto: true, t: 0, rate: 0, best: 1,
     }, keep);
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage blocked */ }
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); localStorage.removeItem(SAVE_KEY + '_bak'); } catch (e) { /* storage blocked */ }
     SS.persist();
     SS.closePanel();
     SS.banner('SIFIRLANDI', 'Yeniden başlıyor…');
@@ -61,7 +63,7 @@
       }
       wrap.appendChild(tg);
       const gq = SS.el(`<div class="dv-speed"><span>Grafik</span>${[['auto', 'Otomatik'], ['high', 'Yüksek'], ['low', 'Düşük']].map(([k, l]) => `<button class="btn ${(save.gfx || 'auto') === k ? 'purple' : 'grey'}" data-k="${k}">${l}</button>`).join('')}</div>`);
-      gq.querySelectorAll('button').forEach(b => b.onclick = () => { save.gfx = b.dataset.k; SS.R.fx = b.dataset.k === 'low' ? 2 : 0; SS.sfx('click'); SS.persist(); open(confirming); });
+      gq.querySelectorAll('button').forEach(b => b.onclick = () => { save.gfx = b.dataset.k; save.eco = save.gfx === 'low'; SS.R.fx = b.dataset.k === 'low' ? 2 : 0; SS.sfx('click'); SS.persist(); open(confirming); });
       wrap.appendChild(gq);
       // volume sliders: master / music / effects (0-100), applied live to the audio graph
       if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
@@ -76,6 +78,12 @@
       wrap.appendChild(vols);
 
       // save code: move the game to another device / browser without an account (copy here, paste there)
+      // last save time + save now
+      const ago = () => { const st = SS.saveState; if (!st || !st.at) return 'henüz yok'; const s2 = Math.round((Date.now() - st.at) / 1000); return s2 < 60 ? `${s2} sn önce` : `${Math.round(s2 / 60)} dk önce`; };
+      const sv = SS.el(`<div class="toggles"><div class="vol sv-now"><img src="assets/ui/ic_save.png" alt=""><label>Otomatik kayıt<small class="sv-ago">Son kayıt: ${ago()}</small></label><button class="btn green">KAYDET</button></div></div>`);
+      sv.querySelector('.btn').onclick = () => { SS.persist(); SS.sfx('accept'); sv.querySelector('.sv-ago').textContent = 'Son kayıt: ' + ago(); SS.toast('Kaydedildi'); };
+      const svT = setInterval(() => { if (!sv.isConnected) return clearInterval(svT); const e = sv.querySelector('.sv-ago'); e.textContent = 'Son kayıt: ' + ago(); }, 1000);
+      wrap.appendChild(sv);
       const code = SS.el(`<div class="toggles"><div class="vol sv-code"><img src="assets/ui/key.png" alt=""><label>Kayıt kodu<small>Başka cihaza taşı</small></label>
         <button class="btn blue">KOPYALA</button><button class="btn grey">YÜKLE</button></div></div>`);
       const [cp, ld] = code.querySelectorAll('.btn');

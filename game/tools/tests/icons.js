@@ -3,7 +3,7 @@
 // price, a weapon's own icon in its row and on the Silah button) are allowed through ALLOW.
 const { chromium } = require('playwright'), path = require('path');
 const URL = 'file://' + path.resolve(__dirname, '../../index.html');
-const ALLOW = /\/(gem|gem_big|coin|lock|play|key|x|heart|mon_LanternRed|face_[A-Za-z]+|wi_[A-Za-z]+|mon_[A-Za-z0-9]+|boss_[A-Za-z0-9]+|chest|chest_open|cup|ic_neo|ic_rebirth|ic_luck|ic_ticket|ic_rapid|ic_boost|ic_scroll|ic_amulet)\.png$/;
+const ALLOW = /\/(gem|gem_big|coin|lock|play|key|x|heart|mon_LanternRed|face_[A-Za-z]+|wi_[A-Za-z]+|mon_[A-Za-z0-9]+|boss_[A-Za-z0-9]+|chest|chest_open|cup|ic_neo|ic_rebirth|ic_luck|ic_ticket|ic_rapid|ic_boost|ic_scroll|ic_amulet|ic_missions|ic_death|ic_towerach|ic_explore|ic_reap|ic_bosshunt)\.png$/;
 (async () => {
   const b = await chromium.launch(), use = new Map();
   const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, locale: 'tr-TR' })).newPage();
