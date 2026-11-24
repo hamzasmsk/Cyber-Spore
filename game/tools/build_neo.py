@@ -16,6 +16,9 @@ Style rules of the pack: 1 px ink outline (#131b1b), 3-tone ramps, hard pixels, 
 """
 import json
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -397,6 +400,9 @@ def main():
     anim['fxp_bit'] = 2
     for name, cols in VCOL.items():
         palette_fx(name, cols)
+    # hand-lit projectiles for every weapon (16 directions / spin steps), see tools/projectiles.py
+    import projectiles
+    projectiles.make(add, anim)
     slash('moon', VCOL['moon']); slash('neon', VCOL['neon'])
 
     # icons

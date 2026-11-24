@@ -750,11 +750,19 @@ const PSTYLE = {
   BigEnergyBall: { ramp: ['#ffffff', '#d9fbff', '#8feff1', '#6fb6ff', '#3b3aa6'], w: 6, len: 60, add: true, jitter: 1, motes: 'q_Spark', mp: 0.5, sparks: 10, ring: 'ice', sc: 1 },
   Plasma:        { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#ff4fb0'], w: 4, len: 56, add: true, motes: 'fxp_bit', mp: 0.4, sparks: 8, sc: 1 },
   Laser:         { ramp: ['#ffffff', '#ffd6ef', '#ff4fb0', '#7a1f5c'], w: 4, len: 150, add: true, sparks: 6, sc: 1, cut: 1 },
-  Katana:        { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#1b5f8c'], w: 8, len: 50, add: true, motes: 'fxp_bit', mp: 0.3, sparks: 9, ring: 'neon', sc: 1 },
+  Katana:        { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#1b5f8c'], w: 3, len: 34, add: true, motes: 'fxp_bit', mp: 0.3, sparks: 9, ring: 'neon', sc: 1 },
   Rail:          { ramp: ['#ffffff', '#d9fbff', '#3fd0e8', '#1b5f8c'], w: 3, len: 130, add: true, sparks: 6, sc: 1 },
   Drone:         { ramp: ['#ffffff', '#ffd6ef', '#ff4fb0', '#7a1f5c'], w: 3, len: 60, add: true, motes: 'fxp_bit', mp: 0.25, sparks: 7, sc: 1 },
 };
 const pstyle = g => PSTYLE[g.spr] || PSTYLE.Shuriken;
+// hand-lit projectile frames from tools/projectiles.py: 16 pre-drawn directions (no run-time rotation, so the
+// pixels stay clean at every angle) or spin steps. Returns the frame name, or null to fall back to the pack sprite.
+const SPIN_FPS = { Shuriken: 26, ShurikenMagic: 20, BigEnergyBall: 10, Plasma: 26 };
+function pName(base, age, ang) {
+  const nS = AN['pps_' + base]; if (nS) return `pps_${base}_${Math.floor(age * (SPIN_FPS[base] || 20)) % nS}`;
+  const nD = AN['ppd_' + base]; if (nD) { const d = ((Math.round(ang / (TAU / 16)) % 16) + 16) % 16; return `ppd_${base}_${d}_${Math.floor(age * 12) % nD}`; }
+  return null;
+}
 const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 const ramp = (r, t) => r[Math.min(r.length - 1, Math.max(0, Math.floor(t * r.length)))];
 // a filled disk on the pixel grid (rows of whole pixels, so it stays crisp)
@@ -1060,19 +1068,20 @@ function drawSpecs(t) {
       for (let i = 0; i < n; i++) {
         const a = sp.t * 7 + i / n * TAU, x = sp.x + Math.cos(a) * sp.rad, y = sp.y + Math.sin(a) * sp.rad * 0.7;
         for (let k = 1; k <= 2; k++) { const a2 = a - k * 0.25; ctx.globalAlpha = 0.35 / k; spr(`p_${sp.spr || 'Shuriken'}_0`, sp.x + Math.cos(a2) * sp.rad, sp.y + Math.sin(a2) * sp.rad * 0.7, 1, 0.5, 0.5, false, 0, '#fce2ca'); }
-        ctx.globalAlpha = 1; spr(`p_${sp.spr || 'Shuriken'}_${Math.floor(t * 20 + i) % 2}`, x, y, 1, 0.5, 0.5);
+        ctx.globalAlpha = 1; { const pn = pName(sp.spr || 'Shuriken', t + i * 0.05, 0); spr(pn || `p_${sp.spr || 'Shuriken'}_${Math.floor(t * 20 + i) % 2}`, x, y, 1, 0.5, 0.5); }
       }
     } else if (sp.k === 'drop') {
       if (sp.t < sp.delay) { ctx.globalAlpha = 0.5; ellipse(sp.x, sp.y, 7 * P, 3 * P); ctx.fillStyle = 'rgba(19,27,27,0.35)'; ctx.fill(); ctx.globalAlpha = 1; continue; }
       ctx.fillStyle = 'rgba(19,27,27,0.35)'; ellipse(sp.x, sp.y, 6 * P * (1 - sp.z / (400 * U)), 2.5 * P, 0, 0, TAU); ctx.fill();
       for (let k = 1; k <= 6; k++) { ctx.globalAlpha = 0.5 * (1 - k / 7); prect(sp.x - P / 2, sp.y - sp.z - k * 4 * P, P, 3 * P, '#fce2ca'); }
-      ctx.globalAlpha = 1; spr(sp.spr, sp.x, sp.y - sp.z, sp.sc, 0.5, 0.5, false, Math.PI / 2);
+      ctx.globalAlpha = 1;
+      { const pn = pName(sp.spr.replace(/^p_|_0$/g, ''), sp.t, Math.PI / 2); if (pn) spr(pn, sp.x, sp.y - sp.z, 1, 0.5, 0.5); else spr(sp.spr, sp.x, sp.y - sp.z, sp.sc, 0.5, 0.5, false, Math.PI / 2); }
     } else if (sp.k === 'arc') {
       if (sp.t < 0) continue;
       const u = sp.t / sp.T, x = lerp(sp.sx, sp.tx, u), gy = lerp(sp.sy, sp.ty, u), y = gy - Math.sin(Math.PI * u) * sp.hgt;
       const u2 = Math.min(1, u + 0.02), x2 = lerp(sp.sx, sp.tx, u2), y2 = lerp(sp.sy, sp.ty, u2) - Math.sin(Math.PI * u2) * sp.hgt;
       ctx.fillStyle = 'rgba(19,27,27,0.3)'; ellipse(x, gy, 5 * P, 2 * P); ctx.fill();
-      spr(sp.spr, x, y, 1, 0.5, 0.5, false, Math.round(Math.atan2(y2 - y, x2 - x) / (Math.PI / 8)) * (Math.PI / 8));
+      { const ang = Math.atan2(y2 - y, x2 - x), pn = pName(sp.spr.replace(/^p_|_0$/g, ''), sp.t, ang); if (pn) spr(pn, x, y, 1, 0.5, 0.5); else spr(sp.spr, x, y, 1, 0.5, 0.5, false, Math.round(ang / (Math.PI / 8)) * (Math.PI / 8)); }
     } else if (sp.k === 'column') {
       if (sp.t < sp.tele) {   // telegraph: thin blinking guide line
         if (Math.floor(t * 20) % 2) for (let y = 140; y < H - 170; y += 4 * P) prect(sp.x - P / 2, y, P, 2 * P, sp.col || '#d3a2c0');
@@ -1080,7 +1089,7 @@ function drawSpecs(t) {
       }
       const a = clamp(1 - (sp.life || 0) / 0.5, 0, 1);
       ctx.globalAlpha = a * 0.55; prect(sp.x - 9 * P, sp.y, 18 * P, H - sp.y, sp.col || '#d3a2c0'); ctx.globalAlpha = a; prect(sp.x - 3 * P, sp.y, 6 * P, H - sp.y, '#ffffff'); ctx.globalAlpha = 1;
-      spr(sp.spr || 'p_BigKunai_0', sp.x, sp.y, 1, 0.5, 0.5, false, -Math.PI / 2);
+      { const b = sp.spr || 'p_BigKunai_0', pn = pName(b.replace(/^p_|_0$/g, ''), sp.t, -Math.PI / 2); if (pn) spr(pn, sp.x, sp.y, 1.5, 0.5, 0.5); else spr(b, sp.x, sp.y, 1, 0.5, 0.5, false, -Math.PI / 2); }
     } else if (sp.k === 'bloom') {
       if (sp.t < sp.tele) { const k = sp.t / sp.tele; ctx.lineWidth = P; ctx.strokeStyle = Math.floor(t * 20) % 2 ? '#8feff1' : '#ffffff'; ellipse(sp.x, sp.y, 95 * U * k, 50 * U * k); ctx.stroke(); }
     } else if (sp.k === 'meteor') {
@@ -1678,9 +1687,12 @@ function render() {
       spr(`vx_glow${q.special || evolved() || sc >= 1.5 ? 40 : 24}_${q.pg || cosT || g.glow || 'gold'}`, q.x, q.y, 1, 0.5, 0.5);
       ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     }
-    const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
-    const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
-    spr(name, q.x, q.y, sc, 0.5, 0.5, false, rot);
+    const pn = pName(g.spr, q.age, q.a);
+    if (pn) spr(pn, q.x, q.y, (q.sc || g.sc || 1) / (g.sc || 1), 0.5, 0.5);
+    else {
+      const name = g.spin ? `p_${g.spr}_${Math.floor(q.age * 20) % n}` : `p_${g.spr}_${Math.floor(q.age * 12) % n}`;
+      spr(name, q.x, q.y, sc, 0.5, 0.5, false, g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8));
+    }
   }
   for (const p of R.parts) {
     const a = clamp(p.life / p.max, 0, 1);
@@ -2048,7 +2060,8 @@ function startPreview(canvas, gi) {
         const rot = g.spin ? 0 : Math.round((q.a - (g.ori || 0)) / (Math.PI / 8)) * (Math.PI / 8);
         drawRibbon(q, PS, PS.ramp, true, false);
         if (PS.add) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35; spr(`vx_glow24_${g.glow || 'gold'}`, q.x, q.y, 1, 0.5, 0.5); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-        spr(name, q.x, q.y, (g.sc || 1) * (PS.sc || 1), 0.5, 0.5, false, rot);
+        const pn = pName(g.spr, q.age, q.a);
+        if (pn) spr(pn, q.x, q.y, 1, 0.5, 0.5); else spr(name, q.x, q.y, (g.sc || 1) * (PS.sc || 1), 0.5, 0.5, false, rot);
       }
       for (const p of parts) {
         const a = p.life / p.max;
