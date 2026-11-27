@@ -37,8 +37,10 @@ const { chromium } = require('playwright'), path = require('path');
   await p.waitForTimeout(300); await p.evaluate(() => { const b = document.querySelector('.mz-ov .btn.green'); b && b.click(); }); await p.waitForTimeout(500);
   ok(await p.evaluate(g1 => ['dragon', 'lotus', 'neon'].every(SS.fxskins.owned) && SS.save.gems === g1 + 800, g1), 'neo pack grants');
   // Doğuş Paketi: offered once after the first Rebirth, with a 24 h timer, shown in the shop
-  await p.evaluate(() => { SS.save.rebirths = 0; SS.save.mon.lastPopup = 0; SS.closePanel(); SS.HOOKS.rebirth.forEach(f => { try { f(); } catch (e) {} }); });
-  await p.waitForTimeout(6500);
+  // (the squad is kept safe here: a knockout card would rightly hold the popup back)
+  await p.evaluate(() => { SS.R.sq.inv = 1e9; const k = document.getElementById('koCard'); if (k) k.remove(); SS.save.rebirths = 0; SS.save.mon.lastPopup = 0; SS.closePanel(); SS.HOOKS.rebirth.forEach(f => { try { f(); } catch (e) {} }); });
+  // the popup waits for the flow's calm gap (up to 25 s after the previous popup)
+  for (let i = 0; i < 40 && !(await p.evaluate(() => !!(SS.save.mon.offers.ss_rebirth_pack && SS.save.mon.offers.ss_rebirth_pack.until > Date.now()))); i++) await p.waitForTimeout(1000);
   ok(await p.evaluate(() => !!(SS.save.mon.offers.ss_rebirth_pack && SS.save.mon.offers.ss_rebirth_pack.until > Date.now())), 'rebirth pack offered');
   await p.evaluate(() => { SS.closePanel(); document.getElementById('shopBtn').click(); });
   await p.waitForTimeout(250);

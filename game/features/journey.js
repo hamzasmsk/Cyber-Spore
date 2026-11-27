@@ -85,7 +85,7 @@
     if (R.boss || R.mode) { SS.toast('Önce bu dövüşü bitir'); return; }
     SS.closePanel(); w.tries++; glass = !!r.glass;
     const keys = Object.keys(SS.BOSSES), key = keys[weekNo() % keys.length];
-    const hp = 10 * Math.pow(1.3, ((save.best || 1) - 1) * 5 + 4) * 22 * r.hp;
+    const hp = 10 * Math.pow(1.3, ((save.best || 1) - 1) * 5 + 4) * (SS.earlyHp ? SS.earlyHp(save.best || 1) : 1) * 22 * r.hp;
     SS.startBoss({ key, hp, time: r.time || 40, rage: !!r.rage, spd: r.spd || 1, sig: r.sig || null, sub: `Haftalık · ${r.name}`, done: won => {
       glass = false;
       if (won) { w.done = true; SS.chest([{ icon: 'gem', label: '40 elmas', apply: () => { save.gems += 40; } }, { icon: 'ic_amulet', label: 'Tılsım Sv.2', apply: () => SS.charms && SS.charms.give(['atk', 'gold', 'guard'][weekNo() % 3], 2) }, { icon: 'ic_scroll', label: '4 parşömen', apply: () => SS.giveScroll(4) }], 'Haftalık sandık'); }

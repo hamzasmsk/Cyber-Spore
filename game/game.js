@@ -267,9 +267,14 @@ const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * (1 + 
 const fireRate = () => stat.speed(save.lv.speed) * modMul('rate') * (R.ultT > 0 ? 3 : 1);
 const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
-const enemyHp = () => 10 * Math.pow(1.3, stageIdx()) * modMul('ehp');
-const reward = () => 10 * Math.pow(1.28, stageIdx());
-const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * 22 * modMul('ehp');
+// early ramp: the first 8 stages get much tougher stage by stage (x2.4 each) while gold grows less (x1.7 each), so
+// gold upgrades alone stall around stage 6 and the next weapon is what carries you on (tools/economy-sim.js ex/rex)
+const EARLY_HP = 2.4, EARLY_GOLD = 1.691, EARLY_CAP = 8;
+const earlyHp = st => Math.pow(EARLY_HP, Math.min(Math.max(0, st - 1), EARLY_CAP));
+const earlyGold = st => Math.pow(EARLY_GOLD, Math.min(Math.max(0, st - 1), EARLY_CAP));
+const enemyHp = () => 10 * Math.pow(1.3, stageIdx()) * earlyHp(save.stage) * modMul('ehp');
+const reward = () => 10 * Math.pow(1.28, stageIdx()) * earlyGold(save.stage);
+const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * earlyHp(save.stage) * 22 * modMul('ehp');
 const bossTime = () => BOSS_TIME + modAdd('bossTime');
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
@@ -590,8 +595,10 @@ function startAdvance(dist, spd) { R.phase = 'advance'; R.advLeft = dist; R.advS
 function startWave() {
   R.phase = 'fight'; R.waveT = 0;
   // every so often a horde: twice the crowd, each one frailer, pouring in fast
-  R.horde = save.stage >= 2 && Math.random() < 0.18;
-  R.toSpawn = R.horde ? 20 + Math.floor(Math.random() * 7) : 8 + Math.floor(Math.random() * 4) + Math.min(4, Math.floor(save.stage / 4));
+  // the crowd grows with the stage: ~12 at the start, ~25 by stage 15; hordes (1 in 4) bring 30-60 frail ones
+  R.horde = save.stage >= 2 && Math.random() < 0.25;
+  R.toSpawn = R.horde ? 28 + Math.min(26, Math.floor(save.stage * 1.3)) + Math.floor(Math.random() * 7)
+    : 10 + Math.floor(Math.random() * 4) + Math.min(14, Math.floor(save.stage * 0.9));
   R.spawnT = 0.1;
   if (R.horde) { banner2('SÜRÜ!'); sfx('elite', 0); R.shake = 3; }
   if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
@@ -620,7 +627,7 @@ function spawnEnemy(forceVr) {
   const b = biome(), type = pick(b.pool), d = EDEF[type];
   const lane = R.horde ? rand(-0.55, 0.55) : rand(-0.45, 0.45);
   const x = clamp(W / 2 + lane * F.pathW * 1.1, 60 * U, W - 60 * U), y = 120 + rand(-20, 20) * U;
-  const elite = !R.horde && save.stage >= 2 && Math.random() < 0.1, hm = R.horde ? 0.6 : 1;
+  const elite = !R.horde && save.stage >= 2 && Math.random() < 0.1, hm = R.horde ? 0.5 : 1;
   // variants (from stage 4): shield / splitter / healer / runner — they make weapon choice and target order matter
   const vr = forceVr === 'none' ? null : forceVr || !elite && !R.horde && save.stage >= 4 && Math.random() < 0.2 ? pick(VARIANTS) : null, vd = vr ? VAR[vr] : null;
   const hp = enemyHp() * EHP * hm * (d.hp || 1) * (elite ? 4 : 1) * (vd ? vd.hp : 1);
@@ -1501,7 +1508,7 @@ function update(dt) {
         else startWave();
       }
     } else if (R.phase === 'fight' && !ko) {
-      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { spawnEnemy(); R.toSpawn--; R.spawnT = R.horde ? rand(0.04, 0.09) : rand(0.08, 0.2); } }
+      if (R.toSpawn > 0) { R.spawnT -= dt; if (R.spawnT <= 0) { const k = Math.min(R.toSpawn, R.horde ? 3 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 3)); for (let i = 0; i < k; i++) spawnEnemy(); R.toSpawn -= k; R.spawnT = R.horde ? rand(0.12, 0.22) : rand(0.3, 0.55); } }   // packs of 2-4 (hordes 3-5), so the field fills up
       else if (R.en.length <= 2 && !R.eb.length && R.toSpawn <= 0 && (R.en.length === 0 || R.waveT > 4)) startAdvance(rand(110, 170) * U, 160 * U);
     }
   }
@@ -2405,7 +2412,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  colBox, moneyMul, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  colBox, moneyMul, earlyHp, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,
