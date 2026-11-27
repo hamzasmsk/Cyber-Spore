@@ -84,6 +84,19 @@
       sv.querySelector('.btn').onclick = () => { SS.persist(); SS.sfx('accept'); sv.querySelector('.sv-ago').textContent = 'Son kayıt: ' + ago(); SS.toast('Kaydedildi'); };
       const svT = setInterval(() => { if (!sv.isConnected) return clearInterval(svT); const e = sv.querySelector('.sv-ago'); e.textContent = 'Son kayıt: ' + ago(); }, 1000);
       wrap.appendChild(sv);
+      // reminders (local notifications, phone app only): daily reward, mine full, offline earnings at their limit
+      const NT = SS.daily && SS.daily.Notif;
+      if (NT && NT.native) {
+        const nt = SS.el(`<div class="toggles"><div class="vol sv-now"><img src="assets/ui/ic_bell.png" alt=""><label>Hatırlatıcılar<small>Günde en fazla 2, gece asla</small></label><button class="btn ${save.notify ? 'green' : 'grey'}">${save.notify ? 'Açık' : 'Kapalı'}</button></div></div>`);
+        const b = nt.querySelector('.btn');
+        b.onclick = async () => {
+          SS.sfx('click');
+          if (save.notify) { save.notify = false; NT.cancel(); SS.persist(); SS.toast('Hatırlatıcılar kapalı'); }
+          else await NT.enable();
+          b.className = 'btn ' + (save.notify ? 'green' : 'grey'); b.textContent = SS.t ? SS.t(save.notify ? 'Açık' : 'Kapalı') : (save.notify ? 'Açık' : 'Kapalı');
+        };
+        wrap.appendChild(nt);
+      }
       const code = SS.el(`<div class="toggles"><div class="vol sv-code"><img src="assets/ui/key.png" alt=""><label>Kayıt kodu<small>Başka cihaza taşı</small></label>
         <button class="btn blue">KOPYALA</button><button class="btn grey">YÜKLE</button></div></div>`);
       const [cp, ld] = code.querySelectorAll('.btn');

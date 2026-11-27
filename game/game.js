@@ -2313,23 +2313,32 @@ const PANELS = {
   }),
 };
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { audioInit(); sfx('click'); PANELS[b.dataset.open](); }));
+// AFK earnings: while the game is closed or in the background, the squad keeps earning at half its measured gold
+// rate, up to the cap (8 h + Ruh Ağacı "Derin Uyku"). Shown on start and when the app comes back after 2+ min.
+const OFF_EFF = 0.5;
 function offlineReward() {
-  if (!save.t) return;
+  if (!save.t || R.offOpen) return;
   // measured from the latest time the game has ever seen, so moving the device clock forward and back pays nothing extra
   const away = (Date.now() - Math.max(save.t, save.tMax || 0)) / 1000;
   if (away < 60 || !save.rate) return;
-  const gain = Math.min(away, (8 + modAdd('offH')) * 3600) * save.rate * 0.4;
+  const capH = 8 + modAdd('offH'), capS = capH * 3600, used = Math.min(away, capS);
+  const gain = used * save.rate * OFF_EFF;
   if (gain < 1) return;
-  const h = Math.floor(away / 3600), m = Math.floor(away % 3600 / 60);
+  const ht = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} sa ${m} dk` : `${m} dk`; };
+  const SSx = window.SS, mine = SSx && SSx.mine && save.mine ? Math.floor(save.mine.stored || 0) : 0, full = away >= capS;
+  R.offOpen = true;
   openPanel('Hoş geldin!', 'green', body => {
-    body.appendChild(el(`<p class="big-note">Sen yokken (${h ? h + ' sa ' : ''}${m} dk) takımın savaşmaya devam etti:</p>`));
-    body.appendChild(el(`<div class="big-num">+${fmt(gain)}</div>`));
-    const Ads = window.SS && window.SS.Ads;
-    const row = el(`<div class="btnrow"><button class="btn green"><img src="assets/ui/coin.png" alt="">TOPLA</button>${Ads && Ads.available('offline') ? '<button class="btn yellow"><img src="assets/ui/play.png" alt="">x2 TOPLA</button>' : ''}</div>`);
+    body.appendChild(el(`<p class="big-note">Sen yokken (${ht(away)}) takımın savaşmaya devam etti:</p>`));
+    body.appendChild(el(`<div class="big-num off-gold"><img src="assets/ui/coin.png" alt="">+${fmt(gain)}</div>`));
+    body.appendChild(el(`<div class="off-cap ${full ? 'full' : ''}"><div class="fa-bar ${full ? 'full' : ''}"><i style="width:${Math.min(100, used / capS * 100).toFixed(1)}%"></i><span>${ht(used)} / ${capH} sa</span></div>
+      <small>${full ? `Sınır doldu: ${capH} saatten sonrası sayılmadı. Ruh Ağacı'ndaki Derin Uyku sınırı uzatır.` : `Çevrimdışı verim: aktif oyunun %${Math.round(OFF_EFF * 100)}'i · sınır ${capH} saat`}</small></div>`));
+    if (mine >= 1) body.appendChild(el(`<div class="off-mine"><img src="assets/ui/ic_mine.png" alt=""><span>Madende <b>${mine}</b> elmas birikti</span></div>`));
+    const Ads = SSx && SSx.Ads, two = Ads && Ads.available('offline');
+    const row = el(`<div class="btnrow"><button class="btn green"><img src="assets/ui/coin.png" alt="">TOPLA</button>${two ? `<button class="btn yellow"><img src="assets/ui/play.png" alt="">x2 TOPLA<small class="off-left">${Ads.remaining('offline')}/3</small></button>` : ''}</div>`);
     // paid exactly once: buttons lock on the first tap, and closing the panel any other way (X, backdrop, back
     // button) still pays the plain amount
     let paid = false;
-    const pay = mul => { if (paid) return; paid = true; addMoney(gain * mul, W / 2, H / 2, mul > 1 ? 24 : 16); sfx('gold', 0); persist(); };
+    const pay = mul => { if (paid) return; paid = true; R.offOpen = false; addMoney(gain * mul, W / 2, H / 2, mul > 1 ? 24 : 16); sfx('gold', 0); persist(); };
     const lock = () => { for (const b of row.children) b.classList.add('off'); };
     row.children[0].onclick = () => { if (paid || row.dataset.busy) return; audioInit(); lock(); pay(1); closePanel(); };
     if (row.children[1]) row.children[1].onclick = async () => { if (paid || row.dataset.busy) return; row.dataset.busy = '1'; audioInit(); lock(); const ok = await Ads.show('offline'); pay(ok ? 2 : 1); closePanel(); };
@@ -2337,6 +2346,13 @@ function offlineReward() {
     const watch = setInterval(() => { if (!body.isConnected || $('panel').classList.contains('hidden')) { clearInterval(watch); if (!row.dataset.busy) pay(1); } }, 300);
   });
 }
+// back from the background (phones pause the game when another app is in front): count that time too
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (hiddenAt && Date.now() - hiddenAt > 120000 && $('panel').classList.contains('hidden') && !R.boss && !R.mode && !R.psave) setTimeout(offlineReward, 400);
+  hiddenAt = 0;
+});
 
 // ================================================================ loop
 let last = performance.now(), saveT = 0, popOn = false;
