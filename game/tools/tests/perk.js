@@ -15,6 +15,13 @@ const { chromium, devices } = require('playwright');
   console.log('paused', await page.evaluate(() => SS.R.paused), JSON.stringify(await page.evaluate(() => SS.save.perks)));
   await page.evaluate(() => { SS.save.perks = { frost: 2, chain: 2, blast: 2, multi: 1, pierce: 1, flame: 1 }; });
   await page.waitForTimeout(2500); await page.screenshot({ path: S + '/2-play.png' });
+  // new crowd cards: spinning blades cut, reaper bursts, execute finishes, second wind saves a knockout
+  await page.evaluate(() => { SS.save.perks = { orbit: 2, reaper: 3, execute: 2, second: 1 }; SS.HOOKS.perk.forEach(h => h({ id: 'second' })); window.__k = 0; SS.HOOKS.kill.push(() => window.__k++); });
+  await page.waitForTimeout(3000); await page.screenshot({ path: S + '/2b-orbit.png' });
+  console.log('kills with new cards', await page.evaluate(() => window.__k));
+  const sw = await page.evaluate(() => { const sq = SS.R.sq; sq.inv = 0; sq.ko = 0; sq.hp = 1; SS.hurtSquad(999999, sq.x, sq.y); return [sq.ko, Math.round(sq.hp / sq.maxHp * 100)]; });
+  console.log('second wind', JSON.stringify(sw));
+  if (sw[0] > 0 || sw[1] < 40) errs.push('second wind did not save the knockout');
   // boss win → auto offer, idle auto pick
   await page.evaluate(() => { SS.save.bossReady = true; SS.startBoss(); });
   await page.waitForTimeout(2500);
