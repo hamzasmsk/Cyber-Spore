@@ -2,7 +2,7 @@
    - 30 levels, each with a free and a premium reward drawn from every reward type in the game: gems, gold,
      x2 power, rapid fire, treasure hunter, Yıldız Taşı (weapon star), 
      Boss Bileti (+15 s without an ad), mine chests, and the season's exclusive costumes and shot trails.
-   - Milestone chests every 5 levels; after level 30 a bonus chest every 300 XP.
+   - Milestone chests every 5 levels; after level 30 a bonus chest every 600 XP. Level = 450 XP.
    - Daily and weekly pass tasks give XP; levels can be skipped with gems.
    - Premium (one purchase per season) pays out every level already reached; Premium+ also adds 10 levels.
    - Seasons rotate through 4 themes, each with its own pair of costumes and trails. */
@@ -10,7 +10,7 @@
 (() => {
   const SS = window.SS;
   if (!SS) { console.warn('pass: SS missing'); return; }
-  const save = SS.save, DAY = 864e5, SEASON_DAYS = 28, LEVELS = 30, XP_PER = 150, BONUS_XP = 300, SKIP_GEMS = 25;
+  const save = SS.save, DAY = 864e5, SEASON_DAYS = 28, LEVELS = 30, XP_PER = 450, BONUS_XP = 600, SKIP_GEMS = 25;
   const EPOCH = Date.UTC(2026, 0, 5);
   const seasonNo = () => Math.floor((Date.now() - EPOCH) / (SEASON_DAYS * DAY)) + 1;
   const seasonEnd = () => EPOCH + seasonNo() * SEASON_DAYS * DAY;
@@ -102,12 +102,12 @@
   const weekKey = () => { const d = new Date(), day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); };
   const today = () => new Date().toISOString().slice(0, 10);
   const DAILY = [
-    { id: 'd_kill', text: 'Düşman yen', goal: 250, xp: 100, ev: 'kill' }, { id: 'd_boss', text: 'Boss yen', goal: 1, xp: 120, ev: 'boss' },
+    { id: 'd_kill', text: 'Düşman yen', goal: 600, xp: 100, ev: 'kill' }, { id: 'd_boss', text: 'Boss yen', goal: 1, xp: 120, ev: 'boss' },
     { id: 'd_elite', text: 'Elit düşman yen', goal: 3, xp: 80, ev: 'elite' }, { id: 'd_tre', text: 'Hazine canavarı yakala', goal: 1, xp: 80, ev: 'treasure' },
     { id: 'd_buy', text: 'Geliştirme al', goal: 25, xp: 60, ev: 'buy' },
   ];
   const WEEKLY = [
-    { id: 'w_kill', text: 'Düşman yen', goal: 3500, xp: 400, ev: 'kill' }, { id: 'w_boss', text: 'Boss yen', goal: 15, xp: 500, ev: 'boss' },
+    { id: 'w_kill', text: 'Düşman yen', goal: 8000, xp: 400, ev: 'kill' }, { id: 'w_boss', text: 'Boss yen', goal: 15, xp: 500, ev: 'boss' },
     { id: 'w_tre', text: 'Hazine canavarı yakala', goal: 3, xp: 300, ev: 'treasure' }, { id: 'w_star', text: 'Silah yıldızı yükselt', goal: 2, xp: 300, ev: 'star' },
     { id: 'w_reb', text: 'Yeniden doğ', goal: 1, xp: 400, ev: 'rebirth' },
   ];
@@ -133,8 +133,13 @@
     for (const t of s.tasks.list.concat(s.week.list)) { const d = def(t.id); if (d && d.ev === ev && !t.done && t.n < d.goal) { t.n = Math.min(d.goal, t.n + k); changed = true; } }
     if (changed) paintDot();
   }
-  SS.HOOKS.kill.push(e => { addXp(e && e.treasure ? 10 : e && e.elite ? 4 : Math.random() < 0.57 ? 1 : 0); progress('kill'); if (e && e.elite) progress('elite'); if (e && e.treasure) progress('treasure'); });
-  SS.HOOKS.bossWin.push(() => { addXp(40); progress('boss'); });
+  // XP from playing is capped per day (80 from enemies, 8 bosses x 15), so the season is a month of visits, not
+  // an afternoon: a daily player finishes level 30 around day 17-22 of 28, a casual one reaches ~18-24
+  const KILL_CAP = 80, BOSS_XP = 15, BOSS_CAP = 8;
+  const dayCap = () => { const s = st(); if (!s.cap || s.cap.day !== today()) s.cap = { day: today(), kill: 0, boss: 0 }; return s.cap; };
+  const killXp = n => { const c = dayCap(); const g = Math.min(n, KILL_CAP - c.kill); if (g > 0) { c.kill += g; addXp(g); } };
+  SS.HOOKS.kill.push(e => { killXp(e && e.treasure ? 10 : e && e.elite ? 2 : Math.random() < 0.15 ? 1 : 0); progress('kill'); if (e && e.elite) progress('elite'); if (e && e.treasure) progress('treasure'); });
+  SS.HOOKS.bossWin.push(() => { const c = dayCap(); if (c.boss < BOSS_CAP) { c.boss++; addXp(BOSS_XP); } progress('boss'); });
   SS.HOOKS.buy.push(() => progress('buy'));
   for (const ev of ['ult', 'star', 'rebirth']) { SS.HOOKS[ev] = SS.HOOKS[ev] || []; SS.HOOKS[ev].push(() => progress(ev)); }
   { const s = st(); if (s.login !== today()) { s.login = today(); s.xp += 60; } }
@@ -185,6 +190,7 @@
       body.appendChild(SS.el(`<div class="ps-head ${th.col}"><div class="ps-lv"><small>SV</small><b>${L}</b></div>
         <div class="ps-info"><b>Sezon ${s.season} · ${th.name}</b><span>Bitiş: <em>${timeLeft()}</em>${s.premium ? ' · <i class="ps-prem">PREMIUM</i>' : ''}</span>
         <div class="pbar"><i style="width:${pct}%"></i><span>${L >= LEVELS ? `Bonus sandık: ${(s.xp - LEVELS * XP_PER) % BONUS_XP} / ${BONUS_XP} XP` : `${into} / ${XP_PER} XP`}</span></div></div></div>`));
+      { const c = dayCap(); body.appendChild(SS.el(`<p class="ps-cap">Bugün oyundan XP: düşman ${c.kill}/${KILL_CAP} · boss ${c.boss * BOSS_XP}/${BOSS_CAP * BOSS_XP} · görevler sınırsız</p>`)); }
       // inventory strip
       body.appendChild(SS.el(`<div class="ps-inv"><span><img src="assets/ui/ic_luck.png" alt="">Yıldız Taşı <b>${save.inv.star}</b></span><span><img src="assets/ui/ic_ticket.png" alt="">Bilet <b>${save.inv.ticket}</b></span></div>`));
       // season showcase

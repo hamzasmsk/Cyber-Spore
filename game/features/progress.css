@@ -383,3 +383,5 @@ body.ps-on #ui,body.ps-on #c{visibility:hidden}
 .vol.sv-now label small,.vol.sv-code label small{font-size:11px;color:var(--muted);font-weight:400}
 .vol.sv-now .btn,.vol.sv-code .btn{flex:none;min-width:0;padding-inline:8px;font-size:13px;min-height:36px}
 .hub-tabs .btn span{font-size:inherit}
+.ps-cap{margin:4px 2px 2px;font-size:11px;color:var(--muted);text-align:center}
+.ps-cap b{color:var(--dark)}
