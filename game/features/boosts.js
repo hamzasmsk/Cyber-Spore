@@ -53,7 +53,7 @@
     run(() => {
       const b = st(); b.adEnd = now() + AD_DUR; b.adCd = b.adEnd + AD_CD;
       SS.persist(); SS.refreshUI(); SS.sfx('win'); vib(60);
-      SS.banner('x2 GÜÇ!', 'Hasar ve para 3 dakika boyunca x2');
+      SS.banner('x2 GÜÇ!', 'Hasar ve altın 3 dakika boyunca x2');
       paint();
     });
   }
@@ -98,7 +98,7 @@
     }
   }
   const stateKey = () => [adOn(), adCooling(), rateOn(), (save.gems || 0) >= RATE_COST].join();
-  const adText = () => adOn() ? `Aktif · ${mmss(st().adEnd - now())} kaldı` : adCooling() ? `Bekleme · ${mmss(st().adCd - now())}` : 'Hasar ve para x2 · 3 dakika';
+  const adText = () => adOn() ? `Aktif · ${mmss(st().adEnd - now())} kaldı` : adCooling() ? `Bekleme · ${mmss(st().adCd - now())}` : 'Hasar ve altın x2 · 3 dakika';
   const rateText = () => rateOn() ? `Aktif · ${mmss(st().rateEnd - now())} kaldı` : 'Atış hızı x1.5 · 2 dakika';
 
   function open() {

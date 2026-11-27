@@ -26,7 +26,7 @@ function fmt(n) {
   if (e < SUF.length) s = SUF[e];
   else { const k = e - SUF.length; s = String.fromCharCode(97 + Math.floor(k / 26) % 26) + String.fromCharCode(97 + k % 26); }
   const v = n / Math.pow(1000, e);
-  return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : String(Math.floor(v))) + s;
+  return String(v < 10 ? parseFloat(v.toFixed(2)) : v < 100 ? parseFloat(v.toFixed(1)) : Math.floor(v)) + s;   // 2.5K, not 2.50K
 }
 
 // ================================================================ canvas & field geometry
@@ -2163,9 +2163,19 @@ cards.forEach(c => {
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => c.addEventListener(ev, stop));
   c.addEventListener('contextmenu', e => e.preventDefault());
 });
-$('bossBtn').onclick = () => { audioInit(); if (save.bossReady && !R.boss) startBoss(); else if (!save.bossReady) toast(`Önce ${SUBS} aşamayı bitir`); };
+$('bossBtn').onclick = () => { audioInit(); if (save.bossReady && !R.boss) startBoss(); else if (!save.bossReady) toast(`Önce bölümün ${Math.max(1, SUBS - save.sub + 1)} aşamasını daha bitir`); };
 function banner(text, sub = '') { const b = $('banner'); b.innerHTML = text + (sub ? `<small>${sub}</small>` : ''); b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); }
-function toast(text) { const t = $('toast'); t.textContent = text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); }
+// toasts take turns (at least 1.4 s each), the same text is never queued twice and at most 3 wait, so a burst of
+// small news does not flicker over the fight
+const toastQ = []; let toastAt = 0, toastTm = 0;
+function toastShow(text) { const t = $('toast'); t.textContent = text; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); toastAt = performance.now(); }
+function toastNext() { toastTm = 0; if (!toastQ.length) return; toastShow(toastQ.shift()); if (toastQ.length) toastTm = setTimeout(toastNext, 1400); }
+function toast(text) {
+  if (performance.now() - toastAt >= 1400 && !toastQ.length) { toastShow(text); return; }
+  if ($('toast').textContent === text || toastQ.includes(text)) return;
+  toastQ.push(text); if (toastQ.length > 3) toastQ.shift();
+  if (!toastTm) toastTm = setTimeout(toastNext, Math.max(0, 1400 - (performance.now() - toastAt)));
+}
 
 // ---------------- panels (weapons, team, rebirth, offline)
 function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
@@ -2325,7 +2335,7 @@ const PANELS = {
     }
     const gain = rebirthGain(), souls = T ? T.soulGain() : 0;
     body.appendChild(el(`<div class="big-num">x${fmt(1 + save.rp * 0.3)}</div>`));
-    body.appendChild(el('<p class="big-note">Kalıcı hasar ve para bonusun. Her doğuş puanı +%30 ekler.</p>'));
+    body.appendChild(el('<p class="big-note">Kalıcı hasar ve altın bonusun. Her doğuş puanı +%30 ekler.</p>'));
     body.appendChild(el(`<div class="row-card"><div class="ico tile"><img src="assets/ui/ic_rebirth.png" alt=""></div><div class="info"><h4>+${fmt(gain)} doğuş puanı${souls ? ` · +${souls} ruh` : ''}</h4>
       <p>${gain > 0 ? `Bonus x${fmt(1 + save.rp * 0.3)} → x${fmt(1 + (save.rp + gain) * 0.3)} · +${rebirthGems(gain)} elmas${souls ? ` · Ruh Ağacı için ${souls} ruh` : ''}. Bölüm, seviyeler ve altın sıfırlanır; elmas, silahlar, takım ve Ruh Ağacı kalır.` : `${REBIRTH_MIN}. bölüme ulaşınca açılır. Puan her bölümde %18 artar: ne kadar ileri gidersen o kadar değerli.`}</p></div></div>`));
     const pk = window.SS && window.SS.perks ? window.SS.perks.list() : [];
