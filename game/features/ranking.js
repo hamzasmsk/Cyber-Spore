@@ -86,7 +86,7 @@
 
       const st = save.stats || {}, surv = save.surv || {}, tw = save.tower || {};
       const recs = [
-        ['ic_explore', 'En iyi bölüm', b], ['ic_reborn', 'Bu dönem', Math.max(K.life, save.stage || 1)],
+        ['ic_explore', 'En iyi bölüm', b], ['ic_reborn', 'Bu Doğuşta en iyi', Math.max(K.life, save.stage || 1)],
         ['ic_towerach', 'Kule katı', tw.best || 0], ['ic_wave', 'Arena dalgası', surv.best || 0],
         ['ic_rebirth', 'Doğuş', save.rebirths || 0], ['ic_bosshunt', 'Boss', SS.fmt(st.bosses || 0)],
         ['ic_reap', 'Düşman', SS.fmt(st.kills || 0)], ['ic_clock', 'Oyun süresi', dur(K.play)],
