@@ -102,5 +102,44 @@
     const tg = w.querySelector('.toggles'); (tg || w).appendChild(row);
   }).observe(document.getElementById('pBody'), { childList: true });
 
-  SS.analytics = { get ready() { return ready; }, log, send };
+  // ---------------- balance: how long each stage takes, where the gold goes, which cards are offered vs. taken
+  // Stage:Time:<stage> = minutes of play (app in front) from reaching the previous best stage to this one
+  const K = () => save.rank || {};
+  let stBest = save.best || 1, stAt = K().play || 0;
+  setInterval(() => {
+    const b = save.best || 1;
+    if (b > stBest) { const now = K().play || 0; if (b <= 60) send('addDesignEvent', `Stage:Time:${pad(b)}`, Math.round((now - stAt) / 6) / 10); stBest = b; stAt = now; }
+  }, 2000);
+  // Upgrade:<power|speed|money> every 10 levels bought, value = stage (which upgrades players lean on, and when)
+  H.buy && H.buy.push(k => { const lv = save.lv && save.lv[k]; if (lv && lv % 10 === 0) send('addDesignEvent', `Upgrade:${k}`, save.stage); });
+  // Boss:Time:<stage> = seconds a won fight took (how close the timer was)
+  let bossT0 = 0; H.bossStart.push(b => { if (b && !b.ex) bossT0 = SS.R.t; });
+  H.bossWin.push(() => { if (bossT0) send('addDesignEvent', `Boss:Time:${pad(save.stage)}`, Math.round(SS.R.t - bossT0)); bossT0 = 0; });
+  // Perk:Offer:<id> for every card shown (pick rate = Perk:<id> / Perk:Offer:<id>)
+  if (SS.perks) new MutationObserver(() => {
+    const ov = document.querySelector('#ui .pk-ov .pk-row'); if (!ov || ov.dataset.ga) return; ov.dataset.ga = '1';
+    for (const c of ov.querySelectorAll('.pk-card[data-id]')) send('addDesignEvent', `Perk:Offer:${c.dataset.id}`);
+  }).observe(document.getElementById('ui'), { childList: true });
+
+  // ---------------- Remote Configs: re-balance without a new release (game.js TUNE, store/DENGE.md)
+  // keys "tune_<name>" with a number; the values are clamped to a safe range in game.js setTune and remembered in
+  // save.tune so the next start uses them from the first second
+  function pullTune() {
+    if (!ready || !GA || !GA.isRemoteConfigsReady || !GA.isRemoteConfigsReady()) return;
+    const o = {};
+    for (const k in SS.TUNE_DEF || {}) {
+      let v = null; try { v = GA.getRemoteConfigsValueAsString('tune_' + k, ''); } catch (e) { v = null; }
+      if (v !== null && v !== '' && isFinite(+v)) o[k] = +v;
+    }
+    // keys removed from the dashboard fall back to the built-in value
+    const full = { ...SS.TUNE_DEF, ...o }, ch = SS.setTune(full);
+    save.tune = o; SS.persist && SS.persist();
+    if (ch.length) send('addDesignEvent', 'Tune:Applied', ch.length);
+  }
+  if (ready && GA && GA.addRemoteConfigsListener) {
+    try { GA.addRemoteConfigsListener({ onRemoteConfigsUpdated: pullTune }); } catch (e) { /* ignore */ }
+    setTimeout(pullTune, 4000);
+  }
+
+  SS.analytics = { get ready() { return ready; }, log, send, pullTune };
 })();

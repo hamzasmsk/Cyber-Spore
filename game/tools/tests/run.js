@@ -3,7 +3,7 @@
 //                      node tools/tests/run.js qa tower   only some
 // A test passes when it exits 0 and its last line says "errors none". Screenshots go to tools/tests/out/.
 const { spawnSync } = require('child_process'), path = require('path'), fs = require('fs');
-const ALL = ['qa', 'weap', 'mon', 'pass', 'tw', 'tree', 'perk', 'daily', 't13', 'flow', 'dev', 'charm', 'journey', 'variants', 'i18nscan', 'icons', 'neo', 'analytics', 'weakspot', 'powersave', 'saves', 'ranking', 'hp', 'offline'];
+const ALL = ['qa', 'weap', 'mon', 'pass', 'tw', 'tree', 'perk', 'daily', 't13', 'flow', 'dev', 'charm', 'journey', 'variants', 'i18nscan', 'icons', 'neo', 'analytics', 'weakspot', 'powersave', 'saves', 'ranking', 'hp', 'offline', 'tune'];
 const pick = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 let fail = 0; const rows = [];
 for (const t of pick) {

@@ -267,15 +267,46 @@ const dmgPerShot = () => stat.power(save.lv.power) * GUNS[save.gun].mult * (1 + 
 const fireRate = () => stat.speed(save.lv.speed) * modMul('rate') * (R.ultT > 0 ? 3 : 1);
 const moneyMul = () => stat.money(save.lv.money) * rebirthMul() * modMul('money');
 const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
+// ---------------- balance knobs (TUNE)
+// Every number the balance hangs on, in one place. features/analytics.js can override them from GameAnalytics
+// Remote Configs (key "tune_<name>", e.g. tune_earlyHp = 2.2) so the game can be re-balanced without a new release;
+// the last values received are kept in save.tune and used from the next start on. store/DENGE.md lists them.
 // early ramp: the first 8 stages get much tougher stage by stage (x2.4 each) while gold grows less (x1.7 each), so
 // gold upgrades alone stall around stage 6 and the next weapon is what carries you on (tools/economy-sim.js ex/rex)
-const EARLY_HP = 2.4, EARLY_GOLD = 1.691, EARLY_CAP = 8;
-const earlyHp = st => Math.pow(EARLY_HP, Math.min(Math.max(0, st - 1), EARLY_CAP));
-const earlyGold = st => Math.pow(EARLY_GOLD, Math.min(Math.max(0, st - 1), EARLY_CAP));
-const enemyHp = () => 10 * Math.pow(1.3, stageIdx()) * earlyHp(save.stage) * modMul('ehp');
-const reward = () => 10 * Math.pow(1.28, stageIdx()) * earlyGold(save.stage);
-const bossHp = () => 10 * Math.pow(1.3, (save.stage - 1) * SUBS + SUBS - 1) * earlyHp(save.stage) * 22 * modMul('ehp');
-const bossTime = () => BOSS_TIME + modAdd('bossTime');
+const TUNE_DEF = {
+  hpGrowth: 1.3,      // enemy health per step (5 steps a stage)
+  goldGrowth: 1.28,   // gold per step
+  earlyHp: 2.4,       // extra enemy health per stage during the early ramp
+  earlyGold: 1.691,   // extra gold per stage during the early ramp
+  earlyCap: 8,        // stages the early ramp lasts
+  bossMul: 22,        // boss health = this many enemies of the last step
+  bossTime: 30,       // seconds to beat a boss
+  waveBase: 10,       // enemies in a normal wave at stage 1
+  waveGrow: 0.9,      // extra enemies per stage
+  waveMax: 14,        // cap on the extra enemies
+  hordeChance: 0.25,  // share of waves that are hordes
+  lungeDmg: 0.08,     // a lunging enemy's hit, share of the squad's base health
+  offEff: 0.5,        // offline earnings, share of the active gold rate
+};
+const TUNE_RANGE = { hpGrowth: [1.2, 1.4], goldGrowth: [1.2, 1.4], earlyHp: [1, 4], earlyGold: [1, 3], earlyCap: [0, 15], bossMul: [8, 60], bossTime: [15, 60],
+  waveBase: [4, 30], waveGrow: [0, 3], waveMax: [0, 40], hordeChance: [0, 0.6], lungeDmg: [0, 0.3], offEff: [0.1, 1] };
+const TUNE = { ...TUNE_DEF };
+function setTune(o) {   // only known keys, only numbers inside a safe range; returns the keys that changed
+  const ch = [];
+  for (const k in o || {}) {
+    const v = +o[k], r = TUNE_RANGE[k];
+    if (!r || !isFinite(v)) continue;
+    const c = clamp(v, r[0], r[1]); if (c !== TUNE[k]) { TUNE[k] = c; ch.push(k); }
+  }
+  return ch;
+}
+setTune(save.tune);
+const earlyHp = st => Math.pow(TUNE.earlyHp, Math.min(Math.max(0, st - 1), TUNE.earlyCap));
+const earlyGold = st => Math.pow(TUNE.earlyGold, Math.min(Math.max(0, st - 1), TUNE.earlyCap));
+const enemyHp = () => 10 * Math.pow(TUNE.hpGrowth, stageIdx()) * earlyHp(save.stage) * modMul('ehp');
+const reward = () => 10 * Math.pow(TUNE.goldGrowth, stageIdx()) * earlyGold(save.stage);
+const bossHp = () => 10 * Math.pow(TUNE.hpGrowth, (save.stage - 1) * SUBS + SUBS - 1) * earlyHp(save.stage) * TUNE.bossMul * modMul('ehp');
+const bossTime = () => TUNE.bossTime + modAdd('bossTime');
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
 // rebirth points grow x1.18 per stage (from stage 8): each rebirth then pushes the wall ~10-15 stages further
@@ -596,9 +627,9 @@ function startWave() {
   R.phase = 'fight'; R.waveT = 0;
   // every so often a horde: twice the crowd, each one frailer, pouring in fast
   // the crowd grows with the stage: ~12 at the start, ~25 by stage 15; hordes (1 in 4) bring 30-60 frail ones
-  R.horde = save.stage >= 2 && Math.random() < 0.25;
+  R.horde = save.stage >= 2 && Math.random() < TUNE.hordeChance;
   R.toSpawn = R.horde ? 28 + Math.min(26, Math.floor(save.stage * 1.3)) + Math.floor(Math.random() * 7)
-    : 10 + Math.floor(Math.random() * 4) + Math.min(14, Math.floor(save.stage * 0.9));
+    : Math.round(TUNE.waveBase) + Math.floor(Math.random() * 4) + Math.min(Math.round(TUNE.waveMax), Math.floor(save.stage * TUNE.waveGrow));
   R.spawnT = 0.1;
   if (R.horde) { banner2('SÜRÜ!'); sfx('elite', 0); R.shake = 3; }
   if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
@@ -1538,7 +1569,7 @@ function update(dt) {
         if (e.lunge <= 0 || !e.rush) { e.rush = false; e.lunge = 0; e.lt = -rand(1.5, 3); }
       } else if (e.lw > 0) {
         e.lw -= dt;
-        if (e.lw <= 0) { e.rush = true; e.lunge = 2.2; e.hitT = 0; e.dmg = hpBase() * (e.elite ? 0.12 : 0.08); sfx('lob', 0.2, e.x); }
+        if (e.lw <= 0) { e.rush = true; e.lunge = 2.2; e.hitT = 0; e.dmg = hpBase() * TUNE.lungeDmg * (e.elite ? 1.5 : 1); sfx('lob', 0.2, e.x); }
       } else if (!R.boss && e.age > 1) {
         e.lt = (e.lt || 0) + dt;
         if (e.lt > 2.2 && lunging < Math.min(4, 2 + Math.floor(save.stage / 10))) { e.lw = 0.5; e.lt = 0; lunging++; }
@@ -2315,14 +2346,13 @@ const PANELS = {
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { audioInit(); sfx('click'); PANELS[b.dataset.open](); }));
 // AFK earnings: while the game is closed or in the background, the squad keeps earning at half its measured gold
 // rate, up to the cap (8 h + Ruh Ağacı "Derin Uyku"). Shown on start and when the app comes back after 2+ min.
-const OFF_EFF = 0.5;
 function offlineReward() {
   if (!save.t || R.offOpen) return;
   // measured from the latest time the game has ever seen, so moving the device clock forward and back pays nothing extra
   const away = (Date.now() - Math.max(save.t, save.tMax || 0)) / 1000;
   if (away < 60 || !save.rate) return;
   const capH = 8 + modAdd('offH'), capS = capH * 3600, used = Math.min(away, capS);
-  const gain = used * save.rate * OFF_EFF;
+  const gain = used * save.rate * TUNE.offEff;
   if (gain < 1) return;
   const ht = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} sa ${m} dk` : `${m} dk`; };
   const SSx = window.SS, mine = SSx && SSx.mine && save.mine ? Math.floor(save.mine.stored || 0) : 0, full = away >= capS;
@@ -2331,7 +2361,7 @@ function offlineReward() {
     body.appendChild(el(`<p class="big-note">Sen yokken (${ht(away)}) takımın savaşmaya devam etti:</p>`));
     body.appendChild(el(`<div class="big-num off-gold"><img src="assets/ui/coin.png" alt="">+${fmt(gain)}</div>`));
     body.appendChild(el(`<div class="off-cap ${full ? 'full' : ''}"><div class="fa-bar ${full ? 'full' : ''}"><i style="width:${Math.min(100, used / capS * 100).toFixed(1)}%"></i><span>${ht(used)} / ${capH} sa</span></div>
-      <small>${full ? `Sınır doldu: ${capH} saatten sonrası sayılmadı. Ruh Ağacı'ndaki Derin Uyku sınırı uzatır.` : `Çevrimdışı verim: aktif oyunun %${Math.round(OFF_EFF * 100)}'i · sınır ${capH} saat`}</small></div>`));
+      <small>${full ? `Sınır doldu: ${capH} saatten sonrası sayılmadı. Ruh Ağacı'ndaki Derin Uyku sınırı uzatır.` : `Çevrimdışı verim: aktif oyunun %${Math.round(TUNE.offEff * 100)}'i · sınır ${capH} saat`}</small></div>`));
     if (mine >= 1) body.appendChild(el(`<div class="off-mine"><img src="assets/ui/ic_mine.png" alt=""><span>Madende <b>${mine}</b> elmas birikti</span></div>`));
     const Ads = SSx && SSx.Ads, two = Ads && Ads.available('offline');
     const row = el(`<div class="btnrow"><button class="btn green"><img src="assets/ui/coin.png" alt="">TOPLA</button>${two ? `<button class="btn yellow"><img src="assets/ui/play.png" alt="">x2 TOPLA<small class="off-left">${Ads.remaining('offline')}/3</small></button>` : ''}</div>`);
@@ -2428,7 +2458,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  colBox, moneyMul, earlyHp, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  colBox, moneyMul, earlyHp, TUNE, TUNE_DEF, setTune, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,

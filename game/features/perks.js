@@ -136,7 +136,7 @@
     const row = ov.querySelector('.pk-row');
     cards.forEach((p, i) => {
       const have = n(p.id);
-      const c = SS.el(`<button class="pk-card ${p.r}" style="animation-delay:${i * 0.07}s"><span class="pk-rar">${RNAME[p.r]}</span><div class="pk-ico"><img src="assets/ui/${p.icon}.png" alt=""></div>
+      const c = SS.el(`<button class="pk-card ${p.r}" data-id="${p.id}" style="animation-delay:${i * 0.07}s"><span class="pk-rar">${RNAME[p.r]}</span><div class="pk-ico"><img src="assets/ui/${p.icon}.png" alt=""></div>
         <b>${p.name}</b><p>${p.txt}</p><span class="pk-lv">${[...Array(p.max)].map((_, k) => `<i class="${k < have ? 'on' : k === have ? 'new' : ''}"></i>`).join('')}</span></button>`);
       c.onclick = () => pick(p, c);
       row.appendChild(c);
