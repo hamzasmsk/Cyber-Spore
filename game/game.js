@@ -632,7 +632,7 @@ function startWave() {
     : Math.round(TUNE.waveBase) + Math.floor(Math.random() * 4) + Math.min(Math.round(TUNE.waveMax), Math.floor(save.stage * TUNE.waveGrow));
   R.spawnT = 0.1;
   if (R.horde) { banner2('SÜRÜ!'); sfx('elite', 0); R.shake = 3; }
-  if (save.stage >= 2 && Math.random() < (save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) setTimeout(spawnTreasure, 1200);
+  if (save.stage >= 2 && Math.random() < ((save.boost && save.boost.treasureEnd > Date.now() ? 0.2 : 0.05) + modAdd('treasure')) * Math.max(1, R.toSpawn / 7)) setTimeout(spawnTreasure, 1200);   // per enemy, not per wave: bigger waves keep the old rate
 }
 function newBiomeAhead() {   // the next region starts just above the screen and scrolls in during the advance
   const CHT = CH * 16 * P;

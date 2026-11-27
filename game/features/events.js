@@ -38,10 +38,10 @@
   }
   SS.HOOKS.kill.push(e => {
     if (!active() || !e) return;
-    const n = e.treasure ? 5 : e.elite ? 1 : Math.random() < 0.03 ? 1 : 0;
+    const n = e.treasure ? 5 : e.elite ? (Math.random() < 0.3 ? 1 : 0) : Math.random() < 0.006 ? 1 : 0;   // ~550 an hour: the shop lasts the weekend
     if (n) drop(n, e.x, e.y - 30 * SS.P);
   });
-  SS.HOOKS.bossWin.push(b => { if (b) drop(5, b.x, b.y - 60 * SS.P); });
+  SS.HOOKS.bossWin.push(b => { if (b) drop(3, b.x, b.y - 60 * SS.P); });
   SS.HOOKS.tower.push(() => { const L = SS.leader; if (L) drop(5, L.x, L.y - 30 * SS.P); });
 
   const left = () => { const ms = cur().end - Date.now(), h = Math.floor(ms / 3.6e6); return h >= 24 ? `${Math.floor(h / 24)}g ${h % 24}sa` : `${h}sa ${Math.floor(ms % 3.6e6 / 6e4)}dk`; };

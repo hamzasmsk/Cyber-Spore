@@ -21,7 +21,7 @@
   const TYPES = {
     kill: {
       icon: monIcon,
-      make: () => { const n = pickOf([50, 90, 140, 200]); return { goal: n, gems: n >= 140 ? 4 : 3, cash: nice(killReward() * n * 0.6) }; },
+      make: () => { const n = pickOf([400, 700, 1100, 1600]); return { goal: n, gems: n >= 1100 ? 4 : 3, cash: nice(killReward() * n * 0.6) }; },
       text: m => `${m.goal} düşman yok et`,
     },
     buy: {

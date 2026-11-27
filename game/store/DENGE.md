@@ -62,6 +62,13 @@ yazılan anahtar veya sayı olmayan değer görmezden gelinir. Tek seferde **tek
 Kartların, silahların ve maliyetlerin değişmesi yeni sürüm gerektirir (koddaki tablolar). Bir değişiklik yapmadan
 önce `node tools/economy-sim.js '{"ex":2.1}'` ile 10 saatlik ilerlemeyi simüle edebiliriz.
 
-## 5. Döngü
+## 5. Yan etki kontrolü (her denge değişikliğinden sonra)
+`node tools/rates-audit.js . 150` oyunu gerçekçi bir botla oynatıp saatlik oranları yazar: düşman, boss, hazine
+canavarı, fener, elmas, kumbara, Ninja Yolu XP'si, parşömen. Değişiklikten önce ve sonra çalıştırılır; öldürme
+sayısına ya da dalgalara bağlı bir sistem birden 5 kat hızlanıyor ya da duruyorsa düzeltilir.
+Ölçülen referans (ilk 12 dakika, aktif oyuncu): ~8000 düşman/saat, hazine ~10–20/saat, kumbara ~30 elmas/saat,
+Ninja Yolu ~1000 XP/saat (günlük sınırlı), fener ~400–550/saat.
+
+## 6. Döngü
 Haftada bir: verilere bak → en büyük sorunu seç → **tek** sayıyı değiştir → bir hafta ölç → tekrar.
 Anlamlı sonuç için en az 15–20 aktif oyuncu ve birkaç gün veri gerekir.

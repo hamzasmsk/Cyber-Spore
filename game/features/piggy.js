@@ -9,7 +9,8 @@ function boot() {
   const SS = window.SS; if (!SS || SS._piggyB) return; SS._piggyB = true;
   const save = SS.save, IAP = SS.IAP;
   const paid = !!(IAP && IAP.enabled);
-  const KILLS_PER_GEM = paid ? 70 : 44, CAP = paid ? 500 : 50, MIN_PAID = 100;
+  const KILLS_PER_GEM = paid ? 250 : 180,   // ~9000 kills an hour of play: the free bank fills in about an hour
+  CAP = paid ? 500 : 50, MIN_PAID = 100;
   if (!save.piggy || typeof save.piggy !== 'object') save.piggy = {};
   const P = save.piggy;
   if (!(P.kills >= 0)) P.kills = 0;

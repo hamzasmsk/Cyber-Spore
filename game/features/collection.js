@@ -19,7 +19,7 @@
     Flam: 'Alev', Spirit2: 'Kor Ruhu', Cyclope: 'Tepegöz', Beast2: 'Kara Canavar', LanternRed: 'Fener Ruhu',
     GoldRacoon: 'Altın Rakun',
   };
-  const M_STEPS = [10, 100, 1000], B_STEPS = [1, 5, 20];
+  const M_STEPS = [20, 500, 5000], B_STEPS = [1, 5, 20];   // ~9000 kills an hour: monster stars over days, not hours
   const starsOf = (n, steps) => steps.filter(s => n >= s).length;
   const allMon = () => SS.BIOMES.flatMap(b => b.pool).concat(['GoldRacoon']);
   const allBoss = () => SS.BIOMES.flatMap(b => b.bosses);

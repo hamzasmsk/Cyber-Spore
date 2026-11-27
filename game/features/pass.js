@@ -103,12 +103,12 @@
   const today = () => new Date().toISOString().slice(0, 10);
   const DAILY = [
     { id: 'd_kill', text: 'Düşman yen', goal: 600, xp: 100, ev: 'kill' }, { id: 'd_boss', text: 'Boss yen', goal: 1, xp: 120, ev: 'boss' },
-    { id: 'd_elite', text: 'Elit düşman yen', goal: 3, xp: 80, ev: 'elite' }, { id: 'd_tre', text: 'Hazine canavarı yakala', goal: 1, xp: 80, ev: 'treasure' },
+    { id: 'd_elite', text: 'Elit düşman yen', goal: 30, xp: 80, ev: 'elite' }, { id: 'd_tre', text: 'Hazine canavarı yakala', goal: 1, xp: 80, ev: 'treasure' },
     { id: 'd_buy', text: 'Geliştirme al', goal: 25, xp: 60, ev: 'buy' },
   ];
   const WEEKLY = [
     { id: 'w_kill', text: 'Düşman yen', goal: 8000, xp: 400, ev: 'kill' }, { id: 'w_boss', text: 'Boss yen', goal: 15, xp: 500, ev: 'boss' },
-    { id: 'w_tre', text: 'Hazine canavarı yakala', goal: 3, xp: 300, ev: 'treasure' }, { id: 'w_star', text: 'Silah yıldızı yükselt', goal: 2, xp: 300, ev: 'star' },
+    { id: 'w_tre', text: 'Hazine canavarı yakala', goal: 5, xp: 300, ev: 'treasure' }, { id: 'w_star', text: 'Silah yıldızı yükselt', goal: 2, xp: 300, ev: 'star' },
     { id: 'w_reb', text: 'Yeniden doğ', goal: 1, xp: 400, ev: 'rebirth' },
   ];
   function st() {
