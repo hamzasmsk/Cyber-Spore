@@ -1,0 +1,14 @@
+{
+  "name": "Shuriken Squad",
+  "short_name": "Shuriken",
+  "description": "Dikey idle ninja nişancı: mangan otomatik atış yapar, sen güçlendir.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#131b1b",
+  "theme_color": "#131b1b",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

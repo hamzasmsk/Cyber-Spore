@@ -1,0 +1,22 @@
+const { chromium, devices } = require('playwright');
+(async () => {
+  const b = await chromium.launch(); const page = await (await b.newContext({ ...devices['iPhone 13'] })).newPage();
+  const errs = []; page.on('pageerror', e => errs.push(e.message + ' ' + (e.stack || '').split('\n')[1])); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  await page.goto('file://' + require('path').resolve(__dirname, '../../index.html'));
+  await page.waitForFunction(() => window.SS && SS.R.heroes.length > 0);
+  const out = require('path').resolve(__dirname, 'out/journey'); require('fs').mkdirSync(out, { recursive: true });
+  await page.evaluate(() => { const d = new Date(), s = SS.save; s.mon.offers.ss_starter = { shown: Date.now() }; s.login.last = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; Object.assign(s, { team: 5, gun: 2, wbest: 3, stage: 12, best: 18, rebirths: 3, lv: { power: 40, speed: 25, money: 5 } }); s.tower.best = 12; s.tut = { power: true }; SS.unlock.all(); SS.setupHeroes(); SS.closePanel(); });
+  await page.waitForTimeout(4500);
+  await page.evaluate(() => { SS.closePanel(); for (const x of document.querySelectorAll('.un-card,.fl-card')) x.parentNode.removeChild(x); });
+  await page.waitForTimeout(600); await page.screenshot({ path: out + '/pet.png' });
+  const r = await page.evaluate(() => { const b = document.getElementById('stageLbl').getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; });
+  await page.mouse.click(r[0], r[1]); await page.waitForTimeout(500); await page.screenshot({ path: out + '/map.png' });
+  await page.evaluate(() => { SS.closePanel(); document.getElementById('skinBtn').click(); }); await page.waitForTimeout(400);
+  await page.evaluate(() => { document.getElementById('pBody').scrollTop = 99999; }); await page.waitForTimeout(200); await page.screenshot({ path: out + '/pets.png' });
+  await page.evaluate(() => { SS.closePanel(); SS.survival.open(); }); await page.waitForTimeout(400); await page.screenshot({ path: out + '/arena2.png' });
+  await page.click('.wk-card .btn'); await page.waitForTimeout(3000);
+  console.log('weekly boss', await page.evaluate(() => !!SS.R.boss && SS.R.boss.ex && SS.R.boss.ex.sub));
+  await page.evaluate(() => { if (SS.R.boss) { SS.R.boss.hp = 0; SS.bossWin(); } }); await page.waitForTimeout(2500); await page.screenshot({ path: out + '/weeklywin.png' });
+  console.log('week', JSON.stringify(await page.evaluate(() => SS.save.week)), 'pet', await page.evaluate(() => SS.save.pet.on));
+  console.log('errors', errs.length ? errs : 'none'); await b.close();
+})();

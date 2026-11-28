@@ -1,0 +1,138 @@
+# Builds the signed Android App Bundle (.aab) for Google Play in the cloud: no Android Studio or Mac needed.
+# Run it from GitHub: Actions > "Shuriken Squad Android" > Run workflow. The .aab appears under the run's Artifacts.
+# Needs four repository secrets (Settings > Secrets and variables > Actions):
+#   ANDROID_KEYSTORE_BASE64   the upload key (.jks) encoded as base64
+#   ANDROID_KEYSTORE_PASSWORD keystore password
+#   ANDROID_KEY_ALIAS         key alias (upload)
+#   ANDROID_KEY_PASSWORD      key password
+# Optional, to upload straight to the Play Console internal testing track:
+#   PLAY_SERVICE_ACCOUNT_JSON a Google Play service account key (JSON)
+name: Shuriken Squad Android
+
+on:
+  # also builds when game/release.json changes on a working branch (a manual "Run workflow" button only exists for
+  # workflows on the default branch); that file holds the version name and the monetization mode
+  push:
+    branches: ['claude/**', 'main']
+    paths: ['game/release.json']
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version name shown to players (e.g. 1.0.1); empty = game/release.json'
+        required: false
+        default: ''
+      upload_track:
+        description: 'Upload to Google Play track (needs PLAY_SERVICE_ACCOUNT_JSON); "none" = only build'
+        required: true
+        default: 'none'
+        type: choice
+        options: [none, internal, alpha]
+      monetization:
+        description: '"free" = no ads and no purchases, ad rewards given directly (closed tests); "full" = ads + purchases'
+        required: true
+        default: 'free'
+        type: choice
+        options: [free, full]
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Release settings (manual inputs, or game/release.json on push)
+        run: |
+          # every upload needs a larger version code; the offset keeps it growing even if the run counter restarts
+          echo "VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ github.event.inputs.version_name }}"; [ -n "$V" ] || V=$(node -p "require('./release.json').version_name")
+            echo "VERSION_NAME=$V" >> "$GITHUB_ENV"
+            echo "MONETIZATION=${{ github.event.inputs.monetization }}" >> "$GITHUB_ENV"
+            echo "UPLOAD_TRACK=${{ github.event.inputs.upload_track }}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION_NAME=$(node -p "require('./release.json').version_name")" >> "$GITHUB_ENV"
+            echo "MONETIZATION=$(node -p "require('./release.json').monetization")" >> "$GITHUB_ENV"
+            echo "UPLOAD_TRACK=none" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          # keep Gradle's downloads between runs: fewer requests to Maven Central (it answers 429 when busy)
+          cache: gradle
+          cache-dependency-path: |
+            game/android/*.gradle*
+            game/android/app/*.gradle*
+            game/android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Android SDK (preinstalled on the runner)
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls "$ANDROID_HOME"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build web game and copy it into the Android project
+        run: |
+          sed -i "s/devTools: true/devTools: false/" monetize.config.js   # no test panel in the store build
+          grep -q "devTools: false" monetize.config.js
+          if [ "$MONETIZATION" = "free" ]; then
+            sed -i "s/mode: 'auto'/mode: 'free'/" monetize.config.js; grep -q "mode: 'free'" monetize.config.js
+            # no ad SDK and no billing library (so no AD_ID / BILLING permission) in a build without ads and purchases
+            npm uninstall --no-audit --no-fund @capacitor-community/admob @revenuecat/purchases-capacitor
+          fi
+          echo "window.SS_VERSION = '$VERSION_NAME';" > version.js
+          npm run build
+          npx cap sync android
+
+      - name: Restore upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then echo "::error::ANDROID_KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed App Bundle
+        working-directory: game/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # forgive copy-paste slips: stray spaces / line breaks, or a pasted "NAME=" prefix
+          clean() { local v; v=$(printf '%s' "$1" | tr -d '\r\n'); v="${v#*_PASSWORD=}"; v="${v#*_ALIAS=}"; v="${v#"${v%%[![:space:]]*}"}"; v="${v%"${v##*[![:space:]]}"}"; printf '%s' "$v"; }
+          export ANDROID_KEYSTORE_PASSWORD="$(clean "$ANDROID_KEYSTORE_PASSWORD")"
+          export ANDROID_KEY_PASSWORD="$(clean "$ANDROID_KEY_PASSWORD")"
+          export ANDROID_KEY_ALIAS="$(clean "$ANDROID_KEY_ALIAS")"
+          # clear messages instead of a deep Gradle error
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD >/dev/null 2>&1; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the key: re-enter it (only the part after '=' in secrets.txt)"; exit 1; fi
+          if ! keytool -list -keystore "$ANDROID_KEYSTORE_PATH" -storepass:env ANDROID_KEYSTORE_PASSWORD -alias "$ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::ANDROID_KEY_ALIAS is wrong: it should be: upload"; exit 1; fi
+          chmod +x gradlew
+          ./gradlew --no-daemon bundleRelease
+
+      - name: Keep the bundle
+        uses: actions/upload-artifact@v5
+        with:
+          name: shuriken-squad-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}
+          path: game/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Upload to Google Play
+        if: ${{ env.UPLOAD_TRACK != 'none' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.shurikensquad.game
+          releaseFiles: game/android/app/build/outputs/bundle/release/app-release.aab
+          track: ${{ env.UPLOAD_TRACK }}
+          status: draft

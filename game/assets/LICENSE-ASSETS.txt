@@ -1,0 +1,4 @@
+Graphics, sound effects and music: "Ninja Adventure" asset pack by Pixel-boy and AAA
+(https://pixel-boy.itch.io/ninja-adventure-asset-pack), Creative Commons Zero (CC0).
+Number font: NormalFont from the same pack (CC0).
+Font: Pixelify Sans by Stefie Justprince, SIL Open Font License 1.1 (via @fontsource/pixelify-sans).

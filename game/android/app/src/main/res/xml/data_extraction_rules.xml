@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: the save game (mirrored by features/native.js into Capacitor Preferences = shared preferences
+     "CapacitorStorage") is backed up to the player's Google Drive and restored on a new phone or a reinstall. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="CapacitorStorage.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="CapacitorStorage.xml" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,143 @@
+/* Shuriken Squad feature: Ayarlar (settings panel). Requires window.SS. Load after the other feature files so the gear button sits last. */
+'use strict';
+(() => {
+  const SS = window.SS;
+  if (!SS) { console.warn('settings: SS missing'); return; }
+  const save = SS.save;
+  const SAVE_KEY = 'swarmsquad_idle_v1';
+
+  if (typeof save.eco !== 'boolean') save.eco = false;
+  // the old "Eko mod" switch (fewer effects) is now Grafik: Düşük; the power-save screen lives in powersave.js
+  if (save.eco && !save.gfx) save.gfx = 'low';
+  save.eco = save.gfx === 'low';
+  if (typeof save.vibrate !== 'boolean') save.vibrate = true;
+  if (typeof save.sound !== 'boolean') save.sound = true;
+  if (typeof save.music !== 'boolean') save.music = true;
+
+  if (typeof SS.vibrate !== 'function') {
+    SS.vibrate = ms => { if (save.vibrate && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* ignore */ } } };
+  }
+  SS.HOOKS.bossWin.push(() => SS.vibrate(80));
+
+  // hidden side button: the top-left square (#settingsTop, see layout.js) clicks it
+  const btn = SS.addSideButton({ side: 'left', label: 'Ayarlar', icon: 'assets/ui/ic_settings.png', color: 'grey', id: 'settingsBtn', onClick: () => open() });
+  btn.classList.add('fa-settings-btn');
+
+  const ITEMS = [
+    { key: 'sound', label: 'Efektler', icon: 'assets/ui/ic_sound_on.png', iconOff: 'assets/ui/ic_sound_off.png', note: 'Atış, para ve boss sesleri' },
+    { key: 'music', label: 'Müzik', icon: 'assets/ui/ic_music.png', note: 'Bölge müzikleri' },
+    { key: 'vibrate', label: 'Titreşim', icon: 'assets/ui/ic_vibrate.png', note: 'Önemli anlarda titret' },
+  ];
+
+  function resetAll() {
+    const keep = { sound: save.sound, music: save.music, eco: save.eco, vibrate: save.vibrate, vol: save.vol, noTrack: save.noTrack, lang: save.lang };
+    for (const k of Object.keys(save)) delete save[k];
+    Object.assign(save, {
+      money: 0, gems: 0, stage: 1, sub: 1, kills: 0, bossReady: false, lv: { power: 0, speed: 0, money: 0 }, gun: 0, team: 1,
+      rebirths: 0, rp: 0, auto: true, t: 0, rate: 0, best: 1,
+    }, keep);
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); localStorage.removeItem(SAVE_KEY + '_bak'); } catch (e) { /* storage blocked */ }
+    SS.persist();
+    SS.closePanel();
+    SS.banner('SIFIRLANDI', 'Yeniden başlıyor…');
+    setTimeout(() => location.reload(), 700);
+  }
+
+  function open(confirming) {
+    SS.openPanel('Ayarlar', 'grey', body => {
+      const wrap = SS.el('<div class="fa-mwrap"></div>');
+      const tg = SS.el('<div class="toggles fa-toggles"></div>');
+      for (const it of ITEMS) {
+        const on = !!save[it.key];
+        const t = SS.el(`<button class="toggle fa-toggle ${on ? 'on' : ''}"><img src="${!on && it.iconOff ? it.iconOff : it.icon}" alt="">
+          <span>${it.label}<small>${it.note}</small></span><em>${on ? 'AÇIK' : 'KAPALI'}</em><b></b></button>`);
+        t.onclick = () => {
+          save[it.key] = !save[it.key]; if (SS.applyVol) SS.applyVol();
+          SS.sfx('click');
+          if (it.key === 'vibrate' && save.vibrate) SS.vibrate(40);
+          if (it.key === 'music') { try { SS.audioInit && SS.audioInit(); } catch (e) { /* ignore */ } SS.musicUpdate && SS.musicUpdate(); }
+          SS.persist(); SS.refreshUI();
+          open(confirming);
+        };
+        tg.appendChild(t);
+      }
+      wrap.appendChild(tg);
+      const gq = SS.el(`<div class="dv-speed"><span>Grafik</span>${[['auto', 'Otomatik'], ['high', 'Yüksek'], ['low', 'Düşük']].map(([k, l]) => `<button class="btn ${(save.gfx || 'auto') === k ? 'purple' : 'grey'}" data-k="${k}">${l}</button>`).join('')}</div>`);
+      gq.querySelectorAll('button').forEach(b => b.onclick = () => { save.gfx = b.dataset.k; save.eco = save.gfx === 'low'; SS.R.fx = b.dataset.k === 'low' ? 2 : 0; SS.sfx('click'); SS.persist(); open(confirming); });
+      wrap.appendChild(gq);
+      // volume sliders: master / music / effects (0-100), applied live to the audio graph
+      if (!save.vol || typeof save.vol !== 'object') save.vol = { master: 0.8, music: 0.6, sfx: 0.8 };
+      const vols = SS.el('<div class="toggles"></div>');
+      [['master', 'Genel', 'ic_volume'], ['music', 'Müzik', 'ic_music'], ['sfx', 'Efekt', 'ic_sound_on']].forEach(([k, label, ic]) => {
+        const row = SS.el(`<div class="vol"><img src="assets/ui/${ic}.png" alt=""><label>${label}</label><input type="range" min="0" max="100" step="5" value="${Math.round((save.vol[k] ?? 0.7) * 100)}"><em>${Math.round((save.vol[k] ?? 0.7) * 100)}</em></div>`);
+        const inp = row.querySelector('input'), out = row.querySelector('em');
+        inp.addEventListener('input', () => { save.vol[k] = inp.value / 100; out.textContent = inp.value; SS.applyVol && SS.applyVol(); });
+        inp.addEventListener('change', () => { SS.sfx(k === 'music' ? 'tick' : 'coin', 0); SS.persist(); });
+        vols.appendChild(row);
+      });
+      wrap.appendChild(vols);
+
+      // save code: move the game to another device / browser without an account (copy here, paste there)
+      // last save time + save now
+      const ago = () => { const st = SS.saveState; if (!st || !st.at) return 'henüz yok'; const s2 = Math.round((Date.now() - st.at) / 1000); return s2 < 60 ? `${s2} sn önce` : `${Math.round(s2 / 60)} dk önce`; };
+      const sv = SS.el(`<div class="toggles"><div class="vol sv-now"><img src="assets/ui/ic_save.png" alt=""><label>Otomatik kayıt<small class="sv-ago">Son kayıt: ${ago()}</small></label><button class="btn green">KAYDET</button></div></div>`);
+      sv.querySelector('.btn').onclick = () => { SS.persist(); SS.sfx('accept'); sv.querySelector('.sv-ago').textContent = 'Son kayıt: ' + ago(); SS.toast('Kaydedildi'); };
+      const svT = setInterval(() => { if (!sv.isConnected) return clearInterval(svT); const e = sv.querySelector('.sv-ago'); e.textContent = 'Son kayıt: ' + ago(); }, 1000);
+      wrap.appendChild(sv);
+      // reminders (local notifications, phone app only): daily reward, mine full, offline earnings at their limit
+      const NT = SS.daily && SS.daily.Notif;
+      if (NT && NT.native) {
+        const nt = SS.el(`<div class="toggles"><div class="vol sv-now"><img src="assets/ui/ic_bell.png" alt=""><label>Hatırlatıcılar<small>Günde en fazla 2, gece asla</small></label><button class="btn ${save.notify ? 'green' : 'grey'}">${save.notify ? 'Açık' : 'Kapalı'}</button></div></div>`);
+        const b = nt.querySelector('.btn');
+        b.onclick = async () => {
+          SS.sfx('click');
+          if (save.notify) { save.notify = false; NT.cancel(); SS.persist(); SS.toast('Hatırlatıcılar kapalı'); }
+          else await NT.enable();
+          b.className = 'btn ' + (save.notify ? 'green' : 'grey'); b.textContent = SS.t ? SS.t(save.notify ? 'Açık' : 'Kapalı') : (save.notify ? 'Açık' : 'Kapalı');
+        };
+        wrap.appendChild(nt);
+      }
+      const code = SS.el(`<div class="toggles"><div class="vol sv-code"><img src="assets/ui/key.png" alt=""><label>Kayıt kodu<small>Başka cihaza taşı</small></label>
+        <button class="btn blue">KOPYALA</button><button class="btn grey">YÜKLE</button></div></div>`);
+      const [cp, ld] = code.querySelectorAll('.btn');
+      cp.onclick = async () => {
+        SS.persist(); let c = '';
+        try { c = 'SS1.' + btoa(unescape(encodeURIComponent(localStorage.getItem(SAVE_KEY) || JSON.stringify(save)))); } catch (e) { c = ''; }
+        try { await navigator.clipboard.writeText(c); SS.toast('Kayıt kodu kopyalandı'); } catch (e) { prompt(SS.t ? SS.t('Kayıt kodun (kopyala):') : 'Kayıt kodun (kopyala):', c); }
+        SS.sfx('click');
+      };
+      ld.onclick = () => {
+        const c = (prompt(SS.t ? SS.t('Kayıt kodunu yapıştır (şu anki ilerleme silinir):') : 'Kayıt kodunu yapıştır (şu anki ilerleme silinir):') || '').trim();
+        if (!c) return;
+        try {
+          if (!c.startsWith('SS1.')) throw 0;
+          const j = JSON.parse(decodeURIComponent(escape(atob(c.slice(4)))));
+          if (!j || typeof j !== 'object' || typeof j.stage !== 'number') throw 0;
+          localStorage.setItem(SAVE_KEY, JSON.stringify(j));
+          SS.R.noSave = true; SS.banner('KAYIT YÜKLENDİ', 'Yeniden başlıyor…');
+          setTimeout(() => location.reload(), 600);
+        } catch (e) { SS.sfx('no'); SS.toast('Geçersiz kayıt kodu'); }
+      };
+      wrap.appendChild(code);
+      const zone = SS.el('<div class="fa-danger"></div>');
+      if (!confirming) {
+        const r = SS.el(`<div class="fa-resetrow"><img src="assets/ui/ic_down.png" alt="">
+          <span>İlerleme<small>Her şeye baştan başla</small></span><button class="btn red fa-reset">SIFIRLA</button></div>`);
+        r.querySelector('.btn').onclick = () => { SS.sfx('no'); open(true); };
+        zone.appendChild(r);
+      } else {
+        zone.classList.add('fa-confirm');
+        zone.appendChild(SS.el('<p class="fa-warn"><b>Emin misin?</b>Altın, elmas, bölümler, silahlar ve takım silinir. Bu işlem geri alınamaz.</p>'));
+        const row = SS.el('<div class="btnrow"><button class="btn grey">VAZGEÇ</button><button class="btn red">SIFIRLA</button></div>');
+        row.children[0].onclick = () => { SS.sfx('click'); open(false); };
+        row.children[1].onclick = resetAll;
+        zone.appendChild(row);
+      }
+      wrap.appendChild(zone);
+      wrap.appendChild(SS.el('<p class="fa-credits">Grafik, ses ve müzik: Ninja Adventure — Pixel-boy &amp; AAA (CC0) · Yazı tipi: Pixelify Sans (OFL)</p>'));
+      body.appendChild(wrap);
+    });
+  }
+
+  SS.settings = { open };
+})();

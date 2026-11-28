@@ -1,0 +1,113 @@
+/* Shuriken Squad — store, offers, season pass and rewarded-ad UI (same pixel system as game.css) */
+
+/* test-mode dialogs and simulated ad */
+.mz-ov{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(19,27,27,.7);padding:16px}
+.mz-box{width:min(340px,92vw);display:flex;flex-direction:column;gap:8px;align-items:stretch;text-align:center}
+.mz-box h4{font-size:20px;color:var(--ink);margin-top:6px}
+.mz-box p{margin:0;font-size:14px;color:var(--dark)}
+.mz-box b{color:var(--ink)}
+.mz-warn{font-size:12px!important;color:var(--red)!important}
+.mz-ad img{width:48px;height:48px;align-self:center}
+.mz-ad .pbar{height:18px}
+
+/* boss-win reward card: slides up above the cards, auto-hides */
+.mz-card{position:absolute;left:50%;bottom:calc(224px + var(--safe-b));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px 6px 5px 8px;
+  background:var(--paper);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);color:var(--ink);pointer-events:auto;z-index:6;
+  animation:mzIn .24s steps(3) both}
+.mz-card img{width:24px;height:24px}
+.mz-card b{font-size:20px}
+.mz-card span{font-size:12px;color:var(--muted);margin-right:4px}
+.mz-card .btn{min-height:38px;font-size:16px;padding:0 10px 3px}
+.mz-card .btn img{height:16px;width:auto}
+.mz-card .mz-t{position:absolute;left:3px;right:3px;bottom:3px;height:3px;background:var(--gold);animation:mzT 7s linear forwards}
+.mz-card.out{animation:mzOut .24s steps(3) forwards}
+@keyframes mzIn{0%{transform:translate(-50%,40px);opacity:0}100%{transform:translate(-50%,0);opacity:1}}
+@keyframes mzOut{100%{transform:translate(-50%,40px);opacity:0}}
+@keyframes mzT{to{right:100%}}
+
+/* store rows */
+.row-card.mz-hero{background:#fff3d6;box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold),inset 0 -9px 0 var(--gold)}
+.row-card.mz-offer-row{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--red),inset 0 -9px 0 var(--red)}
+.row-card.mz-best{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--blue),inset 0 -9px 0 var(--blue)}
+.mz-once{margin-top:2px!important;font-size:11px!important;color:var(--wood2)!important}
+.mz-timer{margin:2px 0 0;font-size:12px;color:var(--red)}
+.mz-timer b{font-variant-numeric:tabular-nums}
+.mz-buy{min-width:86px}
+.mz-restore{margin-top:4px}
+.mz-legal{margin:2px 4px 0;font-size:11px;line-height:1.3;color:var(--muted);text-align:center}
+.mz-legal b{color:var(--red)}
+
+/* offer popup */
+.mz-offer{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;color:var(--dark)}
+.mz-offer-ico{padding:3px;background:var(--red);clip-path:var(--notch)}
+.mz-offer-ico img{display:block;width:72px;height:72px}
+.mz-offer h3{font-size:22px;color:var(--ink)}
+.mz-offer p{margin:0;font-size:14px}
+
+/* Ninja Yolu */
+.ps-head{display:flex;gap:10px;align-items:center;padding:8px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2)}
+.ps-lv{flex:none;width:58px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--purple);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink)}
+.ps-lv b{font-size:26px;line-height:1;color:var(--cream);text-shadow:var(--o-sm)}
+.ps-lv small{font-size:11px;color:var(--cream)}
+.ps-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.ps-info b{font-size:16px;color:var(--ink)}
+.ps-info span{font-size:12px;color:var(--muted)}
+.ps-info em{font-style:normal;color:var(--red)}
+.ps-cols{display:grid;grid-template-columns:30px 1fr 1fr;gap:4px;font-size:12px;color:var(--wood2);text-align:center;margin-top:2px}
+.ps-cols .pp{color:var(--purple)}
+.ps-list{display:flex;flex-direction:column;gap:3px;max-height:42vh;overflow:auto;padding-right:2px;touch-action:pan-y;flex:none}
+.ps-row{display:grid;grid-template-columns:30px 1fr 1fr;gap:4px;align-items:stretch;opacity:.6}
+.ps-row.on{opacity:1}
+.ps-num{display:grid;place-items:center;font-size:13px;color:var(--cream);background:var(--ink2);clip-path:var(--notch)}
+.ps-row.on .ps-num{background:var(--purple)}
+.ps-cell{display:flex;align-items:center;gap:5px;padding:4px 6px;min-height:36px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--ink2);font-size:11px;line-height:1.15;color:var(--dark)}
+.ps-cell img{flex:none;width:24px;height:24px}
+.ps-cell.ready{background:#fff3d6;box-shadow:inset 0 0 0 2px var(--ink),inset 0 0 0 4px var(--gold)}
+.ps-cell.got{opacity:.5}
+.ps-cell.got span::before{content:"✓ ";color:var(--green)}
+.ps-cell.locked{background:#e8d6c0}
+.ps-cell.locked img{filter:grayscale(.6)}
+
+/* Ninja Yolu v2 */
+.ps-head.red .ps-lv{background:var(--red)}
+.ps-head.blue .ps-lv{background:var(--blue)}
+.ps-head.green .ps-lv{background:var(--green)}
+.ps-lv small{font-size:10px;color:var(--cream);letter-spacing:.1em}
+.ps-prem{font-style:normal;padding:0 4px;color:var(--cream);background:var(--purple)}
+.ps-inv{display:flex;gap:4px}
+.ps-inv span{flex:1;display:flex;align-items:center;gap:4px;padding:4px 6px;font-size:11px;color:var(--dark);background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 2px var(--ink2)}
+.ps-inv img{width:20px;height:20px}
+.ps-inv b{margin-left:auto;font-size:14px;color:var(--ink)}
+.ps-show{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--ink2);clip-path:var(--notch);color:var(--cream)}
+.ps-show>b{font-size:14px;color:var(--gold2);text-shadow:var(--o-sm)}
+.ps-show-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.ps-sk,.ps-tr{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;background:rgba(252,226,202,.08);clip-path:var(--notch);text-align:center}
+.ps-sk img{width:42px;height:42px;padding:2px;background:var(--purple);clip-path:var(--notch);box-sizing:content-box}
+.ps-tr i{display:block;width:42px;height:42px;clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 8px rgba(255,255,255,.35)}
+.ps-sk span,.ps-tr span{font-size:11px;line-height:1.1;color:var(--cream)}
+.ps-sk small,.ps-tr small{font-size:9px;color:var(--sage2)}
+.ps-note{font-size:10px;color:var(--sage2)}
+.ps-buy{display:flex;flex-direction:column;gap:6px;padding:8px;background:#fff3d6;clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold)}
+.ps-buy-txt b{display:block;font-size:16px;color:var(--ink)}
+.ps-buy-txt span{font-size:12px;color:var(--dark)}
+.ps-buy-btns{display:flex;gap:6px}
+.ps-buy-btns .btn{flex:1;min-height:42px;font-size:15px}
+.ps-row.mile .ps-num{background:var(--gold);color:var(--ink);text-shadow:none}
+.ps-row.next .ps-num{box-shadow:inset 0 0 0 2px var(--cream)}
+.ps-cell{position:relative;cursor:pointer}
+.ps-ico{flex:none;width:28px;height:28px;display:grid;place-items:center}
+.ps-cell img{width:24px;height:24px}
+.ps-cell.chest{box-shadow:inset 0 0 0 2px var(--ink2),inset 0 -5px 0 var(--gold)}
+.ps-cell.rare{background:#e6f3f7;box-shadow:inset 0 0 0 2px var(--blue)}
+.ps-cell.epic{background:#f3e3ee;box-shadow:inset 0 0 0 2px var(--purple)}
+.ps-cell.epic .ps-ico{background:var(--purple);clip-path:var(--notch)}
+.ps-cell.epic .ps-ico img{width:24px;height:24px}
+.ps-cell.ready{animation:psReady 1s steps(2) infinite}
+@keyframes psReady{50%{filter:brightness(1.08)}}
+.ps-lock{position:absolute;right:3px;top:3px;width:12px!important;height:12px!important}
+.ps-cell.got span::before{content:"✓ ";color:var(--green)}
+.dex-region small{font-size:11px;color:var(--muted)}
+.fb-trail{display:block;width:40px;height:30px;clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 7px rgba(255,255,255,.35)}
+
+/* closed-test build (mode free): no ads, so no "watch" play icons on buttons */
+html.mon-free .btn img[src$="play.png"]{display:none}

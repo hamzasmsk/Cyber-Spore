@@ -1,0 +1,121 @@
+/* Swarm Squad features B: Maden (mine), Mağaza (shop), Kumbara (piggy), Kostüm (skins). Prefix: fb-
+   Same pixel system as game.css: hard edges, notched corners, ink outlines, parchment panels, steps() motion. */
+
+/* ---------------- side columns ----------------
+   game.css places the columns (bottom:150px). With every feature button the left column holds 6 tiles,
+   so on short screens the tiles shrink to stay clear of the top HUD (incl. the boss bar) and the cards. */
+/* the tile <img> has a clip-path (its own stacking layer), so lift the label above it */
+.side .sbtn span{position:relative;z-index:1}
+@media (max-height:700px){
+  .side{gap:3px}
+  .side .sbtn img{width:32px;height:32px}
+}
+
+/* small count badge on a side tile (mine) */
+.fb-badge{position:absolute;top:-4px;right:-2px;min-width:20px;height:18px;padding:0 4px;background:var(--red);clip-path:var(--notch);
+  box-shadow:inset 0 0 0 2px var(--ink);font-style:normal;font-size:12px;line-height:18px;text-align:center;color:var(--cream);text-shadow:var(--o-sm)}
+.fb-badge.hidden{display:none}
+.sbtn.fb-bump{animation:fb-bump .3s steps(2)}
+@keyframes fb-bump{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+/* ---------------- shared panel bits ---------------- */
+.fb-store{display:flex;align-items:center;justify-content:center;gap:8px}
+.fb-store img{width:44px;height:40px;filter:drop-shadow(0 3px 0 var(--ink))}
+.fb-store b{font-size:40px;line-height:1;color:var(--gold2);text-shadow:var(--o);font-variant-numeric:tabular-nums}
+.fb-store small{align-self:flex-end;margin-bottom:3px;font-size:18px;color:var(--muted)}
+.fb-bar{position:relative;height:22px;background:var(--sage3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink)}
+.fb-bar i{position:absolute;inset:3px auto 3px 3px;width:0;max-width:calc(100% - 6px);background:var(--blue);box-shadow:inset 0 3px 0 #7fb0a8;transition:width .3s steps(4)}
+.fb-bar.pink i{background:var(--gold);box-shadow:inset 0 3px 0 var(--gold2)}
+.fb-bar span{position:relative;display:block;text-align:center;font-size:13px;line-height:22px;color:var(--cream);text-shadow:var(--o-sm)}
+.fb-hl{color:var(--wood2)}
+.fb-small{font-size:13px}
+.fb-fly{position:fixed;z-index:30;width:26px;height:24px;margin:-12px 0 0 -13px;pointer-events:none;opacity:0;filter:drop-shadow(0 2px 0 var(--ink));animation:fb-fly .9s steps(6) forwards}
+@keyframes fb-fly{0%{transform:translate(0,0);opacity:1}50%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),calc(var(--dy) - 30px));opacity:0}}
+
+/* dark scene box used by the mine and the piggy bank */
+.fb-mine-scene,.fb-pigstage{position:relative;height:112px;background:var(--sage);clip-path:var(--notch);
+  box-shadow:inset 0 0 0 3px var(--ink),inset 0 -30px 0 var(--sage3),inset 0 -33px 0 var(--ink)}
+
+/* ---------------- Maden ---------------- */
+.fb-mine{display:flex;flex-direction:column;gap:10px}
+.fb-pick{position:absolute;left:50%;top:10px;width:72px;height:72px;margin-left:-36px;z-index:2;filter:drop-shadow(0 3px 0 var(--ink));
+  clip-path:var(--notch);animation:fb-dig 1.6s steps(1) infinite}
+.fb-mcry{position:absolute;bottom:18px;width:60px;height:56px;filter:drop-shadow(0 3px 0 var(--ink))}
+.fb-mcry.c1{left:14px}
+.fb-mcry.c2{right:14px;transform:scaleX(-1)}
+.fb-mgem{position:absolute;z-index:1;width:22px;height:20px;opacity:0;filter:drop-shadow(0 2px 0 var(--ink));animation:fb-sparkle 3s steps(1) infinite}
+.fb-mgem.g1{left:30%;bottom:46px}
+.fb-mgem.g2{right:28%;bottom:54px;animation-delay:1s}
+.fb-mgem.g3{left:58%;bottom:8px;animation-delay:2s}
+.fb-lv{position:absolute;left:8px;top:8px;z-index:3;height:24px;padding:0 8px;background:var(--ink);clip-path:var(--notch);font-size:15px;line-height:24px;color:var(--cream)}
+.fb-lv b{color:var(--gold2)}
+.fb-mine.full .fb-pick,.fb-mine.full .fb-mgem{animation-play-state:paused}
+.fb-mine.full .fb-mine-scene{box-shadow:inset 0 0 0 3px var(--ink),inset 0 0 0 6px var(--gold),inset 0 -30px 0 var(--sage3),inset 0 -33px 0 var(--ink)}
+.fb-mine-scene.lvup{animation:fb-flash .45s steps(3)}
+.fb-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.fb-stats div{display:flex;flex-direction:column;align-items:center;padding:5px 2px 9px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2)}
+.fb-stats small{font-size:12px;color:var(--muted)}
+.fb-stats b{font-size:17px;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+.fb-up .btn span{font-variant-numeric:tabular-nums}
+@keyframes fb-dig{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes fb-sparkle{0%{opacity:0}10%{opacity:1;transform:translateY(0)}25%{opacity:1;transform:translateY(-3px)}40%,100%{opacity:0}}
+@keyframes fb-flash{0%,100%{filter:none}50%{filter:brightness(1.4)}}
+
+/* ---------------- Mağaza ---------------- */
+.fb-shop{display:flex;flex-direction:column;gap:8px}
+.fb-free-note{margin:0;padding:4px 10px 6px;background:var(--paper2);clip-path:var(--notch);text-align:center;font-size:13px;color:var(--dark)}
+.fb-free-note b{color:var(--wood2)}
+.fb-sec{display:flex;align-items:center;gap:6px;margin:4px 2px 0;font-size:17px;color:var(--dark)}
+.fb-sec::after{content:"";flex:1;height:3px;background:var(--paper2)}
+.fb-sec img{width:22px;height:22px;object-fit:contain}
+.fb-gift p{display:flex;align-items:center;flex-wrap:wrap;gap:3px}
+.fb-gift p img{width:16px;height:16px;object-fit:contain}
+.fb-gift .btn{min-width:92px;font-variant-numeric:tabular-nums}
+.fb-gift .ico{background:var(--wood2)}
+.fb-gift.ready .ico img{animation:fb-dig 1.2s steps(1) infinite}
+.fb-pack{position:relative}
+.fb-tag{position:absolute;left:5px;top:5px;z-index:1;padding:0 4px;background:var(--red);clip-path:var(--notch);font-style:normal;font-size:11px;line-height:16px;color:var(--cream);text-shadow:var(--o-sm)}
+.fb-pack p b{color:var(--green)}
+.fb-pack .btn{min-width:78px}
+
+/* ---------------- Kumbara ---------------- */
+.fb-pig-btn{overflow:visible}
+.fb-pigmeter{position:absolute;left:50%;top:100%;width:58px;margin:2px 0 0 -29px;height:18px;display:flex;align-items:center;justify-content:center;gap:2px;
+  background:var(--ink);clip-path:var(--notch)}
+.fb-pigmeter i{position:absolute;inset:2px auto 2px 2px;width:0;max-width:calc(100% - 4px);background:var(--wood2);transition:width .3s steps(3)}
+.fb-pig-btn.full .fb-pigmeter i{background:var(--green)}
+.side .sbtn .fb-pigmeter img{position:relative;width:12px;height:11px;margin:0;padding:0;background:none;clip-path:none}
+.fb-pigmeter b{position:relative;font-size:11px;line-height:18px;color:var(--cream);text-shadow:var(--o-sm);font-variant-numeric:tabular-nums}
+.fb-piggy{display:flex;flex-direction:column;gap:10px}
+.fb-pigstage{display:grid;place-items:center;height:124px}
+.fb-bigpig{width:128px;height:auto;margin-bottom:6px;filter:drop-shadow(0 3px 0 var(--ink));animation:fb-dig 2s steps(1) infinite}
+.fb-pigstage.smash .fb-bigpig{animation:fb-open .5s steps(3) forwards}
+@keyframes fb-open{0%{transform:translateY(0)}40%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+/* ---------------- Kostüm ---------------- */
+.fb-skins{display:flex;flex-direction:column;gap:8px}
+.fb-skin .btn{min-width:84px}
+
+/* settings gear in the top row (moved there by layout.js) */
+
+/* ---------------- Koleksiyon ---------------- */
+.dex-head{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);color:var(--dark)}
+.dex-head div b{font-size:22px;color:var(--ink)}
+.dex-head span{font-size:13px;color:var(--muted)}
+.dex-head em{font-style:normal;color:var(--green)}
+.dex-tabs{display:flex;gap:6px}
+.dex-tabs .btn{flex:1;min-height:40px;font-size:15px}
+.dex-region{margin:4px 2px 0;font-size:14px;color:var(--wood2)}
+.dex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.dex-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 5px;background:var(--paper3);clip-path:var(--notch);box-shadow:inset 0 0 0 3px var(--ink),inset 0 -6px 0 var(--paper2);text-align:center}
+.dex-card b{font-size:12px;line-height:1.1;color:var(--ink);min-height:26px;display:flex;align-items:center}
+.dex-card small{font-size:11px;color:var(--muted)}
+.dex-face{padding:3px;background:var(--sage);clip-path:var(--notch)}
+.dex-face img{display:block;width:48px;height:48px}
+.dex-card.locked .dex-face img{filter:brightness(0);opacity:.45}
+.dex-card.locked b{color:var(--muted)}
+.dex-card.new::after{content:"YENİ";position:absolute;top:3px;right:3px;padding:1px 3px;font-size:9px;color:var(--cream);background:var(--red)}
+.dex-card .stars i{width:11px;height:11px}
+.dex-face{position:relative}
+.dex-card.locked .dex-face img{opacity:0}
+.dex-card.locked .dex-face::after{content:"?";position:absolute;inset:0;display:grid;place-items:center;font-size:28px;color:var(--sage2);background:var(--ink2)}
