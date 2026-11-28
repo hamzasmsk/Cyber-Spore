@@ -23,6 +23,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+          # keep Gradle's downloads between runs: fewer requests to Maven Central (it answers 429 when busy)
+          cache: gradle
+          cache-dependency-path: |
+            game/android/*.gradle*
+            game/android/app/*.gradle*
+            game/android/gradle/wrapper/gradle-wrapper.properties
       - name: Android SDK (preinstalled on the runner)
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls "$ANDROID_HOME"
       - run: npm install --no-audit --no-fund
