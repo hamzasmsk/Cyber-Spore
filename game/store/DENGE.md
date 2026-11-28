@@ -19,8 +19,8 @@ yazılan anahtar veya sayı olmayan değer görmezden gelinir. Tek seferde **tek
 |---|---|---|---|
 | `tune_hpGrowth` | 1.3 | 1.2–1.4 | Her aşamada düşman canı çarpanı (bölüm = 5 aşama). Uzun vadeli zorluk. **Çok hassas**: 0.01 bile büyük fark. |
 | `tune_goldGrowth` | 1.28 | 1.2–1.4 | Her aşamada altın çarpanı. hpGrowth'tan küçük olmalı yoksa oyun hiç zorlaşmaz. |
-| `tune_earlyHp` | 2.4 | 1–4 | İlk bölümlerde her bölüme eklenen düşman canı çarpanı. Erken oyun zorluğu. |
-| `tune_earlyGold` | 1.691 | 1–3 | İlk bölümlerde ek altın çarpanı. earlyHp'den küçük olmalı. |
+| `tune_earlyHp` | 2.2 | 1–4 | İlk bölümlerde her bölüme eklenen düşman canı çarpanı. Erken oyun zorluğu. |
+| `tune_earlyGold` | 1.605 | 1–3 | İlk bölümlerde ek altın çarpanı. earlyHp'den küçük olmalı. |
 | `tune_earlyCap` | 8 | 0–15 | Erken zorluk kaç bölüm sürer. |
 | `tune_bossMul` | 22 | 8–60 | Boss canı = son aşamadaki bir düşmanın bu katı. |
 | `tune_bossTime` | 30 | 15–60 | Boss için süre (saniye). Boss kaybetme oranını doğrudan etkiler. |
@@ -30,6 +30,8 @@ yazılan anahtar veya sayı olmayan değer görmezden gelinir. Tek seferde **tek
 | `tune_hordeChance` | 0.25 | 0–0.6 | Dalgaların ne kadarı "SÜRÜ!" (0.25 = 4'te 1). |
 | `tune_lungeDmg` | 0.08 | 0–0.3 | Saldıran düşmanın vuruşu (takım canının oranı). Nakavt sıklığı. |
 | `tune_offEff` | 0.5 | 0.1–1 | Çevrimdışı kazanç = aktif kazancın bu oranı. |
+| `tune_teamShare` | 0.6 | 0.3–1 | Yardımcı ninjaların hasarı, kaptanın oranı olarak. Takımın gücünü doğrudan belirler. |
+| `tune_teamCost` | 1000 | 100–20000 | Ninja fiyatı = açıldığı bölümde bu kadar düşmandan gelen altın. |
 
 ## 3. Neye bakacağız (GameAnalytics)
 
@@ -50,13 +52,14 @@ yazılan anahtar veya sayı olmayan değer görmezden gelinir. Tek seferde **tek
 
 | Belirti | İlk denenecek |
 |---|---|
-| İlk 5 dakikada bırakıyorlar | `tune_earlyHp` ↓ (2.4 → 2.1) |
-| İlk bölümler hâlâ çok kolay | `tune_earlyHp` ↑ (2.4 → 2.7) |
+| İlk 5 dakikada bırakıyorlar | `tune_earlyHp` ↓ (2.2 → 2.0) |
+| İlk bölümler hâlâ çok kolay | `tune_earlyHp` ↑ (2.2 → 2.5) |
 | Belli bir bölümde herkes takılıyor | `tune_bossTime` ↑ (30 → 35) |
 | Uzun vadede çok yavaş / sıkıcı | `tune_hpGrowth` ↓ (1.3 → 1.29) |
 | Uzun vadede çok hızlı, duvar yok | `tune_hpGrowth` ↑ (1.3 → 1.31) |
 | Sürü hissi yok | `tune_waveGrow` ↑ veya `tune_hordeChance` ↑ |
 | Çok sık nakavt | `tune_lungeDmg` ↓ (0.08 → 0.06) |
+| Takım çok güçlü / zayıf hissettiriyor | `tune_teamShare` (0.6 → 0.5 / 0.7) |
 | Oyuncular geri gelmiyor | `tune_offEff` ↑ (0.5 → 0.6): dönüşte daha çok ödül |
 
 Kartların, silahların ve maliyetlerin değişmesi yeni sürüm gerektirir (koddaki tablolar). Bir değişiklik yapmadan

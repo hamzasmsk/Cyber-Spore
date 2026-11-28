@@ -29,7 +29,7 @@
   const rewTxt = r => [r.gems && `<span><img src="assets/ui/gem.png" alt="">${r.gems}</span>`, r.star && `<span><img src="assets/ui/ic_luck.png" alt="">${r.star}</span>`,
 r.ticket && `<span><img src="assets/ui/ic_ticket.png" alt="">${r.ticket}</span>`].filter(Boolean).join('');
   // rough difficulty from the squad's damage per second against the floor's HP and time limit
-  const diff = f => { const dps = SS.dmgPerShot() * SS.fireRate() * Math.max(1, save.team) * SS.modMul('boss'), k = hpOf(f) / dps / (rule(f).time || 30);
+  const diff = f => { const dps = SS.dmgPerShot() * SS.fireRate() * (SS.teamPower ? SS.teamPower() : Math.max(1, save.team)) * SS.modMul('boss'), k = hpOf(f) / dps / (rule(f).time || 30);
     return k < 0.35 ? { t: 'Kolay', c: 'ez' } : k < 0.8 ? { t: 'Zorlu', c: 'md' } : k < 1.4 ? { t: 'Çok zor', c: 'hd' } : { t: 'İmkânsız gibi', c: 'no' }; };
   let inTower = false;
   const prevBusy = SS.busy; SS.busy = () => inTower || (prevBusy ? prevBusy() : false);

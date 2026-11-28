@@ -6,7 +6,7 @@ const cfg = Object.assign({
   team: [0, 800, 5e6, 5e11, 5e17], gunMult: [1, 2.5, 6, 15, 40, 110, 300, 900, 2500, 7000, 20000, 56000, 160000], gunCost: [0, 5, 15, 40, 100, 250, 600, 1500, 2000, 2800, 3800, 5000, 6500], starK: 0.35,
   bossGemsFirst: s => 3 + Math.floor(s / 4), bossGemsRepeat: s => 0, treasureP: 0.04, treasureGems: s => 1,
   rebGain: s => s >= 8 ? Math.floor(2 * Math.pow(1.18, s - 8)) : 0, rebPer: 0.3, rebGems: g => 5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4)),
-  dailyGemsPerHour: 4.5, hours: 10, paid: false, early: 0, earlyCap: 15, ex: 2.4, exCap: 8, rex: 1.691, teamShare: 1, teamSt: [0, 0, 0, 0, 0], teamC: 0,   // early ramp (game.js EARLY_HP / EARLY_GOLD / EARLY_CAP) noGun: false,
+  dailyGemsPerHour: 4.5, hours: 10, paid: false, early: 0, earlyCap: 15, ex: 2.2, exCap: 8, rex: 1.605, teamShare: 0.6, teamSt: [0, 3, 6, 12, 20], teamC: 1000,   // game.js TUNE   // early ramp (game.js EARLY_HP / EARLY_GOLD / EARLY_CAP) noGun: false,
 }, A);
 // allow overriding functions via strings
 for (const k of ['bossGemsFirst', 'bossGemsRepeat', 'treasureGems', 'rebGain', 'rebGems']) if (typeof cfg[k] === 'string') cfg[k] = eval(cfg[k]);
@@ -26,9 +26,10 @@ function shop() {
   for (let k = 0; k < 2000; k++) {
     const opts = [];
     for (const key of ['power', 'speed', 'money']) { if (key === 'speed' && speed(s.lv.speed) >= 10) continue; opts.push([COST[key](s.lv[key]) * (key === 'money' ? 1.3 : 1), key]); }
-    if (s.team < 5) opts.push([cfg.team[s.team] * 0.7, 'team']);
+    const tSt = cfg.teamSt[s.team] || 0, tCost = () => cfg.teamC ? 10 * Math.pow(cfg.rg, 5 * (tSt - 1)) * Math.pow(cfg.rex, Math.min(Math.max(0, tSt - 1), cfg.exCap)) * cfg.teamC : cfg.team[s.team];
+    if (s.team < 5 && Math.max(s.best, s.stage) >= tSt) opts.push([tCost() * 0.7, 'team']);
     opts.sort((a, b) => a[0] - b[0]); let [c, key] = opts[0];
-    c = key === 'team' ? cfg.team[s.team] : COST[key](s.lv[key]);
+    c = key === 'team' ? tCost() : COST[key](s.lv[key]);
     if (c > s.money) break; s.money -= c; if (key === 'team') { s.team++; mark('team' + s.team); } else s.lv[key]++;
   }
   for (let k = 0; k < 20; k++) {   // gems: next weapon first, otherwise cheap stars

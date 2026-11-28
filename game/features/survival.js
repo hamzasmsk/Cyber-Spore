@@ -41,7 +41,7 @@
     R.eb.length = 0; R.mode = 'surv'; R.phase = 'surv'; R.toSpawn = 0;
     if (R.sq) { R.sq.hp = R.sq.maxHp; R.sq.ko = 0; }
     // toughness from the squad's real damage per second: an early rusher dies in ~0.4 s of focused fire
-    const dps = SS.dmgPerShot() * SS.fireRate() * Math.max(1, save.team);
+    const dps = SS.dmgPerShot() * SS.fireRate() * (SS.teamPower ? SS.teamPower() : Math.max(1, save.team));
     run = { t: 0, kills: 0, lvl: 1, next: 12, spawnT: 0.5, b: {}, novaT: 6, base: dps * 0.4, over: false };
     hud.classList.remove('hidden'); const gl = document.getElementById('goal'); if (gl) gl.classList.add('sv-hide'); SS.banner('HAYATTA KAL!', '150 saniye · her yönden geliyorlar'); SS.sfx('boss', 0); R.shake = 6;
     SS.persist();

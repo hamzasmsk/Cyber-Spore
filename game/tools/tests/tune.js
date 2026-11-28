@@ -14,7 +14,7 @@ const { chromium } = require('playwright'), path = require('path');
   });
   ok(r.ch.includes('earlyHp') && r.ch.includes('bossTime') && !r.ch.includes('nonsense') && !r.ch.includes('waveBase'), 'only known numeric keys');
   ok(r.tune.bossTime === 60, 'clamped to range');
-  ok(Math.abs(r.h1 / r.h0 - Math.pow(2 / 2.4, 4)) < 1e-6, 'enemy health follows the knob');
+  ok(Math.abs(r.h1 / r.h0 - Math.pow(2 / 2.2, 4)) < 1e-6, 'enemy health follows the knob');
   // remembered values apply on the next start
   await p.evaluate(() => { SS.save.tune = { earlyHp: 2.1 }; SS.persist(); });
   await p.reload(); await p.waitForFunction(() => window.SS && SS.TUNE);

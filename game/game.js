@@ -197,11 +197,11 @@ const GUNS = [
 const TRAIL_COL = { gold: '#ffe18d', magic: '#d3a2c0', fire: '#ff9554', ice: '#8feff1', leaf: '#adbc3a', ink: '#8d977f', neon: '#3fd0e8', laser: '#ff4fb0', dragon: '#ff7a2e', lotus: '#6fb6ff', sakura: '#f9a3c8', moon: '#b9b4e6' };
 const ORI = { EnergyBall: -Math.PI / 2, PlantSpike: 0, Fireball: -Math.PI / 4, IceSpike: 0 };
 const TEAM = [
-  { id: 'NinjaBlue',   name: 'Kaptan',  cost: 0,    perk: 'Mangayı yönetir' },
-  { id: 'NinjaRed',    name: 'Kızıl',   cost: 800,  perk: 'Takıma +%10 atış hızı' },
-  { id: 'NinjaYellow', name: 'Altın',   cost: 5e6,  perk: 'Takıma +%20 altın' },
-  { id: 'NinjaBomb',   name: 'Bombacı', cost: 5e11, perk: 'Atışlar %20 şansla patlar (alan hasarı)' },
-  { id: 'NinjaMasked', name: 'Maske',   cost: 5e17, perk: '+%6 kritik şansı' },
+  { id: 'NinjaBlue',   name: 'Kaptan',  st: 0,  cost: 0,    perk: 'Mangayı yönetir' },
+  { id: 'NinjaRed',    name: 'Kızıl',   st: 3,  cost: 800,  perk: 'Takıma +%10 atış hızı' },
+  { id: 'NinjaYellow', name: 'Altın',   st: 6,  cost: 5e6,  perk: 'Takıma +%20 altın' },
+  { id: 'NinjaBomb',   name: 'Bombacı', st: 12, cost: 5e11, perk: 'Atışlar %20 şansla patlar (alan hasarı)' },
+  { id: 'NinjaMasked', name: 'Maske',   st: 20, cost: 5e17, perk: '+%6 kritik şansı' },
 ];
 const SLOTS = [[0, 0], [-0.75, -0.25], [0.75, -0.25], [-0.38, 0.7], [0.38, 0.7]];
 // more, weaker enemies (x0.55 HP, x0.6 gold each, 14 kills per step) keep the time and gold per step about the
@@ -276,8 +276,8 @@ const stageIdx = () => (save.stage - 1) * SUBS + (save.sub - 1);
 const TUNE_DEF = {
   hpGrowth: 1.3,      // enemy health per step (5 steps a stage)
   goldGrowth: 1.28,   // gold per step
-  earlyHp: 2.4,       // extra enemy health per stage during the early ramp
-  earlyGold: 1.691,   // extra gold per stage during the early ramp
+  earlyHp: 2.2,       // extra enemy health per stage during the early ramp
+  earlyGold: 1.605,   // extra gold per stage during the early ramp
   earlyCap: 8,        // stages the early ramp lasts
   bossMul: 22,        // boss health = this many enemies of the last step
   bossTime: 30,       // seconds to beat a boss
@@ -287,9 +287,11 @@ const TUNE_DEF = {
   hordeChance: 0.25,  // share of waves that are hordes
   lungeDmg: 0.08,     // a lunging enemy's hit, share of the squad's base health
   offEff: 0.5,        // offline earnings, share of the active gold rate
+  teamShare: 0.6,     // damage of each extra ninja, share of the captain's (they back the captain up)
+  teamCost: 1000,     // price of a ninja = this many kills' gold at the stage it opens at
 };
 const TUNE_RANGE = { hpGrowth: [1.2, 1.4], goldGrowth: [1.2, 1.4], earlyHp: [1, 4], earlyGold: [1, 3], earlyCap: [0, 15], bossMul: [8, 60], bossTime: [15, 60],
-  waveBase: [4, 30], waveGrow: [0, 3], waveMax: [0, 40], hordeChance: [0, 0.6], lungeDmg: [0, 0.3], offEff: [0.1, 1] };
+  waveBase: [4, 30], waveGrow: [0, 3], waveMax: [0, 40], hordeChance: [0, 0.6], lungeDmg: [0, 0.3], offEff: [0.1, 1], teamShare: [0.3, 1], teamCost: [100, 20000] };
 const TUNE = { ...TUNE_DEF };
 function setTune(o) {   // only known keys, only numbers inside a safe range; returns the keys that changed
   const ch = [];
@@ -307,6 +309,11 @@ const enemyHp = () => 10 * Math.pow(TUNE.hpGrowth, stageIdx()) * earlyHp(save.st
 const reward = () => 10 * Math.pow(TUNE.goldGrowth, stageIdx()) * earlyGold(save.stage);
 const bossHp = () => 10 * Math.pow(TUNE.hpGrowth, (save.stage - 1) * SUBS + SUBS - 1) * earlyHp(save.stage) * TUNE.bossMul * modMul('ehp');
 const bossTime = () => TUNE.bossTime + modAdd('bossTime');
+// squad: ninja i opens at stage TEAM[i].st and costs the gold of TUNE.teamCost kills at that stage (so it is always a
+// few minutes of saving, never a free x2); extra ninjas hit for TUNE.teamShare of the captain
+const teamOpen = i => (save.best || 1) >= (TEAM[i] ? TEAM[i].st : 1e9);
+const teamCost = i => { const st = Math.max(1, TEAM[i].st || 1); return i ? Math.round(10 * Math.pow(TUNE.goldGrowth, SUBS * (st - 1)) * earlyGold(st) * TUNE.teamCost) : 0; };
+const teamPower = () => 1 + TUNE.teamShare * (Math.max(1, save.team) - 1);
 const biome = () => BIOMES[(save.stage - 1) % BIOMES.length];
 const bossKey = () => { const b = biome(); return b.bosses[Math.floor((save.stage - 1) / BIOMES.length) % b.bosses.length]; };
 // rebirth points grow x1.18 per stage (from stage 8): each rebirth then pushes the wall ~10-15 stages further
@@ -961,7 +968,7 @@ function throwNow(h) {
   if (!t || t.dead || (t !== R.boss && !R.en.includes(t))) { t = nearestTarget(h); if (!t) return; }
   const g = GUNS[save.gun], o = handPos(h);
   h.ang = Math.atan2(aimY(t) - o.y, t.x - o.x); h.recoil = 0.09; h.empty = 0.16;
-  const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * heroMul(h.i) * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
+  const base = shotsOf(g), ns = base + modAdd('shots'), crit = Math.random() < critChance(), total = dmgPerShot() * heroMul(h.i) * (h.i > 0 ? TUNE.teamShare : 1) * (crit ? 3 + modAdd('critDmg') : 1), dmg = total / base;
   let tg = [t];
   if (ns > 1 && t !== R.boss) tg = tg.concat(R.en.filter(e => e !== t && !e.dead && e.y > enemyBox().y0 - 10 * U).sort((a, b) => Math.hypot(a.x - o.x, a.y - o.y) - Math.hypot(b.x - o.x, b.y - o.y)).slice(0, ns - 1));
   for (let k = 0; k < ns; k++) {
@@ -1029,7 +1036,7 @@ function stickDecal(q) {
 // ================================================================ evolved weapons: special attacks
 // Every few seconds in a fight an evolved (5-star) weapon fires its signature attack. Each spec is a small
 // object with its own update/draw so the effects stay readable and independent.
-const specDmg = k => dmgPerShot() * Math.max(1, save.team) * k;
+const specDmg = k => dmgPerShot() * teamPower() * k;
 function densest(radius) {   // enemy with the most neighbours
   let best = null, bn = -1;
   for (const e of R.en) { if (e.dead || e.y < enemyBox().y0 - 10 * U) continue; let n = 0; for (const o of R.en) if (!o.dead && Math.hypot(o.x - e.x, o.y - e.y) < radius) n++; if (n > bn) { bn = n; best = e; } }
@@ -2137,7 +2144,7 @@ function updateUI(dt) {
   // red "something to do" dots: affordable weapon, team member, rebirth worth taking
   const note = (sel, on) => { const b = document.querySelector(sel); if (b) b.classList.toggle('notify', !!on); };
   note('[data-open="guns"]', (save.wbest < GUNS.length - 1 && save.gems >= GUNS[save.wbest + 1].cost) || (star(save.gun) < 5 && save.gems >= starCost(save.gun, star(save.gun))));
-  note('[data-open="team"]', (save.team < TEAM.length && save.money >= TEAM[save.team].cost) || TEAM.some((h, i) => i < save.team && hlv(i) < HERO_MAX && (save.scrolls[i] || 0) >= scrollNeed(hlv(i)) && save.money >= heroCost(hlv(i))));
+  note('[data-open="team"]', (save.team < TEAM.length && teamOpen(save.team) && save.money >= teamCost(save.team)) || TEAM.some((h, i) => i < save.team && hlv(i) < HERO_MAX && (save.scrolls[i] || 0) >= scrollNeed(hlv(i)) && save.money >= heroCost(hlv(i))));
   note('[data-open="rebirth"]', (rebirthGain() > 0 && R.bossFails >= 2) || !!(window.SS && window.SS.tree && window.SS.tree.canBuy()));
   // first steps
   if (!save.tut) save.tut = {};
@@ -2303,16 +2310,16 @@ const PANELS = {
   }),
   team: () => openPanel('Takım', 'green', body => {
     const sc = $('pBody').scrollTop;
-    body.appendChild(el('<p class="big-note">Her ninja takıma bir atıcı ve bir yetenek ekler. Bosslardan düşen <b>parşömenlerle</b> seviye atlarlar (Doğuşta sıfırlanmaz).</p>'));
+    body.appendChild(el(`<p class="big-note">Her ninja takıma bir atıcı ve bir yetenek ekler; yardımcılar kaptanın %${Math.round(TUNE.teamShare * 100)}'i kadar vurur. Bosslardan düşen <b>parşömenlerle</b> seviye atlarlar (Doğuşta sıfırlanmaz).</p>`));
     TEAM.forEach((h, i) => {
       const owned = i < save.team, next = i === save.team, lv = hlv(i), sc2 = save.scrolls[i] || 0, need = scrollNeed(lv), max = lv >= HERO_MAX, cost = heroCost(lv), can = owned && !max && sc2 >= need;
       const bar = owned && !max ? `<div class="hl-bar ${sc2 >= need ? 'full' : ''}"><i style="width:${Math.min(100, sc2 / need * 100)}%"></i><span><img src="assets/ui/ic_scroll.png" alt="">${sc2} / ${need}</span></div>` : '';
       const row = el(`<div class="row-card hl-row ${owned || next ? '' : 'lock'}"><div class="ico face"><img src="assets/ui/face_${heroId(i)}.png" alt="">${owned ? `<span class="hl-lv">${max ? 'MAKS' : 'Sv.' + lv}</span>` : ''}</div>
         <div class="info"><h4>${h.name}</h4><p>${owned && !(i === 0 && lv <= 1) ? PERK_TXT[i](lv) : h.perk}${owned && lv > 1 ? ` · <b>+%${Math.round((heroMul(i) - 1) * 100)} hasar</b>` : ''}</p>${bar}</div>
         ${owned ? (max ? '<button class="btn grey off">MAKS</button>' : `<button class="btn ${can ? 'green' : 'grey off'} up"><img src="assets/ui/coin.png" alt="">${fmt(cost)}</button>`)
-          : next ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(h.cost)}</button>` : '<button class="btn grey off"><img src="assets/ui/lock.png" alt=""></button>'}</div>`);
+          : next && teamOpen(i) ? `<button class="btn yellow"><img src="assets/ui/coin.png" alt="">${fmt(teamCost(i))}</button>` : `<button class="btn grey off hl-st"><img src="assets/ui/lock.png" alt="">${!owned && !teamOpen(i) ? 'Bölüm ' + h.st : ''}</button>`}</div>`);
       const b = row.querySelector('.btn');
-      if (next) b.onclick = () => { if (save.money < h.cost) { sfx('no'); toast('Yeterli altın yok'); return; } save.money -= h.cost; save.team++; setupHeroes(); sfx('bonus', 0); persist(); uiKey = ''; PANELS.team(); };
+      if (next && teamOpen(i)) b.onclick = () => { const c = teamCost(i); if (save.money < c) { sfx('no'); toast('Yeterli altın yok'); return; } save.money -= c; save.team++; setupHeroes(); sfx('bonus', 0); persist(); uiKey = ''; PANELS.team(); };
       if (can) b.onclick = () => {
         if (save.money < cost) { sfx('no'); toast('Yeterli altın yok'); return; }
         save.money -= cost; save.scrolls[i] = sc2 - need; save.hlv[i] = lv + 1; persist(); uiKey = '';
@@ -2468,7 +2475,7 @@ function addSideButton({ side = 'left', label, icon, color = 'blue', onClick, id
   return b;
 }
 window.SS = {
-  colBox, moneyMul, earlyHp, TUNE, TUNE_DEF, setTune, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
+  colBox, moneyMul, earlyHp, TUNE, TUNE_DEF, setTune, teamCost, teamOpen, teamPower, save, R, F, GUNS, TEAM, VAR, giveScroll, hlv, spawnTreasure, spawnEnemy, startWave, offlineReward, bossWin, HERO_MAX, KILLS_PER_SUB, SUBS, BIOMES, BOSSES, BOSS_SIG, EDEF, MODS, HOOKS, PANELS, modMul, modAdd, rebirthGain, rebirthGems, REBIRTH_MIN, critChance, bossTime, nearestTarget, damage, onHit, aimY, vfx, fx, chainBolt, kill, liveTargets, areaHit, fmt, sfx, toast, banner, el, openPanel, closePanel, persist, addMoney, addSideButton,
   spr, sprT, rrect, prect, snap, AF, AN, atlasImg, INK, bossH, biome, dmgPerShot, fireRate, moneyMul, enemyHp, reward, buy, startBoss, setupHeroes, heroId,
   hurtSquad, knockout, sqMaxHp, heroBox, part, puff, confetti, bits, boom, addText, along, audioInit, musicUpdate, applyVol, useUlt,
   get _audio() { return { AC, master, sfxBus }; }, get saveState() { return saveState; }, loadInfo, SAVE_KEY,

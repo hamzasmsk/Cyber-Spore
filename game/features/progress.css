@@ -385,3 +385,4 @@ body.ps-on #ui,body.ps-on #c{visibility:hidden}
 .hub-tabs .btn span{font-size:inherit}
 .ps-cap{margin:4px 2px 2px;font-size:11px;color:var(--muted);text-align:center}
 .ps-cap b{color:var(--dark)}
+.hl-row .btn.hl-st{min-width:86px;font-size:12px;gap:4px;white-space:nowrap}
