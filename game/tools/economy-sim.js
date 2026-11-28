@@ -6,7 +6,7 @@ const cfg = Object.assign({
   team: [0, 800, 5e6, 5e11, 5e17], gunMult: [1, 2.5, 6, 15, 40, 110, 300, 900, 2500, 7000, 20000, 56000, 160000], gunCost: [0, 5, 15, 40, 100, 250, 600, 1500, 2000, 2800, 3800, 5000, 6500], starK: 0.35,
   bossGemsFirst: s => 3 + Math.floor(s / 4), bossGemsRepeat: s => 0, treasureP: 0.04, treasureGems: s => 1,
   rebGain: s => s >= 8 ? Math.floor(2 * Math.pow(1.18, s - 8)) : 0, rebPer: 0.3, rebGems: g => 5 + Math.min(60, Math.floor(Math.log2(g + 1) * 4)),
-  dailyGemsPerHour: 4.5, hours: 10, paid: false, early: 0, earlyCap: 15, ex: 2.4, exCap: 8, rex: 1.691,   // early ramp (game.js EARLY_HP / EARLY_GOLD / EARLY_CAP) noGun: false,
+  dailyGemsPerHour: 4.5, hours: 10, paid: false, early: 0, earlyCap: 15, ex: 2.4, exCap: 8, rex: 1.691, teamShare: 1, teamSt: [0, 0, 0, 0, 0], teamC: 0,   // early ramp (game.js EARLY_HP / EARLY_GOLD / EARLY_CAP) noGun: false,
 }, A);
 // allow overriding functions via strings
 for (const k of ['bossGemsFirst', 'bossGemsRepeat', 'treasureGems', 'rebGain', 'rebGems']) if (typeof cfg[k] === 'string') cfg[k] = eval(cfg[k]);
@@ -18,7 +18,7 @@ const rb = () => 1 + s.rp * cfg.rebPer;
 const starMul = () => (1 + 0.3 * (s.star[s.gun] - 1)) * (s.star[s.gun] >= 5 ? 1.5 : 1);
 const crit = () => 1 + 2 * (0.1 + (s.team >= 5 ? 0.06 : 0));
 const goldPerk = () => (s.team >= 3 ? 1.2 : 1) * (1 + Math.min(0.4, t / 3600 * 0.08)) * (s.boost > t ? 2 : 1);   // collection bonus ~ +8%/h, capped
-const dps = () => s.team * speed(s.lv.speed) * (s.team >= 2 ? 1.1 : 1) * power(s.lv.power) * cfg.gunMult[s.gun] * starMul() * crit() * rb() * (s.boost > t ? 2 : 1);
+const dps = () => (1 + cfg.teamShare * (s.team - 1)) * speed(s.lv.speed) * (s.team >= 2 ? 1.1 : 1) * power(s.lv.power) * cfg.gunMult[s.gun] * starMul() * crit() * rb() * (s.boost > t ? 2 : 1);
 let t = 0; const log = [], ms = {}; let fails = 0, stuck = 0, gemsEarned = 0, gemsByBoss = 0, gemsByTreasure = 0, gemsDaily = 0, gemsReb = 0;
 const mark = k => { if (!(k in ms)) ms[k] = Math.round(t / 60); };
 const addGems = (n, src) => { s.gems += n; gemsEarned += n; if (src === 'b') gemsByBoss += n; if (src === 't') gemsByTreasure += n; if (src === 'r') gemsReb += n; };
