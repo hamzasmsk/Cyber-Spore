@@ -2,6 +2,6 @@
 <!-- Google Play Games Services ids (Play Console > Play Games Services > Setup / Leaderboards).
      Leave empty until the game's Play Games project exists: the leaderboard stays switched off in the meantime. -->
 <resources>
-    <string name="game_services_project_id" translatable="false"></string>
-    <string name="leaderboard_best_stage" translatable="false"></string>
+    <string name="game_services_project_id" translatable="false">984131937511</string>
+    <string name="leaderboard_best_stage" translatable="false">CgkI58nWltIcEAIQAQ</string>
 </resources>
